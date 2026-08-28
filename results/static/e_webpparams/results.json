@@ -1,0 +1,22 @@
+{
+ "case": "120 diverse 224px photos, WebP atlas vs individual",
+ "matched_ssim_097": {
+  "default": -9.0,
+  "sns100_pass10": -6.4,
+  "sns100_pass10_autofilter": 5.0
+ },
+ "equal_q80": {
+  "default": {
+   "save_pct": -0.1,
+   "atlas_ssim": 0.9751,
+   "indiv_ssim": 0.9784
+  },
+  "advanced": {
+   "save_pct": 2.4,
+   "atlas_ssim": 0.9799,
+   "indiv_ssim": 0.9792
+  }
+ },
+ "mechanism": "autofilter adaptive deblocking removes atlas tile-boundary block artifacts (raises atlas SSIM above individual); SNS gives larger frame more masking context; segments capped at 4 so structurally knob-immune",
+ "note": "reachable via libwebp WebPConfig struct (python webp pkg); Pillow does not expose these; cwebp -sns 100 -pass 10 -af equivalent"
+}
