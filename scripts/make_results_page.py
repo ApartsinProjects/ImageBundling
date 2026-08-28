@@ -87,6 +87,7 @@ tiles as individual files, at equal interpolated per-tile SSIM. Positive = atlas
                         f"<td>{r['ssim_target'] or 'lossless'}</td><td>{r['bytes_individual']:,}</td>"
                         f"<td>{r['bytes_atlas']:,}</td><td class='{c}'>{r['saving_pct']:.1f}%</td></tr>")
         html.append("</table></details>")
+    html.append('<p class="muted">Alexander Apartsin &middot; MPCode &middot; 2001</p>')
     html.append("</body></html>")
     out = ROOT / "docs" / "results-phase1.html"
     out.write_text("\n".join(html), encoding="utf-8")
