@@ -61,10 +61,19 @@ def main():
                 for t in targets:
                     b_ind = bytes_at_ssim(ind, t)
                     b_atl = bytes_at_ssim(pts, t)
-                    if b_ind is None or b_atl is None:
+                    bound = False
+                    # Atlas ladder entirely above target: its lowest-quality point
+                    # OVERSTATES bytes-at-target, so using it understates the saving.
+                    # Report as a conservative lower bound. Same logic for individual.
+                    if b_atl is None and min(p[0] for p in pts) > t:
+                        b_atl, bound = float(sorted(pts)[0][1]), True
+                    if b_ind is None and min(p[0] for p in ind) > t:
+                        b_ind = float(sorted(ind)[0][1])  # overstates -> saving not a bound anymore
+                        bound = None  # ambiguous direction; skip
+                    if b_ind is None or b_atl is None or bound is None:
                         continue
                     out.append({"class": cls, "n": n, "codec": codec, "pad": pad,
-                                "ssim_target": t,
+                                "ssim_target": t, "lower_bound": bound,
                                 "bytes_individual": round(b_ind),
                                 "bytes_atlas": round(b_atl),
                                 "saving_pct": round(100 * (1 - b_atl / b_ind), 2)})
