@@ -114,7 +114,8 @@ def main():
     html = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Image Bundling Revisited</title><style>{CSS}</style></head><body>
-<h1>Image Bundling Revisited: Atlasing Small Web Images under Modern Codecs and Protocols</h1>
+<h1>Image Bundling Revisited: Optimal Atlasing of Small Web Images under Modern Codecs
+and Protocols</h1>
 <div class="authors">Alexander Apartsin</div>
 <div class="venue">MPCode Technical Report &middot; original project MPCode 2001 &middot; revisited 2026</div>
 
@@ -132,9 +133,13 @@ governed by the container-overhead-to-content ratio: for 224-pixel photographic
 thumbnails it shrinks to 3&ndash;7%, and for lossless codecs atlasing inverts into a cost,
 reaching 35% extra bytes for lossless JPEG&nbsp;XL, whose per-image adaptation outperforms
 any single global model. These measurements yield a codec-aware bundling rule: atlas
-small lossy tiles, serve them as AVIF, and never atlas lossless assets. A companion
-network study measures the end-to-end timing effect across HTTP/1.1, HTTP/2, and HTTP/3
-under emulated network conditions on the same testbed.</p></div>
+small lossy tiles, serve them as AVIF, and never atlas lossless assets. Beyond the
+binary decision, the report formulates atlas construction as an optimization problem:
+partition a page's image set into bundles, and order tiles within each bundle, to
+minimize a cost combining bytes per deploy under cache invalidation, load latency for
+the target protocol and network, and decoded memory, subject to a per-tile quality
+floor. A companion network study measures the end-to-end timing effect across HTTP/1.1,
+HTTP/2, and HTTP/3 under emulated network conditions on the same testbed.</p></div>
 
 <h2>1&nbsp;&nbsp;Introduction</h2>
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -277,7 +282,31 @@ protocols, and five network profiles (localhost floor; 100 Mbit/20 ms; 9 Mbit/60
 1.6 Mbit/150 ms; 9 Mbit/60 ms with 1% loss), eight cold loads per cell. Results are
 reported in the next revision of this report.</p>
 
-<h2>7&nbsp;&nbsp;Practical guidance</h2>
+<h2>7&nbsp;&nbsp;Toward optimal atlas construction</h2>
+<p>The preceding sections treat bundling as a binary choice. The general problem is an
+optimization: given images i with encoded sizes s<sub>i</sub>, content class
+c<sub>i</sub>, update probability p<sub>i</sub> per deploy, and viewport visibility
+v<sub>i</sub>, choose a partition of the set into bundles B<sub>1</sub>..B<sub>k</sub>,
+a tile ordering within each bundle, and a codec per bundle, minimizing</p>
+<p style="text-align:center;text-indent:0">J = w<sub>b</sub>&nbsp;E[bytes per deploy] +
+w<sub>t</sub>&nbsp;latency(k; protocol, network) + w<sub>m</sub>&nbsp;peak decoded
+memory,</p>
+<p style="text-indent:0">subject to a per-tile quality floor, where
+E[bytes]&nbsp;=&nbsp;&Sigma;<sub>j</sub>&nbsp;[1&nbsp;&minus;&nbsp;&Pi;<sub>i&isin;B<sub>j</sub></sub>(1&nbsp;&minus;&nbsp;p<sub>i</sub>)]&nbsp;&middot;&nbsp;bytes(B<sub>j</sub>)
+prices whole-bundle cache invalidation. The measured curves of Sections&nbsp;5
+and&nbsp;6 supply the byte and latency terms; three further measurements calibrate the
+remaining degrees of freedom. First, within-bundle tile ordering: packing visually
+similar tiles adjacently changes what the codec's spatial context can exploit, and is
+evaluated by re-encoding identical tile sets under filename, random, luminance-sorted,
+mean-color-sorted, cluster-grouped, and greedy nearest-neighbor orders. Second, the
+chunk count k trades overhead amortization against invalidation blast radius and
+parallelism; J(k) is measured directly on the testbed. Third, cadence grouping assigns
+tiles with correlated update probabilities to the same bundle, which lowers E[bytes]
+at fixed k. The deliverable is an atlas-optimizer tool that takes a directory of
+images with a manifest of update rates and quality targets and emits the partition,
+per-bundle codec, atlas files, and CSS coordinate map.</p>
+
+<h2>8&nbsp;&nbsp;Practical guidance</h2>
 <p>The static study supports a codec-aware bundling rule. Atlas small lossy assets:
 icon-class tiles gain 26&ndash;60% at matched quality under every DCT-family codec, and
 AVIF gains most. Do not atlas lossless assets: per-image adaptation beats the shared
