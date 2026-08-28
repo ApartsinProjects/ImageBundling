@@ -1,0 +1,182 @@
+{
+ "A_reproduce": [
+  {
+   "codec": "webp",
+   "q": 80,
+   "mode": "individual",
+   "stored": 383036,
+   "reproduced": 383036,
+   "match": true
+  },
+  {
+   "codec": "webp",
+   "q": 80,
+   "mode": "atlas",
+   "stored": 384020,
+   "reproduced": 384020,
+   "match": true
+  },
+  {
+   "codec": "avif",
+   "q": 50,
+   "mode": "individual",
+   "stored": 231398,
+   "reproduced": 231398,
+   "match": true
+  },
+  {
+   "codec": "avif",
+   "q": 50,
+   "mode": "atlas",
+   "stored": 212303,
+   "reproduced": 212303,
+   "match": true
+  }
+ ],
+ "B_slack_webp": {
+  "save_pct_n196_noslack": -0.29,
+  "save_pct_n200_slack": -0.07
+ },
+ "B_slack_png": {
+  "save_pct_n196_noslack": -3.07,
+  "save_pct_n200_slack": -3.82
+ },
+ "C_identical_emoji": {
+  "avif:50": {
+   "individual": 76000,
+   "atlas": 7674,
+   "save_pct": 89.9
+  },
+  "webp:80": {
+   "individual": 126600,
+   "atlas": 109790,
+   "save_pct": 13.3
+  },
+  "jpeg:80": {
+   "individual": 187600,
+   "atlas": 150089,
+   "save_pct": 20.0
+  },
+  "png:None": {
+   "individual": 189000,
+   "atlas": 31043,
+   "save_pct": 83.6
+  },
+  "webp_ll:None": {
+   "individual": 74600,
+   "atlas": 1720,
+   "save_pct": 97.7
+  },
+  "jxl_ll:None": {
+   "individual": 73800,
+   "atlas": 35530,
+   "save_pct": 51.9
+  }
+ },
+ "C_identical_photos": {
+  "avif:50": {
+   "individual": 484500,
+   "atlas": 416277,
+   "save_pct": 14.1
+  },
+  "webp:80": {
+   "individual": 830800,
+   "atlas": 815124,
+   "save_pct": 1.9
+  },
+  "jpeg:80": {
+   "individual": 1098600,
+   "atlas": 1061236,
+   "save_pct": 3.4
+  },
+  "png:None": {
+   "individual": 7930900,
+   "atlas": 924342,
+   "save_pct": 88.3
+  },
+  "webp_ll:None": {
+   "individual": 5125200,
+   "atlas": 70250,
+   "save_pct": 98.6
+  },
+  "jxl_ll:None": {
+   "individual": 4556000,
+   "atlas": 4579088,
+   "save_pct": -0.5
+  }
+ },
+ "D_raw_signs": [
+  {
+   "cls": "photos",
+   "n": 200,
+   "codec": "webp",
+   "q": 80,
+   "individual": 1461288,
+   "atlas": 1462304,
+   "save_pct": -0.1
+  },
+  {
+   "cls": "photos",
+   "n": 200,
+   "codec": "png",
+   "q": null,
+   "individual": 13582572,
+   "atlas": 14101074,
+   "save_pct": -3.8
+  },
+  {
+   "cls": "photos",
+   "n": 200,
+   "codec": "webp_ll",
+   "q": null,
+   "individual": 8774350,
+   "atlas": 8748418,
+   "save_pct": 0.3
+  },
+  {
+   "cls": "photos",
+   "n": 200,
+   "codec": "jxl_ll",
+   "q": null,
+   "individual": 7727611,
+   "atlas": 7868834,
+   "save_pct": -1.8
+  },
+  {
+   "cls": "emoji",
+   "n": 200,
+   "codec": "webp",
+   "q": 80,
+   "individual": 188814,
+   "atlas": 158082,
+   "save_pct": 16.3
+  },
+  {
+   "cls": "emoji",
+   "n": 200,
+   "codec": "png",
+   "q": null,
+   "individual": 374532,
+   "atlas": 386222,
+   "save_pct": -3.1
+  },
+  {
+   "cls": "emoji",
+   "n": 200,
+   "codec": "webp_ll",
+   "q": null,
+   "individual": 157596,
+   "atlas": 164924,
+   "save_pct": -4.6
+  },
+  {
+   "cls": "emoji",
+   "n": 200,
+   "codec": "jxl_ll",
+   "q": null,
+   "individual": 169077,
+   "atlas": 243343,
+   "save_pct": -43.9
+  }
+ ]
+}

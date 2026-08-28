@@ -11,6 +11,7 @@ and map where it stops paying. Plan: ANALYSIS_AND_PLAN.md.
 | 2026-08-28 | smoke_inv1: atlas-of-1 invariant | PASS | atlas of 1 image byte-identical to single file (jpeg 10986 B, avif 4845 B) | Harness sound. |
 | 2026-08-28 | phase1_emoji full sweep (368 rows) | AVIF atlas >=60% saved at n=500, SSIM 0.97; JPEG/JXL ~26%; lossless negative (jxl_ll -35%) | audit clean; invariants pass | Savings scale with container-overhead ratio; lossless atlasing hurts |
 | 2026-08-28 | phase1_photos full sweep (368 rows) | AVIF 5.8%, JXL 7.1%, JPEG 3.0%, WebP -8.5% at n=500, SSIM 0.97 | audit clean | 224px tiles gain little; WebP atlasing net-negative on photos |
+| 2026-08-28 | audit_negatives (A reproduce, B grid-slack, C identical-copies control, D raw signs) | PASS: all stored rows byte-identical on re-encode; slack negligible; negatives persist raw | positive control: every codec with long-range refs shows 84-99% saving on 100 identical tiles | Negatives real. New insight: cross-image redundancy gain requires LZ/IntraBC-class codecs; intra-only transform codecs (JPEG, lossy WebP) cannot deduplicate distant identical content (1.9-3.4% on identical photos) |
 
 ## Bugs found and fixed
 - fetch_assets.sh: Python on Windows emits CRLF; `$(python_gen)` kept trailing `\r` in
