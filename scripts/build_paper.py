@@ -272,6 +272,14 @@ adaptation, and a WebP as little as 30 bytes of container around a heavily
 image-adapted VP8 payload. This report quantifies what bundling recovers, per codec,
 tile size, and image count, under a matched-quality protocol, and describes a testbed
 that measures the timing consequences under HTTP/1.1, HTTP/2, and HTTP/3.</p>
+<p>The regimes this study measures map onto concrete page types. Product grids and
+image-search results serve 100&ndash;280-pixel photographic thumbnails by the dozens;
+recommendation strips, cart previews, and avatar rows serve 48&ndash;96-pixel photos;
+emoji and reaction pickers serve 24&ndash;64-pixel flat art by the hundreds, and are
+one place where sprite atlases remain in production use today (chat applications ship
+emoji sheets; video platforms ship hover-preview storyboards as frame mosaics). The
+tile-size axis of the experiments spans exactly this range, so each regime can read
+its expected saving off the measured curves.</p>
 <p>The display side needs no special machinery: a bundled tile is shown by any of CSS
 <code>background-position</code> (universal), <code>object-view-box</code> (Chromium),
 canvas <code>drawImage</code> region blits, or SVG <code>viewBox</code> cropping. The
