@@ -157,7 +157,8 @@ def network_results_html():
 
 
 def main():
-    rows = load("phase1_emoji") + load("phase1_photos")
+    rows = (load("phase1_emoji") + load("phase1_photos") +
+            load("phase1_photos112") + load("phase1_photos56"))
     ex = json.load((ROOT / "docs" / "img" / "examples.json").open())
 
     def cell(cls, n, codec):
@@ -173,7 +174,8 @@ def main():
     codecs = ["jpeg", "webp", "png", "webp_ll"]
     heads = ["JPEG", "WebP", "PNG", "WebP-lossless"]
     trows = []
-    for cls, label in [("emoji", "flat art 72px"), ("photos", "photos 224px")]:
+    for cls, label in [("emoji", "flat art 72px"), ("photos56", "photos 56px"),
+                       ("photos112", "photos 112px"), ("photos", "photos 224px")]:
         for n in [10, 50, 200, 500]:
             trows.append(f"<tr><td>{label}</td><td>{n}</td>" +
                          "".join(cell(cls, n, c) for c in codecs) + "</tr>")
@@ -236,10 +238,11 @@ focuses on the three formats that carry the overwhelming majority of web images 
 and decode in every browser: JPEG, PNG, and WebP. At matched per-tile quality (SSIM
 0.97), atlasing 500 72-pixel flat-art tiles saves 26&ndash;34% of bytes under JPEG and
 8&ndash;17% under WebP, and the saving is protocol-independent. The saving is governed
-by the ratio of per-file structural cost to content bytes: for 224-pixel photographic
-thumbnails it shrinks to a few percent under JPEG and inverts into a cost under WebP
-and the lossless formats, whose per-image adaptation outperforms any single global
-model. These measurements yield a codec-aware bundling rule: atlas small lossy tiles,
+by the ratio of per-file structural cost to content bytes, and the photographic
+size sweep traces the crossover: 56-pixel thumbnails save 29.8% (JPEG) and 15.3%
+(WebP), 112-pixel thumbnails 9.8% and &minus;1.4%, and 224-pixel thumbnails 3.0% and
+&minus;8.5%, with the lossless formats inverting into a cost wherever per-image
+adaptation outperforms a single global model. These measurements yield a codec-aware bundling rule: atlas small lossy tiles,
 never lossless assets or large photographic tiles. Beyond the
 binary decision, the report formulates atlas construction as an optimization problem:
 partition a page's image set into bundles, and order tiles within each bundle, to
@@ -371,8 +374,14 @@ JPEG's roughly 600 bytes of per-file tables and headers alone account for most o
 measured 26&ndash;34% saving, while WebP's 30-byte floor leaves it the smallest lossy
 gain (8&ndash;17%). Second, savings grow with N and saturate near N&nbsp;=&nbsp;200:
 amortization is essentially complete once hundreds of per-file overheads collapse into
-one. Third, the same 500 tiles that save 26% under JPEG at 72 pixels save 3% at 224
-pixels: tile size, not image count, is the dominant variable.</p>
+one. Third, tile size, not image count, is the dominant variable, and the photo rows
+of Table&nbsp;1 trace the full crossover: downscaling the same 500 photographs from
+224 to 112 to 56 pixels moves the JPEG saving from 3.0% to 9.8% to 29.8%, and moves
+WebP from &minus;8.5% through &minus;1.4% to +15.3%, placing WebP's bundling
+break-even near 100-pixel tiles. Search-result and recommendation thumbnails
+(48&ndash;120&nbsp;px) therefore sit squarely in the paying regime for both formats,
+while product-grid images (200&nbsp;px and up) pay only under JPEG, and only a few
+percent.</p>
 {table1}
 {fig_bars}
 <p>Atlasing is not free where per-image adaptation matters. Both lossless formats lose
