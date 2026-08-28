@@ -1,42 +1,258 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Image Bundling Study</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 46rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a2e; }
-  h1 { font-size: 1.7rem; }
-  a { color: #0b5fa5; }
-  .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
-  .muted { color: #666; font-size: 0.9rem; }
-</style>
-</head>
-<body>
-<h1>Image Bundling Study</h1>
-<p>An empirical study of bundling many small web images (icons, product thumbnails,
-decorations) into a single atlas image, versus serving them individually: byte savings,
-load timing, decode cost, across codecs (PNG, JPEG, WebP, AVIF, JPEG XL) and protocols
-(HTTP/1.1, HTTP/2, HTTP/3).</p>
+<title>Image Bundling Revisited</title><style>
+body{font-family:"Charter","Iowan Old Style","Source Serif Pro",Georgia,"Times New Roman",serif;
+ color:#111418;background:#fff;max-width:720px;margin:2.5rem auto;padding:0 1rem;
+ font-size:11pt;line-height:1.55;text-align:justify;hyphens:auto}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f4f5f7;font-size:9.5pt}
+pre{padding:.5rem .8rem;overflow-x:auto;text-align:left;line-height:1.4;margin:.7rem 0}
+pre+p{text-indent:0}
+h1{font-size:19pt;font-weight:600;text-align:center;line-height:1.25;margin:0 0 .4rem}
+.authors{text-align:center;font-size:10.5pt;color:#2c3138;margin-bottom:.2rem}
+.venue{text-align:center;font-size:9.5pt;color:#5a626c;margin-bottom:1.6rem}
+h2{font-size:13pt;font-weight:700;color:#14385c;margin:1.6rem 0 .5rem;text-align:left}
+h3{font-size:11.5pt;font-weight:700;margin:1.1rem 0 .35rem;text-align:left}
+.abstract{margin:1.2rem 2.2rem}
+.abstract .ahead{text-align:center;font-variant:small-caps;letter-spacing:.08em;font-size:11pt;margin-bottom:.3rem}
+.abstract p{font-size:10pt;text-indent:0}
+p{margin:0;text-indent:1.4em}
+h2+p,h3+p,figure+p,.tablewrap+p,.abstract+p,div+p{text-indent:0}
+figure{margin:1.1rem 0;text-align:center}
+figure img,figure svg{max-width:100%;border:1px solid #d1d4d8}
+figcaption{font-size:9.5pt;color:#5a626c;text-align:justify;margin-top:.35rem;text-indent:0}
+.tablewrap{overflow-x:auto;margin:1.1rem 0}
+table{border-collapse:collapse;margin:0 auto;font-size:9.5pt}
+th,td{padding:2.5px 9px;text-align:right;border:none}
+td:first-child,th:first-child{text-align:left}
+thead th{border-bottom:1px solid #111418}
+table{border-top:1.5px solid #111418;border-bottom:1.5px solid #111418}
+caption{font-size:9.5pt;color:#5a626c;margin-bottom:.3rem;caption-side:top;text-align:justify}
+.refs{font-size:9pt}
+.refs p{text-indent:-1.4em;padding-left:1.4em;margin-bottom:.25rem}
+a{color:#14385c}
+.footer{font-size:9pt;color:#5a626c;text-align:center;margin:2.5rem 0 1rem;border-top:1px solid #d1d4d8;padding-top:.6rem}
+.neg{color:#8a2f22}
+</style></head><body>
+<h1>Image Bundling Revisited: Optimal Atlasing of Small Web Images under Modern Codecs
+and Protocols</h1>
+<div class="authors">Alexander Apartsin</div>
+<div class="venue">MPCode Technical Report &middot; original project MPCode 2001 &middot; revisited 2026</div>
 
-<div class="card">
-  <strong>Plan</strong><br>
-  <a href="https://github.com/ApartsinProjects/ImageBundling/blob/main/ANALYSIS_AND_PLAN.md">Analysis and measurement plan</a>
+<div class="abstract"><div class="ahead">Abstract</div>
+<p>Web pages routinely load tens to hundreds of small images; the median mobile page
+carries 13 image elements and the 90th percentile carries 56. Serving each image as a
+separate resource pays three costs: per-request protocol overhead, a fixed per-file
+container cost that reaches 303 bytes for AVIF, and the loss of cross-image redundancy
+that a codec can exploit only within one file. This report measures how much of these
+costs bundling recovers when many small images are packed into a single atlas image and
+displayed with standard CSS. At matched per-tile quality (SSIM 0.97), atlasing 500
+72-pixel flat-art tiles saves 60% of bytes under AVIF, 26% under JPEG and lossy
+JPEG&nbsp;XL, and 8% under WebP, and the saving is protocol-independent. The saving is
+governed by the container-overhead-to-content ratio: for 224-pixel photographic
+thumbnails it shrinks to 3&ndash;7%, and for lossless codecs atlasing inverts into a cost,
+reaching 35% extra bytes for lossless JPEG&nbsp;XL, whose per-image adaptation outperforms
+any single global model. These measurements yield a codec-aware bundling rule: atlas
+small lossy tiles, serve them as AVIF, and never atlas lossless assets. Beyond the
+binary decision, the report formulates atlas construction as an optimization problem:
+partition a page's image set into bundles, and order tiles within each bundle, to
+minimize a cost combining bytes per deploy under cache invalidation, load latency for
+the target protocol and network, and decoded memory, subject to a per-tile quality
+floor. A companion network study measures the end-to-end timing effect across HTTP/1.1,
+HTTP/2, and HTTP/3 under emulated network conditions on the same testbed.</p></div>
+
+<h2>1&nbsp;&nbsp;Introduction</h2>
+<p>Product grids, icon sets, avatars, and decorative elements make small images the most
+numerous resource class on commercial pages. Bundling them into one image, the CSS
+sprite technique, was standard practice in the HTTP/1.1 era and fell out of favor when
+HTTP/2 multiplexing removed the per-connection request bottleneck. That reasoning
+addressed only the request-count cost. Two byte-level costs survive multiplexing
+untouched: every image file carries a fixed container overhead (headers, quantization
+tables, ISOBMFF boxes), and every file boundary prevents the codec from sharing entropy
+context, palettes, and predictors across images.</p>
+<p>Modern codecs move these costs in opposite directions. AVIF carries roughly 303 bytes
+of mandatory container structure per file, an order of magnitude more than JPEG&nbsp;XL's
+24-byte floor, so the format that compresses large images best is also the format most
+penalized on small files; Cloudinary's delivery pipeline refuses AVIF outright for
+images under 5,000 pixels. This report quantifies what bundling recovers, per codec,
+tile size, and image count, under a matched-quality protocol, and describes a testbed
+that measures the timing consequences under HTTP/1.1, HTTP/2, and HTTP/3.</p>
+<p>The display side needs no special machinery: a bundled tile is shown by any of CSS
+<code>background-position</code> (universal), <code>object-view-box</code> (Chromium),
+canvas <code>drawImage</code> region blits, or SVG <code>viewBox</code> cropping. The
+browser decodes the atlas once and paints windows into it.</p>
+
+<h2>2&nbsp;&nbsp;Related work</h2>
+<p>Bundling under HTTP/2 has been measured for JavaScript: Khan Academy found unbundled
+JS slower than bundles under HTTP/2, attributing the gap to worse per-file compression
+[1]. For images, a CSS-Tricks icon case study reports a 223-icon sprite at roughly 10 KB
+versus 115 KB unbundled [2], without protocol timing. Academic HTTP/2 and HTTP/3 studies
+measure whole-page loads and server push [3, 4]; HTTP/3 outperforms HTTP/2 markedly
+under packet loss [5]. Container-overhead floors per format are documented via minimal
+1x1-pixel files: JPEG&nbsp;XL 24 B, WebP 30 B, PNG 67 B, JPEG 155 B, AVIF 303 B [6, 7].
+HTTP Archive's 2024 Media chapter establishes the prevalence of the many-small-images
+regime [8]. No published measurement quantifies image atlasing under HTTP/2 or HTTP/3,
+and no codec-by-tile-size atlasing sweep at matched quality exists; texture-atlas
+practice in game engines addresses GPU sampling, not codec efficiency [9].</p>
+
+<h2>3&nbsp;&nbsp;The atlas serving model</h2>
+<h3>3.1&nbsp;&nbsp;Rendering a tile from an atlas in HTML</h3>
+<p>A bundled page references one image resource and displays each tile by cropping a
+window into it. Four standard mechanisms cover every deployment context. The classic and
+universal one positions the atlas behind a fixed-size element as a background:</p>
+<pre>&lt;div class="tile" style="background-image:url(atlas.avif);
+     background-position:-144px -216px"&gt;&lt;/div&gt;
+/* .tile has width:72px; height:72px */</pre>
+<p>The element shows the 72x72 region whose top-left corner sits at (144,&nbsp;216);
+<code>background-size</code> rescales the whole atlas when display size differs from
+stored size. Chromium additionally supports cropping a real <code>&lt;img&gt;</code>
+element, which preserves alt text, native lazy loading, and
+<code>fetchpriority</code>:</p>
+<pre>&lt;img src="atlas.avif" style="width:72px;height:72px;
+     object-view-box:xywh(144px 216px 72px 72px)"&gt;</pre>
+<p>Where a real image element is needed cross-browser, a fixed-size wrapper with
+<code>overflow:hidden</code> around a negatively-offset <code>&lt;img&gt;</code> gives
+the same window, and SVG gives it declaratively
+(<code>&lt;svg viewBox="144 216 72 72"&gt;&lt;image href="atlas.avif"/&gt;</code>).
+Canvas completes the set for programmatic UIs:
+<code>ctx.drawImage(atlas, 144, 216, 72, 72, dx, dy, 72, 72)</code> blits any region
+after a single decode. In every mechanism the browser fetches and decodes the atlas
+once, holds one decoded copy, and paints windows into it; per-tile cost is a paint, not
+a decode. The experiments in Section&nbsp;6 use <code>background-position</code>, the
+mechanism with universal support.</p>
+<h3>3.2&nbsp;&nbsp;Delivery, caching, and memory</h3>
+<p>An atlas changes the unit of caching from the tile to the bundle. With standard
+immutable content-addressed URLs (<code>atlas.3fe2a1.avif</code>,
+<code>Cache-Control: immutable</code>), an unchanged atlas costs zero requests on a warm
+cache, and the decode-once property still applies. The cost appears on content change:
+editing one tile invalidates the whole bundle, so the expected re-download per deploy
+grows with bundle size. Splitting the collection into k chunked atlases bounds this
+blast radius at 1/k of the collection while retaining nearly all of the byte and
+request savings (Section&nbsp;5, Table&nbsp;1: four chunks price within one percentage
+point of one atlas), which makes chunking the practical default for collections that
+update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
+weekly seasonal art in another) further confines invalidation to the chunk that
+actually changed.</p>
+<p>The second resource to budget is decoded memory: a decoded atlas occupies
+width&nbsp;x&nbsp;height&nbsp;x&nbsp;4 bytes regardless of its encoded size, so a
+4096x4096 atlas holds 64&nbsp;MB of RGBA for a 300&nbsp;KB transfer. Individual images
+decode lazily and can be evicted per tile; an atlas is decoded and resident as a unit
+while any tile is visible. Chunking bounds this cost the same way it bounds
+invalidation, and below-the-fold chunks combine with lazy loading so off-screen tiles
+cost neither bytes nor memory.</p>
+
+<h2>4&nbsp;&nbsp;Measurement method</h2>
+<h3>4.1&nbsp;&nbsp;Assets and packing</h3>
+<p>Two deterministic asset classes: 520 Twemoji 72x72 flat-art tiles (alpha composited
+over white) and 520 photographic 224x224 thumbnails. Tiles are packed row-major into a
+near-square grid; a padding variant edge-replicates each tile by 8 or 16 pixels. All
+conditions consume identical source pixels.</p>
+<h3>4.2&nbsp;&nbsp;Codecs and matched-quality protocol</h3>
+<p>Five codec families (libjpeg-turbo JPEG, WebP, AVIF, JPEG&nbsp;XL, PNG; WebP and
+JPEG&nbsp;XL also lossless) encode each condition at a quality ladder q &isin;
+{30,50,65,80,90}. Per-tile quality is measured as luma SSIM after cropping the tile
+back out of the decoded artifact, so atlas border bleed is charged to the atlas. Bytes
+are compared at equal quality by log-linear interpolation of each condition's
+rate-distortion curve at fixed SSIM targets; when an atlas's entire ladder exceeds the
+target, its cheapest measured point is used, understating the atlas's advantage, and the
+value is reported as a lower bound. Three invariants validate the harness: lossless
+conditions score SSIM exactly 1.0; an atlas of one image is byte-identical to the
+individual file; padding never reduces atlas bytes.</p>
+
+<h2>5&nbsp;&nbsp;Static results: bytes at matched quality</h2>
+<figure><img src='img/atlas_emoji_100.png' alt='100-emoji atlas'><figcaption><b>Figure 1.</b> A 100-tile atlas (10x10 grid of 72x72px tiles, 720x720px). Encoded with identical AVIF settings, the 100 tiles cost 71,432 bytes as separate files and 39,157 bytes as this single image (45% less), while 100 HTTP requests become one. Each tile is displayed with CSS <code>background-position</code>.</figcaption></figure>
+<p>Table 1 reports the saving from atlasing at SSIM 0.97 across both classes. Three
+regularities organize the table. First, savings scale with the
+container-overhead-to-content ratio: 72-pixel flat-art tiles encode to 1&ndash;3 KB, so
+AVIF's 303-byte floor alone accounts for a large fraction of the measured 48&ndash;60%
+saving, and the per-codec ordering of savings (AVIF &gt; JPEG &gt; JPEG&nbsp;XL &gt;
+WebP) follows the per-codec ordering of container floors. Second, savings grow with N
+and saturate near N&nbsp;=&nbsp;200: amortization is essentially complete once hundreds
+of per-file overheads collapse into one. Third, the same 500 tiles that save 60% at 72
+pixels save 5.8% at 224 pixels: tile size, not image count, is the dominant variable.</p>
+<div class='tablewrap'><table><caption><b>Table 1.</b> Bytes saved by atlasing (%) at matched per-tile SSIM 0.97 (lossy codecs; interpolated on the quality ladder) or exact lossless comparison (-ll columns), grid packing, no padding. Negative values (red) mean the atlas is larger.</caption><thead><tr><th>class</th><th>N</th><th>AVIF</th><th>JPEG</th><th>JXL</th><th>WebP</th><th>PNG</th><th>WebP-ll</th><th>JXL-ll</th></tr></thead><tbody><tr><td>flat art 72px</td><td>10</td><td>48.0</td><td>19.4</td><td>8.5</td><td>&mdash;</td><td>4.3</td><td class="neg">-0.2</td><td class="neg">-9.9</td></tr><tr><td>flat art 72px</td><td>50</td><td>54.9</td><td>26.3</td><td>23.3</td><td>8.3</td><td>5.4</td><td>5.4</td><td class="neg">-5.3</td></tr><tr><td>flat art 72px</td><td>200</td><td>55.9</td><td>25.1</td><td>24.2</td><td>15.2</td><td class="neg">-3.1</td><td class="neg">-4.7</td><td class="neg">-43.9</td></tr><tr><td>flat art 72px</td><td>500</td><td>&ge;60.0</td><td>26.3</td><td>25.8</td><td>8.2</td><td class="neg">-5.7</td><td class="neg">-3.6</td><td class="neg">-35.4</td></tr><tr><td>photos 224px</td><td>10</td><td>3.6</td><td>1.0</td><td>6.2</td><td class="neg">-4.3</td><td class="neg">-5.7</td><td class="neg">-3.4</td><td class="neg">-1.7</td></tr><tr><td>photos 224px</td><td>50</td><td>4.8</td><td>1.8</td><td>6.4</td><td class="neg">-5.1</td><td class="neg">-2.8</td><td>3.0</td><td class="neg">-1.9</td></tr><tr><td>photos 224px</td><td>200</td><td>5.7</td><td>2.6</td><td>7.1</td><td class="neg">-8.2</td><td class="neg">-3.8</td><td>0.3</td><td class="neg">-1.8</td></tr><tr><td>photos 224px</td><td>500</td><td>5.8</td><td>3.0</td><td>7.1</td><td class="neg">-8.5</td><td class="neg">-3.6</td><td class="neg">-4.9</td><td class="neg">-1.7</td></tr></tbody></table></div>
+<figure><svg viewBox="0 0 520 300" style="max-width:100%" font-family="Georgia,serif" role="img" aria-label="Bytes saved by atlasing per codec and image count, emoji"><line x1="56" y1="282" x2="424" y2="282" stroke="#eee"/><text x="50" y="286" font-size="10" text-anchor="end" fill="#5a626c">-60</text><line x1="56" y1="239" x2="424" y2="239" stroke="#eee"/><text x="50" y="243" font-size="10" text-anchor="end" fill="#5a626c">-40</text><line x1="56" y1="196" x2="424" y2="196" stroke="#eee"/><text x="50" y="200" font-size="10" text-anchor="end" fill="#5a626c">-20</text><line x1="56" y1="152" x2="424" y2="152" stroke="#eee"/><text x="50" y="156" font-size="10" text-anchor="end" fill="#5a626c">0</text><line x1="56" y1="109" x2="424" y2="109" stroke="#eee"/><text x="50" y="113" font-size="10" text-anchor="end" fill="#5a626c">20</text><line x1="56" y1="66" x2="424" y2="66" stroke="#eee"/><text x="50" y="70" font-size="10" text-anchor="end" fill="#5a626c">40</text><line x1="56" y1="22" x2="424" y2="22" stroke="#eee"/><text x="50" y="26" font-size="10" text-anchor="end" fill="#5a626c">60</text><rect x="61.0" y="110.4" width="9.1" height="42.0" fill="#c6d3e0"/><rect x="71.6" y="95.4" width="9.1" height="57.0" fill="#8fa8c0"/><rect x="82.3" y="98.0" width="9.1" height="54.4" fill="#4f7196"/><rect x="92.9" y="95.5" width="9.1" height="56.9" fill="#14385c"/><text x="82" y="270" font-size="10" text-anchor="middle" fill="#5a626c">JPEG</text><rect x="124.2" y="134.4" width="9.1" height="18.0" fill="#8fa8c0"/><rect x="134.9" y="119.5" width="9.1" height="32.9" fill="#4f7196"/><rect x="145.5" y="134.6" width="9.1" height="17.8" fill="#14385c"/><text x="135" y="270" font-size="10" text-anchor="middle" fill="#5a626c">WebP</text><rect x="166.1" y="48.5" width="9.1" height="103.9" fill="#c6d3e0"/><rect x="176.8" y="33.6" width="9.1" height="118.8" fill="#8fa8c0"/><rect x="187.4" y="31.4" width="9.1" height="121.0" fill="#4f7196"/><rect x="198.1" y="22.5" width="9.1" height="129.9" fill="#14385c"/><text x="187" y="270" font-size="10" text-anchor="middle" fill="#5a626c">AVIF</text><rect x="218.7" y="133.9" width="9.1" height="18.5" fill="#c6d3e0"/><rect x="229.4" y="102.0" width="9.1" height="50.4" fill="#8fa8c0"/><rect x="240.0" y="100.0" width="9.1" height="52.4" fill="#4f7196"/><rect x="250.6" y="96.6" width="9.1" height="55.8" fill="#14385c"/><text x="240" y="270" font-size="10" text-anchor="middle" fill="#5a626c">JPEG XL</text><rect x="271.3" y="143.0" width="9.1" height="9.4" fill="#c6d3e0"/><rect x="281.9" y="140.7" width="9.1" height="11.7" fill="#8fa8c0"/><rect x="292.6" y="152.4" width="9.1" height="6.8" fill="#4f7196"/><rect x="303.2" y="152.4" width="9.1" height="12.3" fill="#14385c"/><text x="293" y="270" font-size="10" text-anchor="middle" fill="#5a626c">PNG</text><rect x="323.9" y="152.4" width="9.1" height="0.5" fill="#c6d3e0"/><rect x="334.5" y="140.7" width="9.1" height="11.6" fill="#8fa8c0"/><rect x="345.1" y="152.4" width="9.1" height="10.1" fill="#4f7196"/><rect x="355.8" y="152.4" width="9.1" height="7.8" fill="#14385c"/><text x="345" y="270" font-size="10" text-anchor="middle" fill="#5a626c">WebP-ll</text><rect x="376.4" y="152.4" width="9.1" height="21.5" fill="#c6d3e0"/><rect x="387.1" y="152.4" width="9.1" height="11.4" fill="#8fa8c0"/><rect x="397.7" y="152.4" width="9.1" height="95.1" fill="#4f7196"/><rect x="408.4" y="152.4" width="9.1" height="76.6" fill="#14385c"/><text x="398" y="270" font-size="10" text-anchor="middle" fill="#5a626c">JXL-ll</text><line x1="56" y1="152" x2="424" y2="152" stroke="#999"/><text x="240" y="292" font-size="11" text-anchor="middle" fill="#111418">codec</text><text x="14" y="135" font-size="11" text-anchor="middle" fill="#111418" transform="rotate(-90 14 135)">bytes saved by atlasing (%)</text><text x="62" y="28" font-size="12" font-weight="bold" fill="#111418">(a) flat art, 72px</text><rect x="430" y="10" width="82" height="84" fill="#fff" stroke="#d1d4d8"/><rect x="436" y="15" width="12" height="10" fill="#c6d3e0"/><text x="452" y="24" font-size="9" fill="#111418">N=10</text><rect x="436" y="32" width="12" height="10" fill="#8fa8c0"/><text x="452" y="41" font-size="9" fill="#111418">N=50</text><rect x="436" y="49" width="12" height="10" fill="#4f7196"/><text x="452" y="58" font-size="9" fill="#111418">N=200</text><rect x="436" y="66" width="12" height="10" fill="#14385c"/><text x="452" y="75" font-size="9" fill="#111418">N=500</text></svg><svg viewBox="0 0 520 300" style="max-width:100%" font-family="Georgia,serif" role="img" aria-label="Bytes saved by atlasing per codec and image count, photos"><line x1="56" y1="347" x2="424" y2="347" stroke="#eee"/><text x="50" y="351" font-size="10" text-anchor="end" fill="#5a626c">-20</text><line x1="56" y1="127" x2="424" y2="127" stroke="#eee"/><text x="50" y="131" font-size="10" text-anchor="end" fill="#5a626c">0</text><rect x="61.0" y="116.8" width="9.1" height="10.5" fill="#c6d3e0"/><rect x="71.6" y="107.9" width="9.1" height="19.4" fill="#8fa8c0"/><rect x="82.3" y="98.8" width="9.1" height="28.5" fill="#4f7196"/><rect x="92.9" y="94.2" width="9.1" height="33.1" fill="#14385c"/><text x="82" y="270" font-size="10" text-anchor="middle" fill="#5a626c">JPEG</text><rect x="113.6" y="127.3" width="9.1" height="47.4" fill="#c6d3e0"/><rect x="124.2" y="127.3" width="9.1" height="56.0" fill="#8fa8c0"/><rect x="134.9" y="127.3" width="9.1" height="89.7" fill="#4f7196"/><rect x="145.5" y="127.3" width="9.1" height="93.7" fill="#14385c"/><text x="135" y="270" font-size="10" text-anchor="middle" fill="#5a626c">WebP</text><rect x="166.1" y="88.1" width="9.1" height="39.2" fill="#c6d3e0"/><rect x="176.8" y="74.3" width="9.1" height="53.0" fill="#8fa8c0"/><rect x="187.4" y="65.2" width="9.1" height="62.1" fill="#4f7196"/><rect x="198.1" y="63.8" width="9.1" height="63.5" fill="#14385c"/><text x="187" y="270" font-size="10" text-anchor="middle" fill="#5a626c">AVIF</text><rect x="218.7" y="59.4" width="9.1" height="67.9" fill="#c6d3e0"/><rect x="229.4" y="56.9" width="9.1" height="70.4" fill="#8fa8c0"/><rect x="240.0" y="49.0" width="9.1" height="78.3" fill="#4f7196"/><rect x="250.6" y="49.1" width="9.1" height="78.2" fill="#14385c"/><text x="240" y="270" font-size="10" text-anchor="middle" fill="#5a626c">JPEG XL</text><rect x="271.3" y="127.3" width="9.1" height="62.5" fill="#c6d3e0"/><rect x="281.9" y="127.3" width="9.1" height="31.1" fill="#8fa8c0"/><rect x="292.6" y="127.3" width="9.1" height="42.0" fill="#4f7196"/><rect x="303.2" y="127.3" width="9.1" height="40.0" fill="#14385c"/><text x="293" y="270" font-size="10" text-anchor="middle" fill="#5a626c">PNG</text><rect x="323.9" y="127.3" width="9.1" height="37.1" fill="#c6d3e0"/><rect x="334.5" y="94.5" width="9.1" height="32.9" fill="#8fa8c0"/><rect x="345.1" y="124.0" width="9.1" height="3.3" fill="#4f7196"/><rect x="355.8" y="127.3" width="9.1" height="53.5" fill="#14385c"/><text x="345" y="270" font-size="10" text-anchor="middle" fill="#5a626c">WebP-ll</text><rect x="376.4" y="127.3" width="9.1" height="18.2" fill="#c6d3e0"/><rect x="387.1" y="127.3" width="9.1" height="20.9" fill="#8fa8c0"/><rect x="397.7" y="127.3" width="9.1" height="20.1" fill="#4f7196"/><rect x="408.4" y="127.3" width="9.1" height="18.9" fill="#14385c"/><text x="398" y="270" font-size="10" text-anchor="middle" fill="#5a626c">JXL-ll</text><line x1="56" y1="127" x2="424" y2="127" stroke="#999"/><text x="240" y="292" font-size="11" text-anchor="middle" fill="#111418">codec</text><text x="14" y="135" font-size="11" text-anchor="middle" fill="#111418" transform="rotate(-90 14 135)">bytes saved by atlasing (%)</text><text x="62" y="28" font-size="12" font-weight="bold" fill="#111418">(b) photos, 224px</text><rect x="430" y="10" width="82" height="84" fill="#fff" stroke="#d1d4d8"/><rect x="436" y="15" width="12" height="10" fill="#c6d3e0"/><text x="452" y="24" font-size="9" fill="#111418">N=10</text><rect x="436" y="32" width="12" height="10" fill="#8fa8c0"/><text x="452" y="41" font-size="9" fill="#111418">N=50</text><rect x="436" y="49" width="12" height="10" fill="#4f7196"/><text x="452" y="58" font-size="9" fill="#111418">N=200</text><rect x="436" y="66" width="12" height="10" fill="#14385c"/><text x="452" y="75" font-size="9" fill="#111418">N=500</text></svg><figcaption><b>Figure 2.</b> Bytes saved by atlasing per codec at matched per-tile SSIM 0.97 (lossless codecs compared exactly), for (a) 72px flat-art tiles and (b) 224px photographic thumbnails. Bar shade encodes the number of bundled images N. Bars below zero mean the atlas is larger than the same tiles as individual files.</figcaption></figure>
+<p>Atlasing is not free where per-image adaptation matters. Every lossless codec loses
+from atlasing at N&nbsp;&ge;&nbsp;200, and lossless JPEG&nbsp;XL loses 35&ndash;44%:
+its modular mode fits palettes and context models per image, and one global model over
+hundreds of heterogeneous tiles cannot match five hundred specialized ones. The effect
+persists at maximum encoder effort, so it is a property of the representation, not of
+encoder tuning. WebP shows the same inversion on photographic tiles (&minus;8.5% at
+N&nbsp;=&nbsp;500). Edge-replicated padding costs roughly six percentage points of
+saving per 8-pixel step (AVIF, flat art), pricing the block-alignment mitigations
+against chroma bleed.</p>
+<figure><svg viewBox="0 0 520 300" style="max-width:100%" font-family="Georgia,serif" role="img" aria-label="Bytes saved by atlasing per codec and image count, emoji"><line x1="56" y1="282" x2="424" y2="282" stroke="#eee"/><text x="50" y="286" font-size="10" text-anchor="end" fill="#5a626c">-60</text><line x1="56" y1="239" x2="424" y2="239" stroke="#eee"/><text x="50" y="243" font-size="10" text-anchor="end" fill="#5a626c">-40</text><line x1="56" y1="196" x2="424" y2="196" stroke="#eee"/><text x="50" y="200" font-size="10" text-anchor="end" fill="#5a626c">-20</text><line x1="56" y1="152" x2="424" y2="152" stroke="#eee"/><text x="50" y="156" font-size="10" text-anchor="end" fill="#5a626c">0</text><line x1="56" y1="109" x2="424" y2="109" stroke="#eee"/><text x="50" y="113" font-size="10" text-anchor="end" fill="#5a626c">20</text><line x1="56" y1="66" x2="424" y2="66" stroke="#eee"/><text x="50" y="70" font-size="10" text-anchor="end" fill="#5a626c">40</text><line x1="56" y1="22" x2="424" y2="22" stroke="#eee"/><text x="50" y="26" font-size="10" text-anchor="end" fill="#5a626c">60</text><rect x="61.0" y="110.4" width="10.2" height="42.0" fill="#c0392b"/><rect x="84.4" y="48.5" width="10.2" height="103.9" fill="#8e44ad"/><rect x="96.1" y="133.9" width="10.2" height="18.5" fill="#27ae60"/><rect x="107.9" y="143.0" width="10.2" height="9.4" fill="#7f8c8d"/><rect x="119.6" y="152.4" width="10.2" height="0.5" fill="#16a085"/><rect x="131.3" y="152.4" width="10.2" height="21.5" fill="#d35400"/><text x="102" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=10</text><rect x="153.0" y="95.4" width="10.2" height="57.0" fill="#c0392b"/><rect x="164.7" y="134.4" width="10.2" height="18.0" fill="#2980b9"/><rect x="176.4" y="33.6" width="10.2" height="118.8" fill="#8e44ad"/><rect x="188.1" y="102.0" width="10.2" height="50.4" fill="#27ae60"/><rect x="199.9" y="140.7" width="10.2" height="11.7" fill="#7f8c8d"/><rect x="211.6" y="140.7" width="10.2" height="11.6" fill="#16a085"/><rect x="223.3" y="152.4" width="10.2" height="11.4" fill="#d35400"/><text x="194" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=50</text><rect x="245.0" y="98.0" width="10.2" height="54.4" fill="#c0392b"/><rect x="256.7" y="119.5" width="10.2" height="32.9" fill="#2980b9"/><rect x="268.4" y="31.4" width="10.2" height="121.0" fill="#8e44ad"/><rect x="280.1" y="100.0" width="10.2" height="52.4" fill="#27ae60"/><rect x="291.9" y="152.4" width="10.2" height="6.8" fill="#7f8c8d"/><rect x="303.6" y="152.4" width="10.2" height="10.1" fill="#16a085"/><rect x="315.3" y="152.4" width="10.2" height="95.1" fill="#d35400"/><text x="286" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=200</text><rect x="337.0" y="95.5" width="10.2" height="56.9" fill="#c0392b"/><rect x="348.7" y="134.6" width="10.2" height="17.8" fill="#2980b9"/><rect x="360.4" y="22.5" width="10.2" height="129.9" fill="#8e44ad"/><rect x="372.1" y="96.6" width="10.2" height="55.8" fill="#27ae60"/><rect x="383.9" y="152.4" width="10.2" height="12.3" fill="#7f8c8d"/><rect x="395.6" y="152.4" width="10.2" height="7.8" fill="#16a085"/><rect x="407.3" y="152.4" width="10.2" height="76.6" fill="#d35400"/><text x="378" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=500</text><line x1="56" y1="152" x2="424" y2="152" stroke="#999"/><text x="240" y="292" font-size="11" text-anchor="middle" fill="#111418">images per bundle</text><text x="14" y="135" font-size="11" text-anchor="middle" fill="#111418" transform="rotate(-90 14 135)">bytes saved by atlasing (%)</text><text x="62" y="28" font-size="12" font-weight="bold" fill="#111418">(a) flat art, 72px</text><rect x="430" y="10" width="82" height="135" fill="#fff" stroke="#d1d4d8"/><rect x="436" y="15" width="12" height="10" fill="#c0392b"/><text x="452" y="24" font-size="9" fill="#111418">JPEG</text><rect x="436" y="32" width="12" height="10" fill="#2980b9"/><text x="452" y="41" font-size="9" fill="#111418">WebP</text><rect x="436" y="49" width="12" height="10" fill="#8e44ad"/><text x="452" y="58" font-size="9" fill="#111418">AVIF</text><rect x="436" y="66" width="12" height="10" fill="#27ae60"/><text x="452" y="75" font-size="9" fill="#111418">JPEG XL</text><rect x="436" y="83" width="12" height="10" fill="#7f8c8d"/><text x="452" y="92" font-size="9" fill="#111418">PNG</text><rect x="436" y="100" width="12" height="10" fill="#16a085"/><text x="452" y="109" font-size="9" fill="#111418">WebP-ll</text><rect x="436" y="117" width="12" height="10" fill="#d35400"/><text x="452" y="126" font-size="9" fill="#111418">JXL-ll</text></svg><svg viewBox="0 0 520 300" style="max-width:100%" font-family="Georgia,serif" role="img" aria-label="Bytes saved by atlasing per codec and image count, photos"><line x1="56" y1="347" x2="424" y2="347" stroke="#eee"/><text x="50" y="351" font-size="10" text-anchor="end" fill="#5a626c">-20</text><line x1="56" y1="127" x2="424" y2="127" stroke="#eee"/><text x="50" y="131" font-size="10" text-anchor="end" fill="#5a626c">0</text><rect x="61.0" y="116.8" width="10.2" height="10.5" fill="#c0392b"/><rect x="72.7" y="127.3" width="10.2" height="47.4" fill="#2980b9"/><rect x="84.4" y="88.1" width="10.2" height="39.2" fill="#8e44ad"/><rect x="96.1" y="59.4" width="10.2" height="67.9" fill="#27ae60"/><rect x="107.9" y="127.3" width="10.2" height="62.5" fill="#7f8c8d"/><rect x="119.6" y="127.3" width="10.2" height="37.1" fill="#16a085"/><rect x="131.3" y="127.3" width="10.2" height="18.2" fill="#d35400"/><text x="102" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=10</text><rect x="153.0" y="107.9" width="10.2" height="19.4" fill="#c0392b"/><rect x="164.7" y="127.3" width="10.2" height="56.0" fill="#2980b9"/><rect x="176.4" y="74.3" width="10.2" height="53.0" fill="#8e44ad"/><rect x="188.1" y="56.9" width="10.2" height="70.4" fill="#27ae60"/><rect x="199.9" y="127.3" width="10.2" height="31.1" fill="#7f8c8d"/><rect x="211.6" y="94.5" width="10.2" height="32.9" fill="#16a085"/><rect x="223.3" y="127.3" width="10.2" height="20.9" fill="#d35400"/><text x="194" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=50</text><rect x="245.0" y="98.8" width="10.2" height="28.5" fill="#c0392b"/><rect x="256.7" y="127.3" width="10.2" height="89.7" fill="#2980b9"/><rect x="268.4" y="65.2" width="10.2" height="62.1" fill="#8e44ad"/><rect x="280.1" y="49.0" width="10.2" height="78.3" fill="#27ae60"/><rect x="291.9" y="127.3" width="10.2" height="42.0" fill="#7f8c8d"/><rect x="303.6" y="124.0" width="10.2" height="3.3" fill="#16a085"/><rect x="315.3" y="127.3" width="10.2" height="20.1" fill="#d35400"/><text x="286" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=200</text><rect x="337.0" y="94.2" width="10.2" height="33.1" fill="#c0392b"/><rect x="348.7" y="127.3" width="10.2" height="93.7" fill="#2980b9"/><rect x="360.4" y="63.8" width="10.2" height="63.5" fill="#8e44ad"/><rect x="372.1" y="49.1" width="10.2" height="78.2" fill="#27ae60"/><rect x="383.9" y="127.3" width="10.2" height="40.0" fill="#7f8c8d"/><rect x="395.6" y="127.3" width="10.2" height="53.5" fill="#16a085"/><rect x="407.3" y="127.3" width="10.2" height="18.9" fill="#d35400"/><text x="378" y="270" font-size="10" text-anchor="middle" fill="#5a626c">N=500</text><line x1="56" y1="127" x2="424" y2="127" stroke="#999"/><text x="240" y="292" font-size="11" text-anchor="middle" fill="#111418">images per bundle</text><text x="14" y="135" font-size="11" text-anchor="middle" fill="#111418" transform="rotate(-90 14 135)">bytes saved by atlasing (%)</text><text x="62" y="28" font-size="12" font-weight="bold" fill="#111418">(b) photos, 224px</text><rect x="430" y="10" width="82" height="135" fill="#fff" stroke="#d1d4d8"/><rect x="436" y="15" width="12" height="10" fill="#c0392b"/><text x="452" y="24" font-size="9" fill="#111418">JPEG</text><rect x="436" y="32" width="12" height="10" fill="#2980b9"/><text x="452" y="41" font-size="9" fill="#111418">WebP</text><rect x="436" y="49" width="12" height="10" fill="#8e44ad"/><text x="452" y="58" font-size="9" fill="#111418">AVIF</text><rect x="436" y="66" width="12" height="10" fill="#27ae60"/><text x="452" y="75" font-size="9" fill="#111418">JPEG XL</text><rect x="436" y="83" width="12" height="10" fill="#7f8c8d"/><text x="452" y="92" font-size="9" fill="#111418">PNG</text><rect x="436" y="100" width="12" height="10" fill="#16a085"/><text x="452" y="109" font-size="9" fill="#111418">WebP-ll</text><rect x="436" y="117" width="12" height="10" fill="#d35400"/><text x="452" y="126" font-size="9" fill="#111418">JXL-ll</text></svg><figcaption><b>Figure 3.</b> The same savings as Figure 2 grouped by image count N, one codec-colored bar per group: (a) 72px flat art, (b) 224px photographic thumbnails. Savings grow with N and saturate near N&nbsp;=&nbsp;200, once hundreds of per-file container overheads have collapsed into one; the per-codec ordering follows the per-codec container floors.</figcaption></figure>
+<p>The absolute comparison compounds codec choice with bundling: at N&nbsp;=&nbsp;500 and
+SSIM 0.97, the best individually-served option (WebP, 240 KB) is more than twice the
+size of the AVIF atlas (114 KB). A deployment that adopts atlasing without changing
+codec, or AVIF without atlasing, captures less than half of the available saving.</p>
+
+<h2>6&nbsp;&nbsp;Network study design</h2>
+<p>Byte savings are protocol-independent; timing effects are not. The companion testbed
+serves both conditions from a Caddy server inside WSL2 with three protocol endpoints
+(HTTP/1.1, HTTP/2, HTTP/3 on QUIC), shapes real packets with <code>tc netem</code>
+(delay, bandwidth, random loss applied on the server egress), and drives a fresh
+cold-cache Chromium instance per page load via Playwright. Each page stamps a
+timestamp after every tile is decoded and two animation frames have painted, giving a
+single time-to-all-tiles-visible endpoint, and records per-resource transfer sizes and
+the negotiated protocol from the Resource Timing API, which also verifies that every
+load used the intended protocol. The sweep crosses condition (individual, one atlas,
+four chunked atlases) with N &isin; {10, 50, 200, 500}, both asset classes, three
+protocols, and five network profiles (localhost floor; 100 Mbit/20 ms; 9 Mbit/60 ms;
+1.6 Mbit/150 ms; 9 Mbit/60 ms with 1% loss), eight cold loads per cell. Results are
+reported in the next revision of this report.</p>
+
+<h2>7&nbsp;&nbsp;Toward optimal atlas construction</h2>
+<p>The preceding sections treat bundling as a binary choice. The general problem is an
+optimization: given images i with encoded sizes s<sub>i</sub>, content class
+c<sub>i</sub>, update probability p<sub>i</sub> per deploy, and viewport visibility
+v<sub>i</sub>, choose a partition of the set into bundles B<sub>1</sub>..B<sub>k</sub>,
+a tile ordering within each bundle, and a codec per bundle, minimizing</p>
+<p style="text-align:center;text-indent:0">J = w<sub>b</sub>&nbsp;E[bytes per deploy] +
+w<sub>t</sub>&nbsp;latency(k; protocol, network) + w<sub>m</sub>&nbsp;peak decoded
+memory,</p>
+<p style="text-indent:0">subject to a per-tile quality floor, where
+E[bytes]&nbsp;=&nbsp;&Sigma;<sub>j</sub>&nbsp;[1&nbsp;&minus;&nbsp;&Pi;<sub>i&isin;B<sub>j</sub></sub>(1&nbsp;&minus;&nbsp;p<sub>i</sub>)]&nbsp;&middot;&nbsp;bytes(B<sub>j</sub>)
+prices whole-bundle cache invalidation. The measured curves of Sections&nbsp;5
+and&nbsp;6 supply the byte and latency terms; three further measurements calibrate the
+remaining degrees of freedom. First, within-bundle tile ordering: packing visually
+similar tiles adjacently changes what the codec's spatial context can exploit, and is
+evaluated by re-encoding identical tile sets under filename, random, luminance-sorted,
+mean-color-sorted, cluster-grouped, and greedy nearest-neighbor orders. Second, the
+chunk count k trades overhead amortization against invalidation blast radius and
+parallelism; J(k) is measured directly on the testbed. Third, cadence grouping assigns
+tiles with correlated update probabilities to the same bundle, which lowers E[bytes]
+at fixed k. The deliverable is an atlas-optimizer tool that takes a directory of
+images with a manifest of update rates and quality targets and emits the partition,
+per-bundle codec, atlas files, and CSS coordinate map.</p>
+
+<h2>8&nbsp;&nbsp;Practical guidance</h2>
+<p>The static study supports a codec-aware bundling rule. Atlas small lossy assets:
+icon-class tiles gain 26&ndash;60% at matched quality under every DCT-family codec, and
+AVIF gains most. Do not atlas lossless assets: per-image adaptation beats the shared
+context, and the loss grows with N. Do not atlas 200-pixel-class photographs for byte
+reasons: the 3&ndash;7% saving is real but small, and whether the request-count
+reduction pays on latency is a protocol question, not a compression question. Pack
+without padding unless measured chroma bleed on the target content demands alignment,
+and price that padding at roughly six points of saving per 8 pixels.</p>
+
+<h2 class="refs-head">References</h2>
+<div class="refs">
+<p>[1] C. Johnson. Forgo JS packaging? Not so fast. Khan Academy Engineering, 2015.
+https://blog.khanacademy.org/forgo-js-packaging-not-so-fast/</p>
+<p>[2] C. Coyier. Musings on HTTP/2 and bundling. CSS-Tricks.
+https://css-tricks.com/musings-on-http2-and-bundling/</p>
+<p>[3] M. Varvello et al. Is the Web HTTP/2 yet? PAM 2016.</p>
+<p>[4] S. R. Dahal et al. HTTP/2 server push: a performance study. arXiv:2207.05885.</p>
+<p>[5] T. Hunter. HTTP/3 is fast. Request Metrics, 2022.
+https://requestmetrics.com/web-performance/http3-is-fast/</p>
+<p>[6] T. Eden. What's the smallest file size for a 1 pixel image? 2024.
+https://shkspr.mobi/blog/2024/01/whats-the-smallest-file-size-for-a-1-pixel-image/</p>
+<p>[7] J. Sneyers. One pixel is worth three thousand words. Cloudinary Blog.
+https://cloudinary.com/blog/one_pixel_is_worth_three_thousand_words</p>
+<p>[8] HTTP Archive. Web Almanac 2024, Media chapter.
+https://almanac.httparchive.org/en/2024/media</p>
+<p>[9] Unity Technologies. Sprites.AtlasSettings.paddingPower documentation.
+https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html</p>
 </div>
-
-<div class="card">
-  <strong>Technical report</strong><br>
-  <a href="paper.html">Image Bundling Revisited: Atlasing Small Web Images under Modern Codecs and Protocols</a>
-</div>
-
-<div class="card">
-  <strong>Results</strong><br>
-  <a href="results-phase1.html">Phase 1: bytes saved by atlasing at matched quality</a><br>
-  <span class="muted">Both classes complete: flat 72px art saves up to 60% (AVIF) from atlasing
-  at matched SSIM; 224px photo thumbnails save only 3-7% (AVIF/JXL) and lose with WebP.</span>
-</div>
-
-<p class="muted">Source: <a href="https://github.com/ApartsinProjects/ImageBundling">github.com/ApartsinProjects/ImageBundling</a></p>
-<p class="muted">Alexander Apartsin &middot; original project MPCode 2001 &middot; revisited 2026</p>
-</body>
-</html>
+<div class="footer">Alexander Apartsin &middot; original project MPCode 2001 &middot; revisited 2026</div>
+</body></html>

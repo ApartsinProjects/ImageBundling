@@ -342,6 +342,8 @@ https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html
 
     out = ROOT / "docs" / "paper.html"
     out.write_text(html, encoding="utf-8")
+    # the paper IS the site landing page
+    (ROOT / "docs" / "index.html").write_text(html, encoding="utf-8")
     # content canaries
     for canary in ["Table 1.", "Figure 1.", "Figure 2.", "Figure 3.", "<svg",
                    "atlas_emoji_100.png", "Abstract", "References",
