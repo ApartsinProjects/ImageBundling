@@ -1,0 +1,69 @@
+[
+ {
+  "test": "R1_png",
+  "cond": "individual",
+  "bytes": 8104761,
+  "save_pct": 0.0
+ },
+ {
+  "test": "R1_png",
+  "cond": "grid",
+  "bytes": 8449857,
+  "save_pct": -4.3
+ },
+ {
+  "test": "R1_png",
+  "cond": "strip",
+  "bytes": 8114279,
+  "save_pct": -0.1
+ },
+ {
+  "test": "R1_png",
+  "cond": "strip_lumasorted",
+  "bytes": 8115169,
+  "save_pct": -0.1
+ },
+ {
+  "test": "R2_webpll",
+  "cond": "individual",
+  "bytes": 5218918,
+  "save_pct": 0.0
+ },
+ {
+  "test": "R2_webpll",
+  "cond": "grid",
+  "bytes": 5442958,
+  "save_pct": -4.3
+ },
+ {
+  "test": "R2_webpll",
+  "cond": "strip_chunked",
+  "bytes": 5336964,
+  "save_pct": -2.3
+ },
+ {
+  "test": "R2_webpll",
+  "cond": "strip_lumasorted_chunked",
+  "bytes": 5337474,
+  "save_pct": -2.3
+ },
+ {
+  "test": "R3_jpeg",
+  "cond": "individual_optimized",
+  "bytes": 1082926,
+  "save_pct": 0.0
+ },
+ {
+  "test": "R3_jpeg",
+  "cond": "grid_atlas_optimized",
+  "bytes": 1055674,
+  "save_pct": 2.5
+ },
+ {
+  "test": "R3_jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 1068598,
+  "save_pct": 1.3,
+  "vs_atlas": -1.2
+ }
+]
