@@ -16,6 +16,7 @@ and map where it stops paying. Plan: ANALYSIS_AND_PLAN.md.
 | 2026-08-28 | e31_dedup2 (392 unique photos, Modal) | Ordering ~0%, cluster chunks +0.14% on clean photos | matches LZ-dup hypothesis exactly | Similarity gains on photos were 100% duplicate exploitation; effect real only for duplicate-bearing sets |
 | 2026-08-28 | phase2_full network sweep (2647 loads) | SUPERSEDED-BY phase2v2: measurement pages double-fetched every image (JS preload + no-store header defeated coalescing); atlas bytes 2x, individual up to 2x + 250-entry timing-buffer truncation | caught by bytes-vs-manifest check on per-rep data | Timing conclusions void; harness fixed (no-store removed, buffer 4096, bytes invariant), phase2v2 relaunched |
 | 2026-08-28 | phase1 small-thumbnail sweep (photos112/photos56, Modal) | JPEG saving 3.0->9.8->29.8% and WebP -8.5->-1.4->+15.3% as photo tiles shrink 224->112->56px | monotone crossover, matches overhead-ratio model | WebP bundling break-even ~100px; search/recommendation thumbnails are in the paying regime |
+| 2026-08-28 | phase2v3 network sweep (2,515 loads, 0 errors) | Flat-art atlas 7-9x (h1), 4-8x (h3), 1.1-4x (h2); h3 individual 4-5x slower than h2; atlas4 fixes lossy-h1 stall (0.9x->1.8x); byte-bundle up to 5.7x at zero byte cost | all invariants pass; bytes validated per load | H2 confirmed for h1/h3; h2 multiplexing largely closes latency gap, bundling there is a byte play |
 
 ## Bugs found and fixed
 - Phase 2 harness: pages fetched each image twice (markup + JS preload) because Cache-Control: no-store blocked request coalescing; fresh-browser-per-load already guarantees cold cache, so no-store removed. Resource-timing buffer raised to 4096 (default 250 truncated byte accounting). Verified: atlas transfers exactly file size, unimodal timings.
@@ -25,9 +26,7 @@ and map where it stops paying. Plan: ANALYSIS_AND_PLAN.md.
   codepoints, corrupting every emoji URL except the last line. Fix: `| tr -d '\r'`.
 
 ## Current standing + next
-Phase 1 COMPLETE. Byte-level result: bundle small flat lossy assets (AVIF best, >=60%);
-do not bundle lossless or 200px+ photos for byte reasons. Results published:
-https://apartsinprojects.github.io/ImageBundling/results-phase1.html
-Next: Phase 2 network study (Caddy h1/h2/h3 + WSL2 netem + Playwright), where the
-per-request overhead question is answered; photos may still win from bundling on timing
-even at ~0 byte saving.
+Phases 0-2 COMPLETE and published (paper carries static, ordering/partition, and
+network results; all invariants pass). Remaining backlog: E3.7-E3.11 method upgrades,
+optimizer CLI (E3.5), display-mechanism/memory sub-experiments, DOCX build.
+Paper: https://apartsinprojects.github.io/ImageBundling/

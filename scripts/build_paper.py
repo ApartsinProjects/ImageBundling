@@ -53,7 +53,7 @@ def load(tag):
                       "matched_quality_savings.json").open())
 
 
-def load_network(tag="phase2_full"):
+def load_network(tag="phase2v3"):
     f = ROOT / "results" / "network" / tag / "summary.json"
     return json.load(f.open()) if f.exists() else None
 
@@ -66,28 +66,31 @@ def network_results_html():
     med = {(s["profile"], s["proto"], s["cls"], s["n"], s["cond"]): s["median_ms"]
            for s in summ}
     profiles = [("localhost", "localhost"), ("fast", "100 Mbit / 20 ms"),
-                ("cell4g", "9 Mbit / 60 ms"), ("slow3g", "1.6 Mbit / 150 ms"),
-                ("lossy4g", "9 Mbit / 60 ms / 1% loss")]
+                ("cell4g", "9 Mbit / 60 ms"), ("lossy4g", "9 Mbit / 60 ms / 1% loss")]
     trows = []
-    for cls in ["emoji", "photos"]:
+    for cls, clabel in [("emoji", "flat art"), ("photos", "photos")]:
         for pkey, plabel in profiles:
-            cells = []
             for proto in ["h1", "h2", "h3"]:
                 i = med.get((pkey, proto, cls, 500, "individual"))
-                a = med.get((pkey, proto, cls, 500, "atlas1"))
-                cells.append(f"<td>{i:,.0f}</td><td>{a:,.0f}</td>"
-                             f"<td><b>{i/a:.1f}x</b></td>" if i and a
-                             else "<td>&mdash;</td>" * 3)
-            trows.append(f"<tr><td>{cls}</td><td>{plabel}</td>{''.join(cells)}</tr>")
+                a1 = med.get((pkey, proto, cls, 500, "atlas1"))
+                a4 = med.get((pkey, proto, cls, 500, "atlas4"))
+                bb = med.get((pkey, proto, cls, 500, "bundlebin"))
+                if not (i and a1):
+                    continue
+                trows.append(
+                    f"<tr><td>{clabel}</td><td>{plabel}</td><td>{proto}</td>"
+                    f"<td>{i:,.0f}</td><td>{a1:,.0f}</td>"
+                    f"<td>{a4:,.0f}</td><td>{bb:,.0f}</td>"
+                    f"<td><b>{i/a1:.1f}x</b></td><td>{i/bb:.1f}x</td></tr>")
     table2 = ("<div class='tablewrap'><table>"
-              "<caption><b>Table 2.</b> Median time to all 500 tiles visible (ms), "
-              "individual files vs one atlas, and the atlas speedup, per protocol and "
-              "network profile (8 cold loads per cell, first load dropped; WebP-class "
-              "payload sizes).</caption>"
-              "<thead><tr><th>class</th><th>network</th>"
-              "<th>h1 ind</th><th>h1 atl</th><th>x</th>"
-              "<th>h2 ind</th><th>h2 atl</th><th>x</th>"
-              "<th>h3 ind</th><th>h3 atl</th><th>x</th></tr></thead>"
+              "<caption><b>Table 2.</b> Median time to all 500 tiles visible (ms) per "
+              "serving condition, protocol, and network profile (5&ndash;8 cold "
+              "browser loads per cell, first load dropped; WebP payloads). "
+              "atl-x and bun-x are the speedups of the single atlas and of the "
+              "byte-bundle over individual files.</caption>"
+              "<thead><tr><th>class</th><th>network</th><th>proto</th>"
+              "<th>individual</th><th>atlas</th><th>atlas x4</th><th>byte-bundle</th>"
+              "<th>atl-x</th><th>bun-x</th></tr></thead>"
               f"<tbody>{''.join(trows)}</tbody></table></div>")
 
     # Figure 4: speedup bars, groups = profile, bars = protocol, panel per class
@@ -149,10 +152,10 @@ def network_results_html():
     fig4 = (f"<figure>{panel('emoji', '(a) flat art, 72px, N=500')}"
             f"{panel('photos', '(b) photos, 224px, N=500')}"
             "<figcaption><b>Figure 4.</b> Time-to-all-tiles-visible speedup from "
-            "bundling (median individual / median single atlas) at N&nbsp;=&nbsp;500, "
-            "per protocol and network profile. The dashed line marks parity. "
-            "Multiplexing (HTTP/2/3) narrows the gap relative to HTTP/1.1 but never "
-            "closes it.</figcaption></figure>")
+            "atlasing (median individual / median single atlas) at N&nbsp;=&nbsp;500, "
+            "per protocol and network profile. The dashed line marks parity. HTTP/2 "
+            "narrows the gap furthest; HTTP/1.1 and HTTP/3 leave multi-x speedups on "
+            "the table for small flat tiles.</figcaption></figure>")
     return table2 + fig4
 
 
@@ -218,6 +221,7 @@ def main():
                   "overheads have collapsed into one; the per-codec ordering follows the "
                   "per-codec container floors.</figcaption></figure>")
 
+    net_html = network_results_html()
     html = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Image Bundling Revisited</title><style>{CSS}</style></head><body>
@@ -252,9 +256,13 @@ floor. An ordering-and-partition study calibrates the optimizer's levers: cluste
 bundles save 3 percentage points for lossless flat art, and for collections with
 repeated tiles, a similarity-sorted atlas dedupes copies inside the codec's matching
 window, cutting PNG bytes by 17&ndash;18% at a 21.6% duplicate rate, a saving
-separately-served files cannot reach on any protocol. A companion network study
-measures the end-to-end timing effect across HTTP/1.1, HTTP/2, and HTTP/3 under
-emulated network conditions on the same testbed.</p></div>
+separately-served files cannot reach on any protocol. A network study over 2,515 validated
+cold loads across HTTP/1.1, HTTP/2, and HTTP/3 under emulated network conditions
+completes the picture: bundling 500 flat tiles is 7&ndash;9x faster to full visibility
+on HTTP/1.1 and 4&ndash;8x on HTTP/3, while HTTP/2's multiplexing closes most of the
+latency gap and leaves bundling there as chiefly a byte optimization; under packet
+loss, chunked atlases outperform one large atlas by spreading the transfer across
+connections.</p></div>
 
 <h2>1&nbsp;&nbsp;Introduction</h2>
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -405,20 +413,45 @@ individual-JPEG deployment to a WebP atlas cuts bytes by 65%; the format change
 contributes most of it, and bundling contributes the rest while also collapsing 500
 requests into one.</p>
 
-<h2>6&nbsp;&nbsp;Network study design</h2>
-<p>Byte savings are protocol-independent; timing effects are not. The companion testbed
-serves both conditions from a Caddy server inside WSL2 with three protocol endpoints
+<h2>6&nbsp;&nbsp;Network study: timing under HTTP/1.1, HTTP/2, and HTTP/3</h2>
+<h3>6.1&nbsp;&nbsp;Testbed</h3>
+<p>Byte savings are protocol-independent; timing effects are not. The testbed serves
+every condition from a Caddy server inside WSL2 with three protocol endpoints
 (HTTP/1.1, HTTP/2, HTTP/3 on QUIC), shapes real packets with <code>tc netem</code>
 (delay, bandwidth, random loss applied on the server egress), and drives a fresh
 cold-cache Chromium instance per page load via Playwright. Each page stamps a
 timestamp after every tile is decoded and two animation frames have painted, giving a
-single time-to-all-tiles-visible endpoint, and records per-resource transfer sizes and
-the negotiated protocol from the Resource Timing API, which also verifies that every
-load used the intended protocol. The sweep crosses condition (individual, one atlas,
-four chunked atlases) with N &isin; {{10, 50, 200, 500}}, both asset classes, three
-protocols, and five network profiles (localhost floor; 100 Mbit/20 ms; 9 Mbit/60 ms;
-1.6 Mbit/150 ms; 9 Mbit/60 ms with 1% loss), eight cold loads per cell. Results are
-reported in the next revision of this report.</p>
+single time-to-all-tiles-visible endpoint, and records per-resource transfer sizes
+and the negotiated protocol from the Resource Timing API; every load is validated
+against the intended protocol and against the manifest's byte totals, so a page that
+fetched the wrong way cannot enter the dataset. Four serving conditions run: N
+individual files, one atlas, four chunked atlases, and a byte-bundle (the N encoded
+files concatenated into one binary resource plus an offset index; the client slices
+the buffer and decodes each tile from its own bytes, retaining per-file codec
+adaptation while collapsing N requests into one). The sweep crosses these with
+N &isin; {{50, 200, 500}}, both asset classes as WebP q80, three protocols, and four
+network profiles, 2,515 validated cold loads in total.</p>
+<h3>6.2&nbsp;&nbsp;Results</h3>
+{net_html}
+<p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
+HTTP/1.1 and HTTP/3, bundling remains a large timing win: 7&ndash;9x and 4&ndash;8x
+respectively for 500 flat-art tiles, and 1.3&ndash;2.8x for photos, across every
+network profile. Second, HTTP/2 is the strongest protocol for many small files: its
+multiplexing loads 500 individual images almost as fast as the atlas on
+bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
+bundling small tiles rests chiefly on the 15&ndash;26% byte saving rather than on
+latency. HTTP/3's individual-file loads run 4&ndash;5x slower than HTTP/2's on the
+same links, consistent with QUIC deployments' tighter concurrent-stream budgets
+forcing 500 requests into more waves; sites on HTTP/3 today inherit the bundling
+economics of HTTP/1.1 more than those of HTTP/2. Third, chunking is loss insurance:
+under 1% packet loss on HTTP/1.1, the single 3.6&nbsp;MB photo atlas on one TCP
+connection drops to 0.9x (a stall risk the byte study cannot see), while four chunks
+restore 1.8x by spreading the transfer over parallel connections. The byte-bundle
+behaves as designed: it beats individual serving nearly everywhere on HTTP/1.1 and
+HTTP/3 (up to 5.7x) at exactly the individual conditions' byte cost, making it the
+bundling method of choice for content whose pixels should not share a codec model
+(photos, lossless assets); the pixel atlas remains faster where its byte savings
+compound with the request savings.</p>
 
 <h2>7&nbsp;&nbsp;Toward optimal atlas construction</h2>
 <p>The preceding sections treat bundling as a binary choice. The general problem is an
@@ -477,7 +510,12 @@ adaptation beats the shared context, and the loss grows with N. Do not atlas
 WebP inverts; whether the request-count reduction pays on latency is a protocol
 question, not a compression question. Pack without padding unless measured chroma
 bleed on the target content demands alignment, and price that padding at roughly
-7&ndash;10 points of saving per 8 pixels.</p>
+7&ndash;10 points of saving per 8 pixels. Protocol-aware defaults: ship chunked
+atlases (about four chunks) rather than one, which keeps nearly all byte and request
+savings while adding loss resilience and bounded cache invalidation; expect the
+latency payoff to be largest on HTTP/1.1 and HTTP/3 fleets and modest on pure
+HTTP/2; and reach for the byte-bundle where pixels should not share a codec model,
+since it collapses requests at zero byte penalty.</p>
 
 <h2 class="refs-head">References</h2>
 <div class="refs">
@@ -506,7 +544,8 @@ https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html
     # the paper IS the site landing page
     (ROOT / "docs" / "index.html").write_text(html, encoding="utf-8")
     # content canaries
-    for canary in ["Table 1.", "Figure 1.", "Figure 2.", "Figure 3.", "<svg",
+    for canary in ["Table 1.", "Table 2.", "Figure 1.", "Figure 2.", "Figure 3.",
+                   "Figure 4.", "<svg",
                    "atlas_emoji_100.png", "Abstract", "References",
                    "background-position", "object-view-box", "Cache-Control"]:
         assert canary in html, f"CANARY FAILED: {canary}"

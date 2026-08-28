@@ -49,7 +49,7 @@ def main():
     med = {(s["profile"], s["proto"], s["cls"], s["n"], s["cond"]): s["median_ms"]
            for s in summary}
     print(f"\n{'profile':10}{'proto':6}{'cls':7}{'n':>4} {'individ':>9} {'atlas1':>8} "
-          f"{'atlas4':>8} {'speedup':>8}")
+          f"{'atlas4':>8} {'bundle':>8} {'atl-x':>6} {'bun-x':>6}")
     for profile in ["localhost", "fast", "cell4g", "slow3g", "lossy4g"]:
         for proto in ["h1", "h2", "h3"]:
             for cls in ["emoji", "photos"]:
@@ -57,10 +57,12 @@ def main():
                     i = med.get((profile, proto, cls, n, "individual"))
                     a1 = med.get((profile, proto, cls, n, "atlas1"))
                     a4 = med.get((profile, proto, cls, n, "atlas4"))
+                    bb = med.get((profile, proto, cls, n, "bundlebin"))
                     if i is None or a1 is None:
                         continue
                     print(f"{profile:10}{proto:6}{cls:7}{n:>4} {i:>9.0f} {a1:>8.0f} "
-                          f"{a4 if a4 else 0:>8.0f} {i/a1:>7.1f}x")
+                          f"{a4 if a4 else 0:>8.0f} {bb if bb else 0:>8.0f} "
+                          f"{i/a1:>5.1f}x {i/bb if bb else 0:>5.1f}x")
 
 
 if __name__ == "__main__":
