@@ -31,6 +31,25 @@ w_m * peak decoded memory, subject to quality >= target.
   files + CSS map. Cost model calibrated from E3.1-E3.4 measured curves. Greedy:
   cadence-partition first, similarity-cluster within cadence, then k chosen by J(k).
 
+## P1b: method upgrades to widen savings across all codecs (added 2026-08-28)
+- E3.6 Byte-bundle condition: concatenate the N individually-encoded files into ONE
+  binary resource + JSON index; client slices the ArrayBuffer and decodes each via
+  createImageBitmap/blob. Keeps per-image codec adaptation (no shared-model penalty,
+  no quality coupling) while still collapsing N requests into 1. By construction its
+  bytes equal the individual condition minus nothing; it can never lose bytes and
+  still wins latency. The right baseline-beater for WebP-on-photos and all lossless
+  content. Add as a condition to the network study pages.
+- E3.7 Layout variants: vertical-strip atlas (1 tile per scanline row-band) should
+  recover PNG's per-scanline filter adaptation (PNG negative may flip positive);
+  16px-aligned cell sizes (72->80) stop DCT blocks straddling tiles for JPEG/WebP;
+  2D similarity placement (Hilbert-order clusters) matches AVIF superblock-local
+  adaptation better than 1D row-major order.
+- E3.8 Encoder-side spatial adaptivity inside one atlas: libaom delta-q / ROI maps
+  (avifenc/aom --deltaq-mode) to restore per-region quantization that atlasing takes
+  away; JPEG XL patches for repeated elements in icon sets.
+- E3.9 Cross-file dictionary compression as another bundling axis: tar of PNGs +
+  Brotli/zstd (shared window across files) vs PNG atlas vs individual PNGs.
+
 ## P2
 - Phase 3 original items: display-mechanism timing comparison, decoded-memory profile,
   lazy-loading vs atlas below-the-fold, bleed/padding quality study (needs a
