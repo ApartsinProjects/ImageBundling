@@ -338,6 +338,22 @@ on palette size, is the robust default there); and for these alpha-bearing asset
 is structurally disqualified, so the operative comparison is PNG versus WebP, both of
 which the strip atlas improves.</p>
 <div class='tablewrap'><table><caption><b>Table 3.</b> Bundle bytes for 200 synthetic flat icons (fixed 12-color palette, alpha), lossless unless noted, on a clean corpus and one with 20% exact + 20% near-duplicate tiles. Lossless bundles are byte-exact (palette conversion verified identical after decode); the JPEG row is the matched-SSIM-0.97 grid atlas. Smaller is better.</caption><thead><tr><th>bundle</th><th>clean 24px</th><th>clean 48px</th><th>dup 24px</th><th>dup 48px</th></tr></thead><tbody><tr><td>WebP-lossless strip</td><td>6,966</td><td>13,580</td><td>5,422</td><td>10,606</td></tr><tr><td>PNG shared-palette strip</td><td>10,900</td><td>23,089</td><td>6,750</td><td>14,855</td></tr><tr><td>PNG strip (RGBA)</td><td>18,636</td><td>38,598</td><td>17,802</td><td>37,906</td></tr><tr><td>WebP-lossless grid</td><td>7,780</td><td>15,290</td><td>7,618</td><td>14,910</td></tr><tr><td>JPEG atlas (matched SSIM 0.97)</td><td>53,266</td><td>122,387</td><td>51,953</td><td>117,377</td></tr></tbody></table></div>
+<p>Two further use cases confirm where WebP wins on realistic content. Product-catalog
+thumbnails, which sit on white backgrounds, bundle far better than the generic
+full-frame photos of Section&nbsp;5: at equal WebP quality (per-tile SSIM matched within
+0.006) a 100-thumbnail atlas saves 17.8% at 48&nbsp;px, 14.0% at 64&nbsp;px, and still
+6.7% at 112&nbsp;px, all positive, because the homogeneous white field nearly removes
+the shared-segment penalty that drives generic photos negative. Avatar walls add the
+duplicate dimension: a comment thread of 200 slots drawn from a heavy-tailed popularity
+distribution resolves to about 45 unique faces, and an atlas of the uniques (with many
+coordinate-map entries pointing at repeats) saves 26% under WebP and 50% under JPEG at
+32&nbsp;px versus serving the unique files individually. The lossy codecs do not
+recover the duplication on their own, an atlas of all 200 slots is 5.0x the size of the
+unique atlas, so deduplication must be explicit at the coordinate-map level. A
+methodological note accompanies these: when the atlas and individual arms reach nearly
+identical per-tile quality, as they do on homogeneous thumbnails, matched-SSIM byte
+interpolation becomes unstable and equal-quality byte comparison is the reliable
+measurement.</p>
 <h3>7.4&nbsp;&nbsp;The optimizer</h3>
 <p>These rules are implemented as a command-line tool (<code>tools/atlas_optimizer.py</code>
 in the study repository): it folds exact duplicates into shared coordinates,

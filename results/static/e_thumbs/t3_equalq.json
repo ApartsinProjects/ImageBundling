@@ -1,0 +1,42 @@
+[
+ {
+  "size": 48,
+  "atlas": 48130,
+  "individual": 58546,
+  "saving_pct": 17.8,
+  "ssim_atlas": 0.9915,
+  "ssim_indiv": 0.9907
+ },
+ {
+  "size": 64,
+  "atlas": 60622,
+  "individual": 70504,
+  "saving_pct": 14.0,
+  "ssim_atlas": 0.9837,
+  "ssim_indiv": 0.9893
+ },
+ {
+  "size": 80,
+  "atlas": 101434,
+  "individual": 112682,
+  "saving_pct": 10.0,
+  "ssim_atlas": 0.9873,
+  "ssim_indiv": 0.9865
+ },
+ {
+  "size": 96,
+  "atlas": 118898,
+  "individual": 129824,
+  "saving_pct": 8.4,
+  "ssim_atlas": 0.9803,
+  "ssim_indiv": 0.9866
+ },
+ {
+  "size": 112,
+  "atlas": 166752,
+  "individual": 178650,
+  "saving_pct": 6.7,
+  "ssim_atlas": 0.9853,
+  "ssim_indiv": 0.9847
+ }
+]

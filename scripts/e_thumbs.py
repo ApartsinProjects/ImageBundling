@@ -78,10 +78,11 @@ def crop_back(dec, coords, size):
 
 
 def matched_saving(tiles, fmt, target=0.97):
-    """Interpolated atlas-vs-individual saving at SSIM target for a lossy fmt."""
+    """Interpolated atlas-vs-individual saving at SSIM target for a lossy fmt.
+    Dense ladder + bracket check: returns saving only if BOTH curves span the target."""
     size = tiles[0].shape[0]
     pa, pi = [], []
-    for q in (40, 65, 90):
+    for q in (20, 35, 50, 60, 70, 80, 90, 95):
         ek = {"quality": q} if fmt == "WEBP" else {"quality": q, "optimize": True}
         if fmt == "WEBP":
             ek["method"] = 6
@@ -153,7 +154,10 @@ def main():
             ac, ic, sc = matched_saving(slot_tiles, fmt)
             emit(test="T4", size=size, fmt=fmt, slots=200, unique_used=n_unique_used,
                  atlas_uniques=au, individual_uniques=iu, saving_dedup_pct=su,
-                 atlas_all200=ac, individual_all200=ic, saving_nodedup_pct=sc)
+                 atlas_all200=ac, individual_all200=ic, saving_nodedup_pct=sc,
+                 # does the codec dedup on its own? all-200 atlas / uniques atlas.
+                 # ~1.0 = codec dedups; ~200/uniques = it does not.
+                 all200_over_uniques=round(ac / au, 2) if au and ac else None)
 
     json.dump(rows, (OUT / "results.json").open("w"), indent=1)
     (OUT / "results.jsonl").write_text("\n".join(json.dumps(r) for r in rows))

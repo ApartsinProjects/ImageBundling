@@ -1,0 +1,148 @@
+[
+ {
+  "test": "T3",
+  "size": 48,
+  "n": 100,
+  "fmt": "WEBP",
+  "atlas": 26298,
+  "individual": 34521,
+  "saving_pct": 23.8
+ },
+ {
+  "test": "T3",
+  "size": 48,
+  "n": 100,
+  "fmt": "JPEG",
+  "atlas": 49531,
+  "individual": 80918,
+  "saving_pct": 38.8
+ },
+ {
+  "test": "T3",
+  "size": 64,
+  "n": 100,
+  "fmt": "WEBP",
+  "atlas": 48831,
+  "individual": 44742,
+  "saving_pct": -9.1
+ },
+ {
+  "test": "T3",
+  "size": 64,
+  "n": 100,
+  "fmt": "JPEG",
+  "atlas": 46716,
+  "individual": 77462,
+  "saving_pct": 39.7
+ },
+ {
+  "test": "T3",
+  "size": 80,
+  "n": 100,
+  "fmt": "WEBP",
+  "atlas": 63473,
+  "individual": 73976,
+  "saving_pct": 14.2
+ },
+ {
+  "test": "T3",
+  "size": 80,
+  "n": 100,
+  "fmt": "JPEG",
+  "atlas": 109984,
+  "individual": 141887,
+  "saving_pct": 22.5
+ },
+ {
+  "test": "T3",
+  "size": 96,
+  "n": 100,
+  "fmt": "WEBP",
+  "atlas": 88891,
+  "individual": 83544,
+  "saving_pct": -6.4
+ },
+ {
+  "test": "T3",
+  "size": 96,
+  "n": 100,
+  "fmt": "JPEG",
+  "atlas": 149014,
+  "individual": 181012,
+  "saving_pct": 17.7
+ },
+ {
+  "test": "T3",
+  "size": 112,
+  "n": 100,
+  "fmt": "WEBP",
+  "atlas": 110408,
+  "individual": 121689,
+  "saving_pct": 9.3
+ },
+ {
+  "test": "T3",
+  "size": 112,
+  "n": 100,
+  "fmt": "JPEG",
+  "atlas": 210234,
+  "individual": 242265,
+  "saving_pct": 13.2
+ },
+ {
+  "test": "T4",
+  "size": 32,
+  "fmt": "WEBP",
+  "slots": 200,
+  "unique_used": 43,
+  "atlas_uniques": 8842,
+  "individual_uniques": 12000,
+  "saving_dedup_pct": 26.3,
+  "atlas_all200": 44163,
+  "individual_all200": 60333,
+  "saving_nodedup_pct": 26.8,
+  "all200_over_uniques": 4.99
+ },
+ {
+  "test": "T4",
+  "size": 32,
+  "fmt": "JPEG",
+  "slots": 200,
+  "unique_used": 43,
+  "atlas_uniques": 13072,
+  "individual_uniques": 25886,
+  "saving_dedup_pct": 49.5,
+  "atlas_all200": 65739,
+  "individual_all200": 127362,
+  "saving_nodedup_pct": 48.4,
+  "all200_over_uniques": 5.03
+ },
+ {
+  "test": "T4",
+  "size": 48,
+  "fmt": "WEBP",
+  "slots": 200,
+  "unique_used": 48,
+  "atlas_uniques": 20300,
+  "individual_uniques": 23672,
+  "saving_dedup_pct": 14.2,
+  "atlas_all200": 91599,
+  "individual_all200": 110727,
+  "saving_nodedup_pct": 17.3,
+  "all200_over_uniques": 4.51
+ },
+ {
+  "test": "T4",
+  "size": 48,
+  "fmt": "JPEG",
+  "slots": 200,
+  "unique_used": 48,
+  "atlas_uniques": 29676,
+  "individual_uniques": 44388,
+  "saving_dedup_pct": 33.1,
+  "atlas_all200": 135003,
+  "individual_all200": 197773,
+  "saving_nodedup_pct": 31.7,
+  "all200_over_uniques": 4.55
+ }
+]
