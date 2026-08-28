@@ -1,0 +1,34 @@
+{
+	auto_https disable_redirects
+	local_certs
+	servers :8441 {
+		protocols h1
+	}
+	servers :8442 {
+		protocols h1 h2
+	}
+	servers :8443 {
+		protocols h1 h2 h3
+	}
+}
+
+https://:8441 {
+	tls internal
+	root * /root/www
+	file_server
+	header Cache-Control "no-store"
+}
+
+https://:8442 {
+	tls internal
+	root * /root/www
+	file_server
+	header Cache-Control "no-store"
+}
+
+https://:8443 {
+	tls internal
+	root * /root/www
+	file_server
+	header Cache-Control "no-store"
+}
