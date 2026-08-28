@@ -1,0 +1,74 @@
+[
+ {
+  "class": "photos",
+  "n": 1,
+  "codec": "jpeg",
+  "quality": 80,
+  "mode": "individual",
+  "pad": 0,
+  "bytes_total": 10986,
+  "bytes_per_tile": 10986.0,
+  "ssim_mean": 0.9968115178866608,
+  "ssim_min": 0.9968115178866608,
+  "ssim_p10": 0.9968115178866608,
+  "enc_s": 0.012,
+  "dec_s": 0.007,
+  "ssims": [
+   0.99681
+  ]
+ },
+ {
+  "class": "photos",
+  "n": 1,
+  "codec": "jpeg",
+  "quality": 80,
+  "mode": "atlas",
+  "pad": 0,
+  "bytes_total": 10986,
+  "bytes_per_tile": 10986.0,
+  "ssim_mean": 0.9968115178866608,
+  "ssim_min": 0.9968115178866608,
+  "ssim_p10": 0.9968115178866608,
+  "enc_s": 0.001,
+  "dec_s": 0.0,
+  "ssims": [
+   0.99681
+  ]
+ },
+ {
+  "class": "photos",
+  "n": 1,
+  "codec": "avif",
+  "quality": 50,
+  "mode": "individual",
+  "pad": 0,
+  "bytes_total": 4845,
+  "bytes_per_tile": 4845.0,
+  "ssim_mean": 0.9749091952540937,
+  "ssim_min": 0.9749091952540937,
+  "ssim_p10": 0.9749091952540937,
+  "enc_s": 0.087,
+  "dec_s": 0.011,
+  "ssims": [
+   0.97491
+  ]
+ },
+ {
+  "class": "photos",
+  "n": 1,
+  "codec": "avif",
+  "quality": 50,
+  "mode": "atlas",
+  "pad": 0,
+  "bytes_total": 4845,
+  "bytes_per_tile": 4845.0,
+  "ssim_mean": 0.9749091952540937,
+  "ssim_min": 0.9749091952540937,
+  "ssim_p10": 0.9749091952540937,
+  "enc_s": 0.035,
+  "dec_s": 0.002,
+  "ssims": [
+   0.97491
+  ]
+ }
+]

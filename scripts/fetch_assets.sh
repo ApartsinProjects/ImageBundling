@@ -20,7 +20,7 @@ EOF
 }
 
 count=0
-for cp in $(python_gen); do
+for cp in $(python_gen | tr -d '\r'); do
   [ $count -ge 520 ] && break
   f="$EMOJI_DIR/$cp.png"
   if [ -s "$f" ]; then count=$((count+1)); continue; fi
