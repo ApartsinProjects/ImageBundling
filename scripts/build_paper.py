@@ -245,8 +245,13 @@ binary decision, the report formulates atlas construction as an optimization pro
 partition a page's image set into bundles, and order tiles within each bundle, to
 minimize a cost combining bytes per deploy under cache invalidation, load latency for
 the target protocol and network, and decoded memory, subject to a per-tile quality
-floor. A companion network study measures the end-to-end timing effect across HTTP/1.1,
-HTTP/2, and HTTP/3 under emulated network conditions on the same testbed.</p></div>
+floor. An ordering-and-partition study calibrates the optimizer's levers: cluster-pure
+bundles save 3 percentage points for lossless flat art, and for collections with
+repeated tiles, a similarity-sorted atlas dedupes copies inside the codec's matching
+window, cutting PNG bytes by 17&ndash;18% at a 21.6% duplicate rate, a saving
+separately-served files cannot reach on any protocol. A companion network study
+measures the end-to-end timing effect across HTTP/1.1, HTTP/2, and HTTP/3 under
+emulated network conditions on the same testbed.</p></div>
 
 <h2>1&nbsp;&nbsp;Introduction</h2>
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -410,17 +415,40 @@ memory,</p>
 <p style="text-indent:0">subject to a per-tile quality floor, where
 E[bytes]&nbsp;=&nbsp;&Sigma;<sub>j</sub>&nbsp;[1&nbsp;&minus;&nbsp;&Pi;<sub>i&isin;B<sub>j</sub></sub>(1&nbsp;&minus;&nbsp;p<sub>i</sub>)]&nbsp;&middot;&nbsp;bytes(B<sub>j</sub>)
 prices whole-bundle cache invalidation. The measured curves of Sections&nbsp;5
-and&nbsp;6 supply the byte and latency terms; three further measurements calibrate the
-remaining degrees of freedom. First, within-bundle tile ordering: packing visually
-similar tiles adjacently changes what the codec's spatial context can exploit, and is
-evaluated by re-encoding identical tile sets under filename, random, luminance-sorted,
-mean-color-sorted, cluster-grouped, and greedy nearest-neighbor orders. Second, the
-chunk count k trades overhead amortization against invalidation blast radius and
-parallelism; J(k) is measured directly on the testbed. Third, cadence grouping assigns
-tiles with correlated update probabilities to the same bundle, which lowers E[bytes]
-at fixed k. The deliverable is an atlas-optimizer tool that takes a directory of
-images with a manifest of update rates and quality targets and emits the partition,
-per-bundle codec, atlas files, and CSS coordinate map.</p>
+and&nbsp;6 supply the byte and latency terms; a dedicated ordering-and-partition study
+calibrates the remaining degrees of freedom.</p>
+<h3>7.1&nbsp;&nbsp;What ordering and partitioning are worth</h3>
+<p>The study re-encodes identical tile sets under eight within-atlas orders (source
+order, three random shuffles, luminance-sorted, mean-color-sorted, k-means
+cluster-grouped, greedy nearest-neighbor) and two 4-way partitions (random split vs
+cluster-pure split), for every in-scope codec at N&nbsp;=&nbsp;500. Three calibrated
+rules emerge. For lossy codecs, ordering is worth at most one percent: the placement
+of tiles does not recover the shared-model penalty, so the optimizer can ignore order
+for JPEG and lossy WebP and spend its freedom elsewhere. For lossless flat art, order
+and partition are real levers: source order (which groups semantically related icons)
+is already near-optimal, random shuffling costs 2&ndash;4%, and cluster-pure chunks
+beat randomly-split chunks by 3&nbsp;percentage points (lossless WebP, PNG alike),
+so same-family tiles belong in the same bundle.</p>
+<h3>7.2&nbsp;&nbsp;Duplicate exploitation</h3>
+<p>The largest partition-level effect belongs to collections containing repeated
+tiles. Real product grids repeat thumbnails freely (variant images, placeholder art,
+re-listed items); in a test set where 21.6% of tiles were exact repeats, a
+similarity-sorted atlas cut PNG bytes by 17&ndash;18% and lossless WebP bytes by
+15&ndash;16% relative to unsorted packing, turning both formats' atlas comparison
+against individual files from negative to clearly positive (+16.9% and +11.5%). The
+mechanism is windowed matching: sorting places copies within the codec's LZ window,
+which dedupes them, something separately-served files can never do, at any protocol.
+The gain applies precisely to the LZ-class codecs and scales with the duplicate rate,
+so the optimizer prices it as a measured dup-rate term: deduplicate exactly-repeated
+tiles at the coordinate-map level (many CSS entries, one atlas region), and sort
+near-duplicates adjacent so the encoder captures the rest.</p>
+<h3>7.3&nbsp;&nbsp;The optimizer</h3>
+<p>The deliverable is an atlas-optimizer tool that takes a directory of images with a
+manifest of update rates and quality targets and emits the partition, per-bundle
+codec, atlas files, and CSS coordinate map: cadence-partition first, then group by
+family within cadence (Section&nbsp;7.1), collapse exact duplicates into shared
+coordinates and sort near-duplicates adjacent (Section&nbsp;7.2), and choose the
+chunk count k from the measured J(k) trade-off.</p>
 
 <h2>8&nbsp;&nbsp;Practical guidance</h2>
 <p>The static study supports a codec-aware bundling rule for the deployed-everywhere
