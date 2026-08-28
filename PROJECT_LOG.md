@@ -9,7 +9,6 @@ and map where it stops paying. Plan: ANALYSIS_AND_PLAN.md.
 | 2026-08-28 | Phase 0 scout (scout/PHASE0_SCOUT.md) | Prior art mapped | n/a | No published sprite measurements under h2 or h3; AVIF container floor ~303 B vs JXL 24 B; Cloudinary refuses AVIF under 5,000 px. Planned measurements confirmed novel. |
 | 2026-08-28 | smoke1: 8 photos (224px), 5 codecs, atlas vs individual | Pipeline works | Lossless SSIM = 1.0 exactly; lossy SSIM 0.96-0.996 | AVIF atlas saved ~350 B/tile, matching its ~303 B container floor. PNG atlas slightly LARGER than individual (photos don't share PNG filter context). |
 | 2026-08-28 | smoke_inv1: atlas-of-1 invariant | PASS | atlas of 1 image byte-identical to single file (jpeg 10986 B, avif 4845 B) | Harness sound. |
-
 | 2026-08-28 | phase1_emoji full sweep (368 rows) | AVIF atlas >=60% saved at n=500, SSIM 0.97; JPEG/JXL ~26%; lossless negative (jxl_ll -35%) | audit clean; invariants pass | Savings scale with container-overhead ratio; lossless atlasing hurts |
 | 2026-08-28 | phase1_photos full sweep (368 rows) | AVIF 5.8%, JXL 7.1%, JPEG 3.0%, WebP -8.5% at n=500, SSIM 0.97 | audit clean | 224px tiles gain little; WebP atlasing net-negative on photos |
 
