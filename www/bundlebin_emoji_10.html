@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><script>performance.setResourceTimingBufferSize(4096)</script><style>body{margin:0;display:flex;flex-wrap:wrap}.tile{width:72px;height:72px}</style></head><body><script>const READY = (async () => {const resp = await fetch('bundle_emoji_10.bin');const buf = await resp.arrayBuffer();const offs = [[0, 1266], [1266, 1046], [2312, 690], [3002, 988], [3990, 868], [4858, 880], [5738, 890], [6628, 1202], [7830, 1212], [9042, 1416]];await Promise.all(offs.map(async ([o, l]) => {  const url = URL.createObjectURL(    new Blob([buf.slice(o, o + l)], {type: 'image/webp'}));  const im = new Image(); im.className = 'tile'; im.src = url;  document.body.appendChild(im);  await im.decode();}));})();</script>
+<script>
+window.__done = (async () => {
+  await READY;
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const mark = performance.now();
+  const resources = performance.getEntriesByType('resource')
+    .filter(e => e.name.match(/\.(webp|png|jpg|bin)$/))
+    .map(e => ({name: e.name.split('/').pop(), transferSize: e.transferSize,
+                encodedBodySize: e.encodedBodySize, protocol: e.nextHopProtocol,
+                dur: e.duration}));
+  return {allVisibleMs: mark, resources, nRendered: document.querySelectorAll('.tile').length};
+})();
+</script>
+</body></html>

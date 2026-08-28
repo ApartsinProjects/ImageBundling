@@ -3,154 +3,210 @@
   "cls": "emoji",
   "n": 10,
   "cond": "individual",
-  "encoded_bytes": 7205,
+  "encoded_bytes": 10458,
   "files": 10
  },
  {
   "cls": "emoji",
   "n": 10,
+  "cond": "bundlebin",
+  "encoded_bytes": 10458,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 10,
   "cond": "atlas1",
-  "encoded_bytes": 4328,
+  "encoded_bytes": 8968,
   "files": 1
  },
  {
   "cls": "emoji",
   "n": 50,
   "cond": "individual",
-  "encoded_bytes": 35146,
+  "encoded_bytes": 43792,
   "files": 50
  },
  {
   "cls": "emoji",
   "n": 50,
+  "cond": "bundlebin",
+  "encoded_bytes": 43792,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 50,
   "cond": "atlas1",
-  "encoded_bytes": 19065,
+  "encoded_bytes": 36230,
   "files": 1
  },
  {
   "cls": "emoji",
   "n": 50,
   "cond": "atlas4",
-  "encoded_bytes": 20067,
+  "encoded_bytes": 37180,
   "files": 4
  },
  {
   "cls": "emoji",
   "n": 200,
   "cond": "individual",
-  "encoded_bytes": 149443,
+  "encoded_bytes": 188814,
   "files": 200
  },
  {
   "cls": "emoji",
   "n": 200,
+  "cond": "bundlebin",
+  "encoded_bytes": 188814,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 200,
   "cond": "atlas1",
-  "encoded_bytes": 82815,
+  "encoded_bytes": 158082,
   "files": 1
  },
  {
   "cls": "emoji",
   "n": 200,
   "cond": "atlas4",
-  "encoded_bytes": 84205,
+  "encoded_bytes": 159932,
   "files": 4
  },
  {
   "cls": "emoji",
   "n": 500,
   "cond": "individual",
-  "encoded_bytes": 356843,
+  "encoded_bytes": 438068,
   "files": 500
  },
  {
   "cls": "emoji",
   "n": 500,
+  "cond": "bundlebin",
+  "encoded_bytes": 438068,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
   "cond": "atlas1",
-  "encoded_bytes": 192887,
+  "encoded_bytes": 370804,
   "files": 1
  },
  {
   "cls": "emoji",
   "n": 500,
   "cond": "atlas4",
-  "encoded_bytes": 190980,
+  "encoded_bytes": 367638,
   "files": 4
  },
  {
   "cls": "photos",
   "n": 10,
   "cond": "individual",
-  "encoded_bytes": 49676,
+  "encoded_bytes": 82108,
   "files": 10
  },
  {
   "cls": "photos",
   "n": 10,
+  "cond": "bundlebin",
+  "encoded_bytes": 82108,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 10,
   "cond": "atlas1",
-  "encoded_bytes": 45252,
+  "encoded_bytes": 81152,
   "files": 1
  },
  {
   "cls": "photos",
   "n": 50,
   "cond": "individual",
-  "encoded_bytes": 231398,
+  "encoded_bytes": 383036,
   "files": 50
  },
  {
   "cls": "photos",
   "n": 50,
+  "cond": "bundlebin",
+  "encoded_bytes": 383036,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 50,
   "cond": "atlas1",
-  "encoded_bytes": 212303,
+  "encoded_bytes": 384020,
   "files": 1
  },
  {
   "cls": "photos",
   "n": 50,
   "cond": "atlas4",
-  "encoded_bytes": 213314,
+  "encoded_bytes": 380442,
   "files": 4
  },
  {
   "cls": "photos",
   "n": 200,
   "cond": "individual",
-  "encoded_bytes": 890127,
+  "encoded_bytes": 1461288,
   "files": 200
  },
  {
   "cls": "photos",
   "n": 200,
+  "cond": "bundlebin",
+  "encoded_bytes": 1461288,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 200,
   "cond": "atlas1",
-  "encoded_bytes": 818554,
+  "encoded_bytes": 1462304,
   "files": 1
  },
  {
   "cls": "photos",
   "n": 200,
   "cond": "atlas4",
-  "encoded_bytes": 817208,
+  "encoded_bytes": 1451318,
   "files": 4
  },
  {
   "cls": "photos",
   "n": 500,
   "cond": "individual",
-  "encoded_bytes": 2213280,
+  "encoded_bytes": 3629342,
   "files": 500
  },
  {
   "cls": "photos",
   "n": 500,
+  "cond": "bundlebin",
+  "encoded_bytes": 3629342,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 500,
   "cond": "atlas1",
-  "encoded_bytes": 2038966,
+  "encoded_bytes": 3635164,
   "files": 1
  },
  {
   "cls": "photos",
   "n": 500,
   "cond": "atlas4",
-  "encoded_bytes": 2040196,
+  "encoded_bytes": 3623176,
   "files": 4
  }
 ]

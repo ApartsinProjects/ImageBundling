@@ -1,15 +1,11 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><script>performance.setResourceTimingBufferSize(4096)</script><style>body{margin:0;display:flex;flex-wrap:wrap}.tile{width:224px;height:224px}</style></head><body><img class='tile' src='photos_10_t000.avif'><img class='tile' src='photos_10_t001.avif'><img class='tile' src='photos_10_t002.avif'><img class='tile' src='photos_10_t003.avif'><img class='tile' src='photos_10_t004.avif'><img class='tile' src='photos_10_t005.avif'><img class='tile' src='photos_10_t006.avif'><img class='tile' src='photos_10_t007.avif'><img class='tile' src='photos_10_t008.avif'><img class='tile' src='photos_10_t009.avif'><script>const PRELOAD=["photos_10_t000.avif", "photos_10_t001.avif", "photos_10_t002.avif", "photos_10_t003.avif", "photos_10_t004.avif", "photos_10_t005.avif", "photos_10_t006.avif", "photos_10_t007.avif", "photos_10_t008.avif", "photos_10_t009.avif"];</script>
+<!DOCTYPE html><html><head><meta charset='utf-8'><script>performance.setResourceTimingBufferSize(4096)</script><style>body{margin:0;display:flex;flex-wrap:wrap}.tile{width:224px;height:224px}</style></head><body><img class='tile' src='photos_10_t000.webp'><img class='tile' src='photos_10_t001.webp'><img class='tile' src='photos_10_t002.webp'><img class='tile' src='photos_10_t003.webp'><img class='tile' src='photos_10_t004.webp'><img class='tile' src='photos_10_t005.webp'><img class='tile' src='photos_10_t006.webp'><img class='tile' src='photos_10_t007.webp'><img class='tile' src='photos_10_t008.webp'><img class='tile' src='photos_10_t009.webp'><script>const READY = (async () => {await Promise.all([...document.images].map(i => i.decode()));})();</script>
 <script>
 window.__done = (async () => {
-  const t0 = performance.timeOrigin;
-  await Promise.all(PRELOAD.map(u => {
-    const im = new Image(); im.src = u;
-    return im.decode();
-  }));
+  await READY;
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const mark = performance.now();
   const resources = performance.getEntriesByType('resource')
-    .filter(e => e.name.match(/\.(avif|webp|png|jpg)$/))
+    .filter(e => e.name.match(/\.(webp|png|jpg|bin)$/))
     .map(e => ({name: e.name.split('/').pop(), transferSize: e.transferSize,
                 encodedBodySize: e.encodedBodySize, protocol: e.nextHopProtocol,
                 dur: e.duration}));

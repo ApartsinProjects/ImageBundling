@@ -91,7 +91,11 @@ def decode(data):
 # ---------------------------------------------------------------- assets
 
 def load_tiles(cls, n):
-    d = ASSETS / cls
+    """Class name may carry a resize suffix: 'photos112' loads 'photos' at 112x112."""
+    import re
+    m = re.fullmatch(r"([a-z]+?)(\d+)", cls)
+    resize = int(m.group(2)) if m and not (ASSETS / cls).exists() else None
+    d = ASSETS / (m.group(1) if resize else cls)
     files = sorted(d.iterdir())[:n]
     if len(files) < n:
         raise SystemExit(f"only {len(files)} assets in {d}, need {n}")
@@ -102,7 +106,10 @@ def load_tiles(cls, n):
             im = im.convert("RGBA")
             bg = Image.new("RGBA", im.size, (255, 255, 255, 255))
             im = Image.alpha_composite(bg, im)
-        tiles.append(np.asarray(im.convert("RGB")))
+        im = im.convert("RGB")
+        if resize:
+            im = im.resize((resize, resize), Image.LANCZOS)
+        tiles.append(np.asarray(im))
     shapes = {t.shape for t in tiles}
     if len(shapes) != 1:
         raise SystemExit(f"mixed tile shapes in {cls}: {shapes}")

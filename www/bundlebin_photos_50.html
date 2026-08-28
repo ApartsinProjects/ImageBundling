@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><script>performance.setResourceTimingBufferSize(4096)</script><style>body{margin:0;display:flex;flex-wrap:wrap}.tile{width:224px;height:224px}</style></head><body><script>const READY = (async () => {const resp = await fetch('bundle_photos_50.bin');const buf = await resp.arrayBuffer();const offs = [[0, 8308], [8308, 8368], [16676, 9204], [25880, 4742], [30622, 4832], [35454, 7816], [43270, 10764], [54034, 10554], [64588, 7002], [71590, 10518], [82108, 6212], [88320, 10170], [98490, 8656], [107146, 10688], [117834, 11888], [129722, 4956], [134678, 2408], [137086, 8706], [145792, 6144], [151936, 3720], [155656, 6034], [161690, 3864], [165554, 6144], [171698, 4686], [176384, 6380], [182764, 4458], [187222, 13390], [200612, 7664], [208276, 7782], [216058, 6212], [222270, 18740], [241010, 8910], [249920, 5660], [255580, 5912], [261492, 10518], [272010, 14292], [286302, 1008], [287310, 13390], [300700, 7464], [308164, 12968], [321132, 6220], [327352, 3894], [331246, 11830], [343076, 12012], [355088, 2162], [357250, 8052], [365302, 4008], [369310, 3988], [373298, 4292], [377590, 5446]];await Promise.all(offs.map(async ([o, l]) => {  const url = URL.createObjectURL(    new Blob([buf.slice(o, o + l)], {type: 'image/webp'}));  const im = new Image(); im.className = 'tile'; im.src = url;  document.body.appendChild(im);  await im.decode();}));})();</script>
+<script>
+window.__done = (async () => {
+  await READY;
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const mark = performance.now();
+  const resources = performance.getEntriesByType('resource')
+    .filter(e => e.name.match(/\.(webp|png|jpg|bin)$/))
+    .map(e => ({name: e.name.split('/').pop(), transferSize: e.transferSize,
+                encodedBodySize: e.encodedBodySize, protocol: e.nextHopProtocol,
+                dur: e.duration}));
+  return {allVisibleMs: mark, resources, nRendered: document.querySelectorAll('.tile').length};
+})();
+</script>
+</body></html>
