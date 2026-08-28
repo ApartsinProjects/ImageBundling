@@ -17,7 +17,7 @@ RESULTS.mkdir(exist_ok=True)
 
 image = (
     modal.Image.from_registry("pytorch/pytorch:2.4.0-cuda12.4-cudnn9-devel", add_python="3.11")
-    .pip_install("pillow", "pillow-jxl-plugin", "numpy")
+    .pip_install("pillow", "pillow-jxl-plugin", "pillow-avif-plugin", "numpy")
     .add_local_file("E:/Projects/ImageBudnling/scripts/e31_cloud.py", "/app/script.py")
     .add_local_file("E:/Projects/ImageBudnling/scripts/assets_bundle.zip", "/app/assets_bundle.zip")
     .add_local_file("E:/Projects/ImageBudnling/scripts/static_study.py", "/app/static_study.py")

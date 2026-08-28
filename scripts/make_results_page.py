@@ -17,8 +17,9 @@ SHORT = {"avif": "AVIF", "jpeg": "JPEG", "jxl": "JPEG XL", "webp": "WebP",
          "png": "PNG", "webp_ll": "WebP-ll", "jxl_ll": "JXL-ll"}
 
 
-def bar_chart(rows, cls, target, pad, panel_label=""):
-    """Grouped bar chart: savings% per codec (x) with one bar per N (shade ramp)."""
+def bar_chart(rows, cls, target, pad, panel_label="", group_by="codec"):
+    """Grouped bar chart of savings%. group_by='codec': codec groups, N-shaded bars.
+    group_by='n': N groups, codec-colored bars."""
     vals = {}
     for r in rows:
         lossless = r["ssim_target"] is None
@@ -31,11 +32,24 @@ def bar_chart(rows, cls, target, pad, panel_label=""):
         return ""
     codecs = [c for c in FAMS if any(k[0] == c for k in vals)]
     ns = sorted({k[1] for k in vals})
-    W, H, ML, MB, MT, MR = 520, 300, 56, 46, 16, 96
-    ymin = min(0, min(vals.values())) - 3
+    if group_by == "n":
+        groups = [(n, [(c, vals.get((c, n))) for c in codecs]) for n in ns]
+        glabels = [f"N={n}" for n in ns]
+        color_of = {c: COLORS.get(c, "#333") for c in codecs}
+        legend_items = [(SHORT.get(c, c), COLORS.get(c, "#333"), "line") for c in codecs]
+        MRLEG = 96
+    else:
+        groups = [(c, [(n, vals.get((c, n))) for n in ns]) for c in codecs]
+        glabels = [SHORT.get(c, c) for c in codecs]
+        color_of = None
+        legend_items = [(f"N={n}", NSHADES.get(n, "#333"), "rect") for n in ns]
+        MRLEG = 96
+    W, H, ML, MB, MT, MR = 520, 300, 56, 46, 16, MRLEG
+    ymin = min(0, min(v for v in vals.values())) - 3
     ymax = max(vals.values()) + 3
-    gw = (W - ML - MR) / len(codecs)
-    bw = min(11.0, (gw - 10) / len(ns))
+    gw = (W - ML - MR) / len(groups)
+    nbars = max(len(m) for _, m in groups)
+    bw = min(13.0, (gw - 10) / nbars)
 
     def Y(s):
         return (H - MB) - (H - MB - MT) * (s - ymin) / (ymax - ymin)
@@ -49,21 +63,22 @@ def bar_chart(rows, cls, target, pad, panel_label=""):
         out.append(f'<line x1="{ML}" y1="{Y(g):.0f}" x2="{W-MR}" y2="{Y(g):.0f}" stroke="#eee"/>'
                    f'<text x="{ML-6}" y="{Y(g)+4:.0f}" font-size="10" text-anchor="end" '
                    f'fill="#5a626c">{g}</text>')
-    for gi, codec in enumerate(codecs):
-        x0 = ML + gi * gw + (gw - bw * len(ns)) / 2
-        for ni, n in enumerate(ns):
-            s = vals.get((codec, n))
+    for gi, (gkey, members) in enumerate(groups):
+        x0 = ML + gi * gw + (gw - bw * len(members)) / 2
+        for mi, (mkey, s) in enumerate(members):
             if s is None:
                 continue
-            x = x0 + ni * bw
+            fill = color_of[mkey] if group_by == "n" else NSHADES.get(mkey, "#333")
+            x = x0 + mi * bw
             y0, y1 = Y(max(0, s)), Y(min(0, s))
             out.append(f'<rect x="{x:.1f}" y="{y0:.1f}" width="{bw-1.5:.1f}" '
-                       f'height="{max(0.5, y1-y0):.1f}" fill="{NSHADES.get(n, "#333")}"/>')
+                       f'height="{max(0.5, y1-y0):.1f}" fill="{fill}"/>')
         out.append(f'<text x="{ML+gi*gw+gw/2:.0f}" y="{H-MB+16}" font-size="10" '
-                   f'text-anchor="middle" fill="#5a626c">{SHORT.get(codec, codec)}</text>')
+                   f'text-anchor="middle" fill="#5a626c">{glabels[gi]}</text>')
     out.append(f'<line x1="{ML}" y1="{Y(0):.0f}" x2="{W-MR}" y2="{Y(0):.0f}" stroke="#999"/>')
+    xlabel = "images per bundle" if group_by == "n" else "codec"
     out.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-8}" font-size="11" text-anchor="middle" '
-               f'fill="#111418">codec</text>')
+               f'fill="#111418">{xlabel}</text>')
     out.append(f'<text x="14" y="{(MT+H-MB)/2:.0f}" font-size="11" text-anchor="middle" '
                f'fill="#111418" transform="rotate(-90 14 {(MT+H-MB)/2:.0f})">'
                f'bytes saved by atlasing (%)</text>')
@@ -71,12 +86,12 @@ def bar_chart(rows, cls, target, pad, panel_label=""):
         out.append(f'<text x="{ML+6}" y="{MT+12}" font-size="12" font-weight="bold" '
                    f'fill="#111418">{panel_label}</text>')
     lx, ly, lh = W - MR + 12, MT + 6, 17
-    out.append(f'<rect x="{lx-6}" y="{ly-12}" width="{MR-14}" height="{len(ns)*lh+16}" '
-               f'fill="#fff" stroke="#d1d4d8"/>')
-    for i, n in enumerate(ns):
+    out.append(f'<rect x="{lx-6}" y="{ly-12}" width="{MR-14}" '
+               f'height="{len(legend_items)*lh+16}" fill="#fff" stroke="#d1d4d8"/>')
+    for i, (label, color, _) in enumerate(legend_items):
         yy = ly + i * lh
-        out.append(f'<rect x="{lx}" y="{yy-7}" width="12" height="10" fill="{NSHADES.get(n, "#333")}"/>'
-                   f'<text x="{lx+18}" y="{yy+2}" font-size="10" fill="#111418">N={n}</text>')
+        out.append(f'<rect x="{lx}" y="{yy-7}" width="12" height="10" fill="{color}"/>'
+                   f'<text x="{lx+16}" y="{yy+2}" font-size="9" fill="#111418">{label}</text>')
     out.append('</svg>')
     return "".join(out)
 

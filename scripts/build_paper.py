@@ -101,11 +101,13 @@ def main():
                 "flat-art tiles and (b) 224px photographic thumbnails. Bar shade encodes "
                 "the number of bundled images N. Bars below zero mean the atlas is larger "
                 "than the same tiles as individual files.</figcaption></figure>")
-    chart_e = svg_chart(load("phase1_emoji"), "emoji", 0.97, 0, "(a) flat art, 72px")
-    chart_p = svg_chart(load("phase1_photos"), "photos", 0.97, 0, "(b) photos, 224px")
+    chart_e = bar_chart(load("phase1_emoji"), "emoji", 0.97, 0,
+                        "(a) flat art, 72px", group_by="n")
+    chart_p = bar_chart(load("phase1_photos"), "photos", 0.97, 0,
+                        "(b) photos, 224px", group_by="n")
     fig_charts = (f"<figure>{chart_e}{chart_p}"
-                  "<figcaption><b>Figure 3.</b> The same savings as Figure 2 plotted "
-                  "against image count N (log axis), one line per codec: (a) 72px flat "
+                  "<figcaption><b>Figure 3.</b> The same savings as Figure 2 grouped "
+                  "by image count N, one codec-colored bar per group: (a) 72px flat "
                   "art, (b) 224px photographic thumbnails. Savings grow with N and "
                   "saturate near N&nbsp;=&nbsp;200, once hundreds of per-file container "
                   "overheads have collapsed into one; the per-codec ordering follows the "

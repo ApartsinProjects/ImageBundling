@@ -8,6 +8,10 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, "/app")
+try:
+    import pillow_avif  # noqa: F401  (registers AVIF when Pillow lacks native support)
+except ImportError:
+    pass
 
 zipfile.ZipFile("/app/assets_bundle.zip").extractall("/assets")
 print("assets extracted:",
