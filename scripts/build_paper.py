@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from make_results_page import svg_chart  # noqa: E402
+from make_results_page import bar_chart, svg_chart  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -18,6 +18,8 @@ body{font-family:"Charter","Iowan Old Style","Source Serif Pro",Georgia,"Times N
  color:#111418;background:#fff;max-width:720px;margin:2.5rem auto;padding:0 1rem;
  font-size:11pt;line-height:1.55;text-align:justify;hyphens:auto}
 code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f4f5f7;font-size:9.5pt}
+pre{padding:.5rem .8rem;overflow-x:auto;text-align:left;line-height:1.4;margin:.7rem 0}
+pre+p{text-indent:0}
 h1{font-size:19pt;font-weight:600;text-align:center;line-height:1.25;margin:0 0 .4rem}
 .authors{text-align:center;font-size:10.5pt;color:#2c3138;margin-bottom:.2rem}
 .venue{text-align:center;font-size:9.5pt;color:#5a626c;margin-bottom:1.6rem}
@@ -91,14 +93,23 @@ def main():
                  f"while {emoji_ex['n']} HTTP requests become one. Each tile is displayed "
                  f"with CSS <code>background-position</code>.</figcaption></figure>")
 
-    chart_e = svg_chart(load("phase1_emoji"), "emoji", 0.97, 0)
-    chart_p = svg_chart(load("phase1_photos"), "photos", 0.97, 0)
+    bars_e = bar_chart(load("phase1_emoji"), "emoji", 0.97, 0, "(a) flat art, 72px")
+    bars_p = bar_chart(load("phase1_photos"), "photos", 0.97, 0, "(b) photos, 224px")
+    fig_bars = (f"<figure>{bars_e}{bars_p}"
+                "<figcaption><b>Figure 2.</b> Bytes saved by atlasing per codec at matched "
+                "per-tile SSIM 0.97 (lossless codecs compared exactly), for (a) 72px "
+                "flat-art tiles and (b) 224px photographic thumbnails. Bar shade encodes "
+                "the number of bundled images N. Bars below zero mean the atlas is larger "
+                "than the same tiles as individual files.</figcaption></figure>")
+    chart_e = svg_chart(load("phase1_emoji"), "emoji", 0.97, 0, "(a) flat art, 72px")
+    chart_p = svg_chart(load("phase1_photos"), "photos", 0.97, 0, "(b) photos, 224px")
     fig_charts = (f"<figure>{chart_e}{chart_p}"
-                  "<figcaption><b>Figure 2.</b> Savings from atlasing versus image count N "
-                  "(log axis) per codec at matched SSIM 0.97, for 72px flat art (top) and "
-                  "224px photo thumbnails (bottom). The flat-art savings track each "
-                  "codec's fixed per-file container overhead; photo savings are bounded "
-                  "by the small overhead-to-content ratio at 224px.</figcaption></figure>")
+                  "<figcaption><b>Figure 3.</b> The same savings as Figure 2 plotted "
+                  "against image count N (log axis), one line per codec: (a) 72px flat "
+                  "art, (b) 224px photographic thumbnails. Savings grow with N and "
+                  "saturate near N&nbsp;=&nbsp;200, once hundreds of per-file container "
+                  "overheads have collapsed into one; the per-codec ordering follows the "
+                  "per-codec container floors.</figcaption></figure>")
 
     html = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -159,13 +170,59 @@ regime [8]. No published measurement quantifies image atlasing under HTTP/2 or H
 and no codec-by-tile-size atlasing sweep at matched quality exists; texture-atlas
 practice in game engines addresses GPU sampling, not codec efficiency [9].</p>
 
-<h2>3&nbsp;&nbsp;Measurement method</h2>
-<h3>3.1&nbsp;&nbsp;Assets and packing</h3>
+<h2>3&nbsp;&nbsp;The atlas serving model</h2>
+<h3>3.1&nbsp;&nbsp;Rendering a tile from an atlas in HTML</h3>
+<p>A bundled page references one image resource and displays each tile by cropping a
+window into it. Four standard mechanisms cover every deployment context. The classic and
+universal one positions the atlas behind a fixed-size element as a background:</p>
+<pre>&lt;div class="tile" style="background-image:url(atlas.avif);
+     background-position:-144px -216px"&gt;&lt;/div&gt;
+/* .tile has width:72px; height:72px */</pre>
+<p>The element shows the 72x72 region whose top-left corner sits at (144,&nbsp;216);
+<code>background-size</code> rescales the whole atlas when display size differs from
+stored size. Chromium additionally supports cropping a real <code>&lt;img&gt;</code>
+element, which preserves alt text, native lazy loading, and
+<code>fetchpriority</code>:</p>
+<pre>&lt;img src="atlas.avif" style="width:72px;height:72px;
+     object-view-box:xywh(144px 216px 72px 72px)"&gt;</pre>
+<p>Where a real image element is needed cross-browser, a fixed-size wrapper with
+<code>overflow:hidden</code> around a negatively-offset <code>&lt;img&gt;</code> gives
+the same window, and SVG gives it declaratively
+(<code>&lt;svg viewBox="144 216 72 72"&gt;&lt;image href="atlas.avif"/&gt;</code>).
+Canvas completes the set for programmatic UIs:
+<code>ctx.drawImage(atlas, 144, 216, 72, 72, dx, dy, 72, 72)</code> blits any region
+after a single decode. In every mechanism the browser fetches and decodes the atlas
+once, holds one decoded copy, and paints windows into it; per-tile cost is a paint, not
+a decode. The experiments in Section&nbsp;6 use <code>background-position</code>, the
+mechanism with universal support.</p>
+<h3>3.2&nbsp;&nbsp;Delivery, caching, and memory</h3>
+<p>An atlas changes the unit of caching from the tile to the bundle. With standard
+immutable content-addressed URLs (<code>atlas.3fe2a1.avif</code>,
+<code>Cache-Control: immutable</code>), an unchanged atlas costs zero requests on a warm
+cache, and the decode-once property still applies. The cost appears on content change:
+editing one tile invalidates the whole bundle, so the expected re-download per deploy
+grows with bundle size. Splitting the collection into k chunked atlases bounds this
+blast radius at 1/k of the collection while retaining nearly all of the byte and
+request savings (Section&nbsp;5, Table&nbsp;1: four chunks price within one percentage
+point of one atlas), which makes chunking the practical default for collections that
+update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
+weekly seasonal art in another) further confines invalidation to the chunk that
+actually changed.</p>
+<p>The second resource to budget is decoded memory: a decoded atlas occupies
+width&nbsp;x&nbsp;height&nbsp;x&nbsp;4 bytes regardless of its encoded size, so a
+4096x4096 atlas holds 64&nbsp;MB of RGBA for a 300&nbsp;KB transfer. Individual images
+decode lazily and can be evicted per tile; an atlas is decoded and resident as a unit
+while any tile is visible. Chunking bounds this cost the same way it bounds
+invalidation, and below-the-fold chunks combine with lazy loading so off-screen tiles
+cost neither bytes nor memory.</p>
+
+<h2>4&nbsp;&nbsp;Measurement method</h2>
+<h3>4.1&nbsp;&nbsp;Assets and packing</h3>
 <p>Two deterministic asset classes: 520 Twemoji 72x72 flat-art tiles (alpha composited
 over white) and 520 photographic 224x224 thumbnails. Tiles are packed row-major into a
 near-square grid; a padding variant edge-replicates each tile by 8 or 16 pixels. All
 conditions consume identical source pixels.</p>
-<h3>3.2&nbsp;&nbsp;Codecs and matched-quality protocol</h3>
+<h3>4.2&nbsp;&nbsp;Codecs and matched-quality protocol</h3>
 <p>Five codec families (libjpeg-turbo JPEG, WebP, AVIF, JPEG&nbsp;XL, PNG; WebP and
 JPEG&nbsp;XL also lossless) encode each condition at a quality ladder q &isin;
 {{30,50,65,80,90}}. Per-tile quality is measured as luma SSIM after cropping the tile
@@ -177,7 +234,7 @@ value is reported as a lower bound. Three invariants validate the harness: lossl
 conditions score SSIM exactly 1.0; an atlas of one image is byte-identical to the
 individual file; padding never reduces atlas bytes.</p>
 
-<h2>4&nbsp;&nbsp;Static results: bytes at matched quality</h2>
+<h2>5&nbsp;&nbsp;Static results: bytes at matched quality</h2>
 {fig_atlas}
 <p>Table 1 reports the saving from atlasing at SSIM 0.97 across both classes. Three
 regularities organize the table. First, savings scale with the
@@ -189,6 +246,7 @@ and saturate near N&nbsp;=&nbsp;200: amortization is essentially complete once h
 of per-file overheads collapse into one. Third, the same 500 tiles that save 60% at 72
 pixels save 5.8% at 224 pixels: tile size, not image count, is the dominant variable.</p>
 {table1}
+{fig_bars}
 <p>Atlasing is not free where per-image adaptation matters. Every lossless codec loses
 from atlasing at N&nbsp;&ge;&nbsp;200, and lossless JPEG&nbsp;XL loses 35&ndash;44%:
 its modular mode fits palettes and context models per image, and one global model over
@@ -204,7 +262,7 @@ SSIM 0.97, the best individually-served option (WebP, 240 KB) is more than twice
 size of the AVIF atlas (114 KB). A deployment that adopts atlasing without changing
 codec, or AVIF without atlasing, captures less than half of the available saving.</p>
 
-<h2>5&nbsp;&nbsp;Network study design</h2>
+<h2>6&nbsp;&nbsp;Network study design</h2>
 <p>Byte savings are protocol-independent; timing effects are not. The companion testbed
 serves both conditions from a Caddy server inside WSL2 with three protocol endpoints
 (HTTP/1.1, HTTP/2, HTTP/3 on QUIC), shapes real packets with <code>tc netem</code>
@@ -219,7 +277,7 @@ protocols, and five network profiles (localhost floor; 100 Mbit/20 ms; 9 Mbit/60
 1.6 Mbit/150 ms; 9 Mbit/60 ms with 1% loss), eight cold loads per cell. Results are
 reported in the next revision of this report.</p>
 
-<h2>6&nbsp;&nbsp;Practical guidance</h2>
+<h2>7&nbsp;&nbsp;Practical guidance</h2>
 <p>The static study supports a codec-aware bundling rule. Atlas small lossy assets:
 icon-class tiles gain 26&ndash;60% at matched quality under every DCT-family codec, and
 AVIF gains most. Do not atlas lossless assets: per-image adaptation beats the shared
@@ -254,10 +312,12 @@ https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html
     out = ROOT / "docs" / "paper.html"
     out.write_text(html, encoding="utf-8")
     # content canaries
-    for canary in ["Table 1.", "Figure 1.", "Figure 2.", "<svg", "atlas_emoji_100.png",
-                   "Abstract", "References"]:
+    for canary in ["Table 1.", "Figure 1.", "Figure 2.", "Figure 3.", "<svg",
+                   "atlas_emoji_100.png", "Abstract", "References",
+                   "background-position", "object-view-box", "Cache-Control"]:
         assert canary in html, f"CANARY FAILED: {canary}"
-    assert html.count("<svg") >= 2, "CANARY FAILED: expected 2 charts"
+    assert html.count("<svg") >= 4, "CANARY FAILED: expected 4 charts"
+    assert html.count("aria-label") >= 4, "CANARY FAILED: chart accessibility labels"
     print(f"wrote {out} ({len(html):,} bytes), canaries pass")
 
 
