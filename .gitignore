@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .venv/
 scratch/
+
+# smoke-test and superseded intermediate runs (not paper content)
+results/network/smoke_*/
+results/static/*_smoke/
+results/static/audit_stdout.txt
+results/static/e31_dedup_results.jsonl
+results/network/phase2v2/
