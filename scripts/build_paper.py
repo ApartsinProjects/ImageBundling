@@ -105,8 +105,7 @@ def main():
 <title>Image Bundling Revisited</title><style>{CSS}</style></head><body>
 <h1>Image Bundling Revisited: Atlasing Small Web Images under Modern Codecs and Protocols</h1>
 <div class="authors">Alexander Apartsin</div>
-<div class="venue">MPCode Technical Report &middot; August 2026 &middot;
-<a href="https://github.com/ApartsinProjects/ImageBundling">github.com/ApartsinProjects/ImageBundling</a></div>
+<div class="venue">MPCode Technical Report &middot; 2001</div>
 
 <div class="abstract"><div class="ahead">Abstract</div>
 <p>Web pages routinely load tens to hundreds of small images; the median mobile page
