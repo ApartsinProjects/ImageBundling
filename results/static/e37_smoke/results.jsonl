@@ -1,0 +1,32 @@
+{"cls": "emoji", "n": 40, "exp": "A_strip", "codec": "png", "cond": "individual", "bytes": 68952}
+{"cls": "emoji", "n": 40, "exp": "A_strip", "codec": "png", "cond": "grid", "bytes": 63086}
+{"cls": "emoji", "n": 40, "exp": "A_strip", "codec": "png", "cond": "strip", "bytes": 54762}
+{"cls": "emoji", "n": 40, "exp": "A_strip", "codec": "png", "cond": "strip_kmeans", "bytes": 57107}
+{"cls": "emoji", "n": 40, "exp": "C_serp", "codec": "png", "q": null, "cond": "rowmajor_kmeans", "bytes": 64416}
+{"cls": "emoji", "n": 40, "exp": "C_serp", "codec": "png", "q": null, "cond": "serpentine_kmeans", "bytes": 64341}
+{"cls": "emoji", "n": 40, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "rowmajor_kmeans", "bytes": 26488}
+{"cls": "emoji", "n": 40, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "serpentine_kmeans", "bytes": 26358}
+{"cls": "emoji", "n": 40, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "rowmajor_kmeans", "bytes": 30288}
+{"cls": "emoji", "n": 40, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "serpentine_kmeans", "bytes": 30088}
+{"cls": "photos", "n": 36, "exp": "A_strip", "codec": "png", "cond": "individual", "bytes": 2540894}
+{"cls": "photos", "n": 36, "exp": "A_strip", "codec": "png", "cond": "grid", "bytes": 2645039}
+{"cls": "photos", "n": 36, "exp": "A_strip", "codec": "png", "cond": "strip", "bytes": 2542717}
+{"cls": "photos", "n": 36, "exp": "A_strip", "codec": "png", "cond": "strip_kmeans", "bytes": 2545995}
+{"cls": "photos", "n": 36, "exp": "C_serp", "codec": "png", "q": null, "cond": "rowmajor_kmeans", "bytes": 2651473}
+{"cls": "photos", "n": 36, "exp": "C_serp", "codec": "png", "q": null, "cond": "serpentine_kmeans", "bytes": 2650874}
+{"cls": "photos", "n": 36, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "rowmajor_kmeans", "bytes": 1640280}
+{"cls": "photos", "n": 36, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "serpentine_kmeans", "bytes": 1639896}
+{"cls": "photos", "n": 36, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "rowmajor_kmeans", "bytes": 285164}
+{"cls": "photos", "n": 36, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "serpentine_kmeans", "bytes": 286050}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "jpeg", "q": 50, "pad": 0, "cell": 72, "bytes": 27637, "ssim": 0.95407}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "jpeg", "q": 80, "pad": 0, "cell": 72, "bytes": 45677, "ssim": 0.97736}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "jpeg", "q": 50, "pad": 4, "cell": 80, "bytes": 30478, "ssim": 0.95709}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "jpeg", "q": 80, "pad": 4, "cell": 80, "bytes": 50379, "ssim": 0.97797}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "jpeg", "q": 50, "pad": 8, "cell": 88, "bytes": 31994, "ssim": 0.95435}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "jpeg", "q": 80, "pad": 8, "cell": 88, "bytes": 51838, "ssim": 0.9775}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "webp", "q": 50, "pad": 0, "cell": 72, "bytes": 19856, "ssim": 0.97144}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "webp", "q": 80, "pad": 0, "cell": 72, "bytes": 29948, "ssim": 0.98911}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "webp", "q": 50, "pad": 4, "cell": 80, "bytes": 21720, "ssim": 0.97662}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "webp", "q": 80, "pad": 4, "cell": 80, "bytes": 32620, "ssim": 0.98926}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "webp", "q": 50, "pad": 8, "cell": 88, "bytes": 22410, "ssim": 0.97178}
+{"cls": "emoji", "n": 40, "exp": "B_align", "codec": "webp", "q": 80, "pad": 8, "cell": 88, "bytes": 33110, "ssim": 0.98862}

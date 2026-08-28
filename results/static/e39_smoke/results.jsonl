@@ -1,0 +1,38 @@
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "png", "cond": "individual", "bytes": 54491}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "png", "cond": "bundle_raw", "bytes": 54491}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "png", "cond": "bundle_brotli11", "bytes": 53035}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "png", "cond": "bundle_zstd19long", "bytes": 53026}
+{"cls": "emoji", "n": 30, "exp": "E311b", "codec": "png", "cond": "perfile_zstd_traineddict", "bytes": 68986, "dict_bytes": 44641}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp", "cond": "individual", "bytes": 27728}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp", "cond": "bundle_raw", "bytes": 27728}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp", "cond": "bundle_brotli11", "bytes": 26917}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp", "cond": "bundle_zstd19long", "bytes": 26952}
+{"cls": "emoji", "n": 30, "exp": "E311b", "codec": "webp", "cond": "perfile_zstd_traineddict", "bytes": 34866, "dict_bytes": 21998}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp_ll", "cond": "individual", "bytes": 23326}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp_ll", "cond": "bundle_raw", "bytes": 23326}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp_ll", "cond": "bundle_brotli11", "bytes": 22249}
+{"cls": "emoji", "n": 30, "exp": "E39", "codec": "webp_ll", "cond": "bundle_zstd19long", "bytes": 22289}
+{"cls": "emoji", "n": 30, "exp": "E311b", "codec": "webp_ll", "cond": "perfile_zstd_traineddict", "bytes": 27892, "dict_bytes": 14526}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "png", "cond": "individual", "bytes": 1912375}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "png", "cond": "bundle_raw", "bytes": 1912375}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "png", "cond": "bundle_brotli11", "bytes": 1888559}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "png", "cond": "bundle_zstd19long", "bytes": 1893853}
+{"cls": "photos", "n": 28, "exp": "E311b", "codec": "png", "cond": "perfile_zstd_traineddict", "bytes": 1915677, "dict_bytes": 112640}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp", "cond": "individual", "bytes": 209914}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp", "cond": "bundle_raw", "bytes": 209914}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp", "cond": "bundle_brotli11", "bytes": 209919}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp", "cond": "bundle_zstd19long", "bytes": 209929}
+{"cls": "photos", "n": 28, "exp": "E311b", "codec": "webp", "cond": "perfile_zstd_traineddict", "bytes": 220334, "dict_bytes": 112640}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp_ll", "cond": "individual", "bytes": 1215844}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp_ll", "cond": "bundle_raw", "bytes": 1215844}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp_ll", "cond": "bundle_brotli11", "bytes": 1215849}
+{"cls": "photos", "n": 28, "exp": "E39", "codec": "webp_ll", "cond": "bundle_zstd19long", "bytes": 1215286}
+{"cls": "photos", "n": 28, "exp": "E311b", "codec": "webp_ll", "cond": "perfile_zstd_traineddict", "bytes": 1213887, "dict_bytes": 112640}
+{"exp": "E311a", "k_changed": 5, "strategy": "atlas1_full", "bytes": 196440}
+{"exp": "E311a", "k_changed": 5, "strategy": "atlas4_changed_chunks", "bytes": 93266}
+{"exp": "E311a", "k_changed": 5, "strategy": "bundle_zstd_patch", "bytes": 25123}
+{"exp": "E311a", "k_changed": 5, "strategy": "individual_changed_files", "bytes": 25150}
+{"exp": "E311a", "k_changed": 25, "strategy": "atlas1_full", "bytes": 146416}
+{"exp": "E311a", "k_changed": 25, "strategy": "atlas4_changed_chunks", "bytes": 145436}
+{"exp": "E311a", "k_changed": 25, "strategy": "bundle_zstd_patch", "bytes": 121246}
+{"exp": "E311a", "k_changed": 25, "strategy": "individual_changed_files", "bytes": 126560}
