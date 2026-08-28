@@ -49,6 +49,19 @@ w_m * peak decoded memory, subject to quality >= target.
   away; JPEG XL patches for repeated elements in icon sets.
 - E3.9 Cross-file dictionary compression as another bundling axis: tar of PNGs +
   Brotli/zstd (shared window across files) vs PNG atlas vs individual PNGs.
+- E3.10 Atlas-tuned encoder configs (fair under matched-quality): AVIF via avifenc/aom
+  screen-content tools (--enable-intrabc, palette) for flat atlases + deltaq/ROI maps;
+  JXL smaller modular group size (128px groups restore per-region tree/palette
+  adaptation, direct fix candidate for the jxl_ll -44%) + patches; PNG strip layout +
+  sorted order (E3.1 shows sorted photo order +18%, VERIFY first); WebP max partitions.
+- E3.11 Trained shared dictionaries: (a) Compression Dictionary Transport
+  (Use-As-Dictionary, shipped in Chrome): serve updated atlas delta-compressed against
+  the cached previous atlas -> cache-invalidation blast radius collapses to the delta;
+  (b) zstd dictionary trained on the tile-file corpus for byte-bundles; (c) trained-
+  codebook texture codecs (Basis Universal) for the WebGL path.
+- E3.1 follow-up: verify the PNG+sorted-photos +18% locally (re-encode independently,
+  compare against individual files); if real, PNG atlasing flips positive with a
+  packing rule, no format change.
 
 ## P2
 - Phase 3 original items: display-mechanism timing comparison, decoded-memory profile,
