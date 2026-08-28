@@ -405,6 +405,25 @@ shared cost (tables) is large and its adaptive coupling is weak; lossless flat a
 hugely because a shared palette is pure fixed-cost saving; photographic WebP loses under
 the default encoder because the shared four-segment allocation is adaptive state, and
 recovers once adaptive deblocking neutralizes the artifact that sharing introduced.</p>
+<p>The spectrum has a hard end. Individual serving costs
+&Sigma;<sub>i</sub>&nbsp;(H<sub>i</sub>&nbsp;+&nbsp;C<sub>i</sub>(x<sub>i</sub>)), where
+H<sub>i</sub> is a file's fixed overhead and C<sub>i</sub> its compressed payload under
+state tuned to that image; an atlas costs
+H&nbsp;+&nbsp;C(x<sub>1</sub>..x<sub>N</sub>;&thinsp;&theta;) with one shared header and
+one shared adaptive state &theta;. Bundling wins only when the saved overhead
+&Sigma;<sub>i</sub>&nbsp;H<sub>i</sub>&nbsp;&minus;&nbsp;H exceeds the cost of replacing
+each image's optimal state by the shared &theta;. For large, unrelated photographs
+H<sub>i</sub>/C<sub>i</sub>&nbsp;&rarr;&nbsp;0: almost no fixed overhead remains to
+amortize while any adaptation penalty persists, so no single browser-decodable pixel
+atlas can beat independently-optimized files for every heterogeneous corpus. This is the
+boundary the measurements trace, JPEG's advantage falling from +30% at 56&nbsp;px to +3%
+at 224&nbsp;px, and it is why the byte-bundle, which shares only transport, is the
+principled zero-coupling endpoint rather than a fallback. The open direction is to
+decouple adaptation spatially while keeping single-resource amortization: WebP's lossless
+format already carries a spatially-varying entropy image (meta-prefix groups), and
+aligning that grid to atlas tile boundaries, which today requires instrumenting the
+encoder, is the most promising route to a lossless photographic atlas that wins on
+bytes.</p>
 <h3>6.2&nbsp;&nbsp;Cache invalidation and delta updates</h3>
 <p>Bundling's one structural liability is cache granularity: editing a single tile
 invalidates the whole bundle, so a naive re-deploy re-downloads everything. Formally, a
