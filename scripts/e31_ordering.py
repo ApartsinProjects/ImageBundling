@@ -112,6 +112,8 @@ def main():
     ap.add_argument("--orders", default="baseline,random_0,random_1,random_2,luma,"
                                         "meancolor,kmeans,greedy_nn")
     ap.add_argument("--chunks", type=int, default=4)
+    ap.add_argument("--dedup", action="store_true",
+                    help="drop pixel-identical duplicate tiles before the study")
     args = ap.parse_args()
 
     outdir = ROOT / "results" / "static" / args.tag
@@ -121,6 +123,16 @@ def main():
 
     for cls in args.classes.split(","):
         tiles, _ = ss.load_tiles(cls, args.n)
+        if args.dedup:
+            import hashlib
+            seen, uniq = set(), []
+            for t in tiles:
+                k = hashlib.md5(t.tobytes()).hexdigest()
+                if k not in seen:
+                    seen.add(k)
+                    uniq.append(t)
+            print(f"dedup: {len(tiles)} -> {len(uniq)} unique tiles", flush=True)
+            tiles = uniq
         orders = orderings(tiles, which)
         for codec, q in (ss.parse_codec(s) for s in args.codecs.split(",")):
             for oname, idx in orders.items():

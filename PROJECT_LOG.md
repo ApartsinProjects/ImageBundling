@@ -12,8 +12,11 @@ and map where it stops paying. Plan: ANALYSIS_AND_PLAN.md.
 | 2026-08-28 | phase1_emoji full sweep (368 rows) | AVIF atlas >=60% saved at n=500, SSIM 0.97; JPEG/JXL ~26%; lossless negative (jxl_ll -35%) | audit clean; invariants pass | Savings scale with container-overhead ratio; lossless atlasing hurts |
 | 2026-08-28 | phase1_photos full sweep (368 rows) | AVIF 5.8%, JXL 7.1%, JPEG 3.0%, WebP -8.5% at n=500, SSIM 0.97 | audit clean | 224px tiles gain little; WebP atlasing net-negative on photos |
 | 2026-08-28 | audit_negatives (A reproduce, B grid-slack, C identical-copies control, D raw signs) | PASS: all stored rows byte-identical on re-encode; slack negligible; negatives persist raw | positive control: every codec with long-range refs shows 84-99% saving on 100 identical tiles | Negatives real. New insight: cross-image redundancy gain requires LZ/IntraBC-class codecs; intra-only transform codecs (JPEG, lossy WebP) cannot deduplicate distant identical content (1.9-3.4% on identical photos) |
+| 2026-08-28 | E3.1 ordering/partition study (Modal, 160 rows) | Ordering worth <=1% for lossy; kmeans chunks +3pp for lossless; photos sorted-order '+18%' traced to 108/500 pixel-identical Picsum duplicates deduped by LZ windows | dup-rate measured by pixel md5; LZ-only signature matches | Similarity ordering does not fix lossy atlas penalty; duplicate exploitation is the real (reframed) win; dedup re-run in flight |
 
 ## Bugs found and fixed
+- gpu2modal modal_runner autowrap --run built an incomplete argparse.Namespace (missing allow_duplicate/watchdog/fanout fields); patched in the skill and pushed.
+- Photo asset set: Picsum seeded URLs return a finite pool; 108/500 tiles pixel-identical. Affects similarity-ordering interpretation; dedup flag added to e31_ordering.
 - fetch_assets.sh: Python on Windows emits CRLF; `$(python_gen)` kept trailing `\r` in
   codepoints, corrupting every emoji URL except the last line. Fix: `| tr -d '\r'`.
 
