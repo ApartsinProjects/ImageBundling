@@ -74,6 +74,24 @@ th{background:#f5f5f5}td:first-child,th:first-child{text-align:left}.neg{color:#
 <p class="muted">Each point compares one atlas (grid, pad=0 unless noted) against the same
 tiles as individual files, at equal interpolated per-tile SSIM. Positive = atlas smaller.
 <a href="https://github.com/ApartsinProjects/ImageBundling">Repo and methodology</a>.</p>"""]
+
+    ex_file = ROOT / "docs" / "img" / "examples.json"
+    if ex_file.exists():
+        html.append("<h2>What an atlas looks like</h2>")
+        for ex in json.load(ex_file.open()):
+            s = ex["stats"]
+            cap = "; ".join(
+                f"{k}: {v['individual']:,} B as {ex['n']} files vs {v['atlas']:,} B "
+                f"as one atlas ({v['saving_pct']:+.1f}%)" for k, v in s.items())
+            html.append(
+                f'<figure style="margin:1rem 0"><img src="img/{ex["file"]}" '
+                f'style="max-width:100%;height:auto;border:1px solid #ddd" '
+                f'alt="{ex["n"]}-tile {ex["class"]} atlas">'
+                f'<figcaption class="muted">{ex["n"]} {ex["class"]} tiles '
+                f'({ex["tile"]} px each) packed into one {ex["grid"]} grid, '
+                f'{ex["atlas_px"]} px. Same encoder settings both ways: {cap}. '
+                f'{ex["n"]} HTTP requests become 1; the page shows each tile with CSS '
+                f'background-position.</figcaption></figure>')
     for cls in classes:
         html.append(f"<h2>{cls} (SSIM target 0.97, pad 0)</h2>")
         html.append(svg_chart(rows, cls, 0.97, 0))

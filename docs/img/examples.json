@@ -1,0 +1,52 @@
+[
+ {
+  "class": "emoji",
+  "n": 100,
+  "file": "atlas_emoji_100.png",
+  "grid": "10x10",
+  "tile": "72x72",
+  "atlas_px": "720x720",
+  "stats": {
+   "AVIF q50": {
+    "individual": 71432,
+    "atlas": 39157,
+    "saving_pct": 45.2
+   },
+   "WebP q80": {
+    "individual": 87696,
+    "atlas": 73114,
+    "saving_pct": 16.6
+   },
+   "JPEG q80": {
+    "individual": 147361,
+    "atlas": 112059,
+    "saving_pct": 24.0
+   }
+  }
+ },
+ {
+  "class": "photos",
+  "n": 25,
+  "file": "atlas_photos_25.jpg",
+  "grid": "5x5",
+  "tile": "224x224",
+  "atlas_px": "1120x1120",
+  "stats": {
+   "AVIF q50": {
+    "individual": 112489,
+    "atlas": 103275,
+    "saving_pct": 8.2
+   },
+   "WebP q80": {
+    "individual": 182764,
+    "atlas": 183988,
+    "saving_pct": -0.7
+   },
+   "JPEG q80": {
+    "individual": 230864,
+    "atlas": 224987,
+    "saving_pct": 2.5
+   }
+  }
+ }
+]
