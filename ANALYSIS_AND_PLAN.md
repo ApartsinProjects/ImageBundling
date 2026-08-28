@@ -164,3 +164,14 @@ measurable claims are:
    per protocol.
 3. The **chunked-atlas middle ground** (a few bundles instead of one) may dominate both
    extremes: most of the byte savings, bounded cache-invalidation and memory cost.
+
+## 7. Phase 3 extension: optimal atlas partitioning (added 2026-08-28)
+
+Beyond the binary bundle-or-not decision, choose the partition of an image set into
+atlases that minimizes a weighted cost J combining (a) expected bytes per deploy under
+per-image update rates (whole-bundle invalidation), (b) load latency for the target
+protocol and network (parallelism vs request overhead), and (c) peak decoded memory,
+subject to a per-tile quality floor. Measured inputs: similarity-aware grouping effect
+(E3.1), J(k) chunk-count curves (E3.2), cadence-grouped partitions (E3.3), mixed-size
+packing (E3.4). Deliverable: an atlas-optimizer CLI that emits partition + per-bundle
+codec + atlas files + CSS map from a directory and a manifest (E3.5). Details: BACKLOG.md.
