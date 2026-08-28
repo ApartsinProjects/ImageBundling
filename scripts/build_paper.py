@@ -499,6 +499,18 @@ The gain applies precisely to the LZ-class codecs and scales with the duplicate 
 so the optimizer prices it as a measured dup-rate term: deduplicate exactly-repeated
 tiles at the coordinate-map level (many CSS entries, one atlas region), and sort
 near-duplicates adjacent so the encoder captures the rest.</p>
+<p>The byte-bundle has two standard-container siblings that measured byte-equivalent to
+it: JPEG abbreviated format (one shared DQT+DHT table datastream plus per-tile
+table-less scans, which recovers the ~600&nbsp;bytes-per-file of tables that constitute
+JPEG's entire atlas advantage) and animated WebP (one tile per frame, each an
+independent VP8 payload with its own tables and quantizer segments). Both keep per-tile
+encoding, so they beat the pixel atlas exactly where its shared-model coupling costs
+quality, and trail it where fixed-overhead amortization dominates; neither improves on
+the byte-bundle's bytes, but each is preferable when a single playable container or
+per-tile random access matters. This places every method on one coupling axis: what
+tiles share, transport only (byte-bundle and its container siblings), or transport plus
+tables (shared-table bundles), or the full pixel model (atlas). Savings come from
+sharing fixed costs; losses come from sharing adaptive state.</p>
 <h3>7.3&nbsp;&nbsp;The optimizer</h3>
 <p>These rules are implemented as a command-line tool (<code>tools/atlas_optimizer.py</code>
 in the study repository): it folds exact duplicates into shared coordinates,

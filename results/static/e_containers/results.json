@@ -1,0 +1,368 @@
+[
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "individual_optimized",
+  "bytes": 522466
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "individual_fixed",
+  "bytes": 692904
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "grid_atlas",
+  "bytes": 358602
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 384027,
+  "prefix": 623,
+  "save_vs_ind_opt": 26.5,
+  "save_vs_atlas": -7.1
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "webp",
+  "cond": "individual",
+  "bytes": 315924
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "webp",
+  "cond": "grid_atlas",
+  "bytes": 261124
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 50,
+  "codec": "webp",
+  "cond": "animated_webp",
+  "bytes": 326466,
+  "save_vs_ind": -3.3,
+  "save_vs_atlas": -25.0
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "individual_optimized",
+  "bytes": 750314
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "individual_fixed",
+  "bytes": 927352
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "grid_atlas",
+  "bytes": 578927
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 618475,
+  "prefix": 623,
+  "save_vs_ind_opt": 17.6,
+  "save_vs_atlas": -6.8
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "webp",
+  "cond": "individual",
+  "bytes": 452498
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "webp",
+  "cond": "grid_atlas",
+  "bytes": 381582
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "q": 80,
+  "codec": "webp",
+  "cond": "animated_webp",
+  "bytes": 462056,
+  "save_vs_ind": -2.1,
+  "save_vs_atlas": -21.1
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "individual_optimized",
+  "bytes": 2618687
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "individual_fixed",
+  "bytes": 2829542
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "grid_atlas",
+  "bytes": 2535365
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 2587517,
+  "prefix": 623,
+  "save_vs_ind_opt": 1.2,
+  "save_vs_atlas": -2.1
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "webp",
+  "cond": "individual",
+  "bytes": 1911016
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "webp",
+  "cond": "grid_atlas",
+  "bytes": 1886876
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 50,
+  "codec": "webp",
+  "cond": "animated_webp",
+  "bytes": 1915258,
+  "save_vs_ind": -0.2,
+  "save_vs_atlas": -1.5
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "individual_optimized",
+  "bytes": 3559542
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "individual_fixed",
+  "bytes": 3752587
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "grid_atlas",
+  "bytes": 3473327
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 3510562,
+  "prefix": 623,
+  "save_vs_ind_opt": 1.4,
+  "save_vs_atlas": -1.1
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "webp",
+  "cond": "individual",
+  "bytes": 2975566
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "webp",
+  "cond": "grid_atlas",
+  "bytes": 2962228
+ },
+ {
+  "cls": "photos",
+  "n": 392,
+  "q": 80,
+  "codec": "webp",
+  "cond": "animated_webp",
+  "bytes": 2979192,
+  "save_vs_ind": -0.1,
+  "save_vs_atlas": -0.6
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "individual_optimized",
+  "bytes": 759433
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "individual_fixed",
+  "bytes": 895045
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "grid_atlas",
+  "bytes": 645186
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 653020,
+  "prefix": 623,
+  "save_vs_ind_opt": 14.0,
+  "save_vs_atlas": -1.2
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "webp",
+  "cond": "individual",
+  "bytes": 620718
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "webp",
+  "cond": "grid_atlas",
+  "bytes": 583244
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 50,
+  "codec": "webp",
+  "cond": "animated_webp",
+  "bytes": 624484,
+  "save_vs_ind": -0.6,
+  "save_vs_atlas": -7.1
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "individual_optimized",
+  "bytes": 1235235
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "individual_fixed",
+  "bytes": 1364367
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "grid_atlas",
+  "bytes": 1117432
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "jpeg",
+  "cond": "shared_tables_bundle",
+  "bytes": 1122342,
+  "prefix": 623,
+  "save_vs_ind_opt": 9.1,
+  "save_vs_atlas": -0.4
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "webp",
+  "cond": "individual",
+  "bytes": 991116
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "webp",
+  "cond": "grid_atlas",
+  "bytes": 939184
+ },
+ {
+  "cls": "photos112",
+  "n": 392,
+  "q": 80,
+  "codec": "webp",
+  "cond": "animated_webp",
+  "bytes": 994810,
+  "save_vs_ind": -0.4,
+  "save_vs_atlas": -5.9
+ }
+]
