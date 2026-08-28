@@ -105,7 +105,7 @@ def main():
 <title>Image Bundling Revisited</title><style>{CSS}</style></head><body>
 <h1>Image Bundling Revisited: Atlasing Small Web Images under Modern Codecs and Protocols</h1>
 <div class="authors">Alexander Apartsin</div>
-<div class="venue">MPCode Technical Report &middot; 2001</div>
+<div class="venue">MPCode Technical Report &middot; original project MPCode 2001 &middot; revisited 2026</div>
 
 <div class="abstract"><div class="ahead">Abstract</div>
 <p>Web pages routinely load tens to hundreds of small images; the median mobile page
@@ -248,7 +248,7 @@ https://almanac.httparchive.org/en/2024/media</p>
 <p>[9] Unity Technologies. Sprites.AtlasSettings.paddingPower documentation.
 https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html</p>
 </div>
-<div class="footer">Alexander Apartsin &middot; MPCode &middot; 2001</div>
+<div class="footer">Alexander Apartsin &middot; original project MPCode 2001 &middot; revisited 2026</div>
 </body></html>"""
 
     out = ROOT / "docs" / "paper.html"

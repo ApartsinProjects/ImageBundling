@@ -12,4 +12,4 @@ AVIF, JPEG XL) and protocols (HTTP/1.1, HTTP/2, HTTP/3).
 
 ## Author
 
-Alexander Apartsin, MPCode, 2001
+Alexander Apartsin, original project MPCode 2001, revisited 2026
