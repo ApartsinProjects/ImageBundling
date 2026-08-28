@@ -1,0 +1,32 @@
+{"cls": "emoji", "n": 500, "exp": "A_strip", "codec": "png", "cond": "individual", "bytes": 826493}
+{"cls": "emoji", "n": 500, "exp": "A_strip", "codec": "png", "cond": "grid", "bytes": 873346}
+{"cls": "emoji", "n": 500, "exp": "A_strip", "codec": "png", "cond": "strip", "bytes": 754438}
+{"cls": "emoji", "n": 500, "exp": "A_strip", "codec": "png", "cond": "strip_kmeans", "bytes": 767131}
+{"cls": "emoji", "n": 500, "exp": "C_serp", "codec": "png", "q": null, "cond": "rowmajor_kmeans", "bytes": 885118}
+{"cls": "emoji", "n": 500, "exp": "C_serp", "codec": "png", "q": null, "cond": "serpentine_kmeans", "bytes": 884891}
+{"cls": "emoji", "n": 500, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "rowmajor_kmeans", "bytes": 365382}
+{"cls": "emoji", "n": 500, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "serpentine_kmeans", "bytes": 365068}
+{"cls": "emoji", "n": 500, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "rowmajor_kmeans", "bytes": 370836}
+{"cls": "emoji", "n": 500, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "serpentine_kmeans", "bytes": 370630}
+{"cls": "photos", "n": 392, "exp": "A_strip", "codec": "png", "cond": "individual", "bytes": 26344972}
+{"cls": "photos", "n": 392, "exp": "A_strip", "codec": "png", "cond": "grid", "bytes": 27713084}
+{"cls": "photos", "n": 392, "exp": "A_strip", "codec": "png", "cond": "strip", "bytes": 26378013}
+{"cls": "photos", "n": 392, "exp": "A_strip", "codec": "png", "cond": "strip_kmeans", "bytes": 26384876}
+{"cls": "photos", "n": 392, "exp": "C_serp", "codec": "png", "q": null, "cond": "rowmajor_kmeans", "bytes": 27654755}
+{"cls": "photos", "n": 392, "exp": "C_serp", "codec": "png", "q": null, "cond": "serpentine_kmeans", "bytes": 27655621}
+{"cls": "photos", "n": 392, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "rowmajor_kmeans", "bytes": 17960660}
+{"cls": "photos", "n": 392, "exp": "C_serp", "codec": "webp_ll", "q": null, "cond": "serpentine_kmeans", "bytes": 17957022}
+{"cls": "photos", "n": 392, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "rowmajor_kmeans", "bytes": 2882566}
+{"cls": "photos", "n": 392, "exp": "C_serp", "codec": "webp", "q": 80, "cond": "serpentine_kmeans", "bytes": 2882194}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "jpeg", "q": 50, "pad": 0, "cell": 72, "bytes": 358602, "ssim": 0.95709}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "jpeg", "q": 80, "pad": 0, "cell": 72, "bytes": 578927, "ssim": 0.97926}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "jpeg", "q": 50, "pad": 4, "cell": 80, "bytes": 384975, "ssim": 0.95809}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "jpeg", "q": 80, "pad": 4, "cell": 80, "bytes": 622320, "ssim": 0.97942}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "jpeg", "q": 50, "pad": 8, "cell": 88, "bytes": 401554, "ssim": 0.95733}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "jpeg", "q": 80, "pad": 8, "cell": 88, "bytes": 639997, "ssim": 0.97936}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "webp", "q": 50, "pad": 0, "cell": 72, "bytes": 250710, "ssim": 0.97484}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "webp", "q": 80, "pad": 0, "cell": 72, "bytes": 370804, "ssim": 0.98362}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "webp", "q": 50, "pad": 4, "cell": 80, "bytes": 263432, "ssim": 0.97584}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "webp", "q": 80, "pad": 4, "cell": 80, "bytes": 383962, "ssim": 0.98463}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "webp", "q": 50, "pad": 8, "cell": 88, "bytes": 268246, "ssim": 0.97534}
+{"cls": "emoji", "n": 500, "exp": "B_align", "codec": "webp", "q": 80, "pad": 8, "cell": 88, "bytes": 392656, "ssim": 0.98497}

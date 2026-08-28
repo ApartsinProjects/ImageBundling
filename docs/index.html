@@ -286,7 +286,14 @@ for JPEG and lossy WebP and spend its freedom elsewhere. For lossless flat art, 
 and partition are real levers: source order (which groups semantically related icons)
 is already near-optimal, random shuffling costs 2&ndash;4%, and cluster-pure chunks
 beat randomly-split chunks by 3&nbsp;percentage points (lossless WebP, PNG alike),
-so same-family tiles belong in the same bundle.</p>
+so same-family tiles belong in the same bundle. For PNG specifically, layout is
+decisive: packing tiles as a one-tile-wide vertical strip lets the per-scanline
+filters re-adapt at every tile boundary, turning the PNG flat-art atlas from 5.7%
+larger than individual files (grid layout) to 8.7% smaller, and lifting the photo
+atlas from &minus;5.2% to parity. Strip packing is therefore the PNG packing rule
+(chunked to respect browser image-dimension limits), while block-aligned cells are
+not worth adopting for any codec: aligning 72-pixel tiles to 80-pixel cells costs
+7% in bytes for a quality gain below measurement noise.</p>
 <h3>7.2&nbsp;&nbsp;Duplicate exploitation</h3>
 <p>The largest partition-level effect belongs to collections containing repeated
 tiles. Real product grids repeat thumbnails freely (variant images, placeholder art,
@@ -327,7 +334,13 @@ atlases (about four chunks) rather than one, which keeps nearly all byte and req
 savings while adding loss resilience and bounded cache invalidation; expect the
 latency payoff to be largest on HTTP/1.1 and HTTP/3 fleets and modest on pure
 HTTP/2; and reach for the byte-bundle where pixels should not share a codec model,
-since it collapses requests at zero byte penalty.</p>
+since it collapses requests at zero byte penalty. For update-heavy collections, serve
+bundle updates as a delta against the cached previous version (Compression Dictionary
+Transport): in a simulation replacing tiles in a 392-photo WebP bundle, a zstd delta
+against the prior bundle cost 25&nbsp;KB when 5 tiles changed and 237&nbsp;KB when 50
+changed, tracking the changed-files optimum and beating whole-atlas re-download
+(2.8&nbsp;MB) by two orders of magnitude, which makes cache invalidation, the
+structural weakness of bundling, proportional to churn rather than to bundle size.</p>
 
 <h2 class="refs-head">References</h2>
 <div class="refs">

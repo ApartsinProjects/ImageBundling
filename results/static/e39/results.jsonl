@@ -1,0 +1,42 @@
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "png", "cond": "individual", "bytes": 826493}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "png", "cond": "bundle_raw", "bytes": 826493}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "png", "cond": "bundle_brotli11", "bytes": 797257}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "png", "cond": "bundle_zstd19long", "bytes": 799125}
+{"cls": "emoji", "n": 500, "exp": "E311b", "codec": "png", "cond": "perfile_zstd_traineddict", "bytes": 811794, "dict_bytes": 112640}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp", "cond": "individual", "bytes": 438068}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp", "cond": "bundle_raw", "bytes": 438068}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp", "cond": "bundle_brotli11", "bytes": 421164}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp", "cond": "bundle_zstd19long", "bytes": 423057}
+{"cls": "emoji", "n": 500, "exp": "E311b", "codec": "webp", "cond": "perfile_zstd_traineddict", "bytes": 435907, "dict_bytes": 112640}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp_ll", "cond": "individual", "bytes": 349418}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp_ll", "cond": "bundle_raw", "bytes": 349418}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp_ll", "cond": "bundle_brotli11", "bytes": 336574}
+{"cls": "emoji", "n": 500, "exp": "E39", "codec": "webp_ll", "cond": "bundle_zstd19long", "bytes": 337846}
+{"cls": "emoji", "n": 500, "exp": "E311b", "codec": "webp_ll", "cond": "perfile_zstd_traineddict", "bytes": 349887, "dict_bytes": 112640}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "png", "cond": "individual", "bytes": 26344972}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "png", "cond": "bundle_raw", "bytes": 26344972}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "png", "cond": "bundle_brotli11", "bytes": 25957666}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "png", "cond": "bundle_zstd19long", "bytes": 25960574}
+{"cls": "photos", "n": 392, "exp": "E311b", "codec": "png", "cond": "perfile_zstd_traineddict", "bytes": 26212520, "dict_bytes": 112640}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp", "cond": "individual", "bytes": 2882762}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp", "cond": "bundle_raw", "bytes": 2882762}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp", "cond": "bundle_brotli11", "bytes": 2882774}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp", "cond": "bundle_zstd19long", "bytes": 2882837}
+{"cls": "photos", "n": 392, "exp": "E311b", "codec": "webp", "cond": "perfile_zstd_traineddict", "bytes": 2892508, "dict_bytes": 112640}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp_ll", "cond": "individual", "bytes": 16893628}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp_ll", "cond": "bundle_raw", "bytes": 16893628}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp_ll", "cond": "bundle_brotli11", "bytes": 16893681}
+{"cls": "photos", "n": 392, "exp": "E39", "codec": "webp_ll", "cond": "bundle_zstd19long", "bytes": 16870097}
+{"cls": "photos", "n": 392, "exp": "E311b", "codec": "webp_ll", "cond": "perfile_zstd_traineddict", "bytes": 16849696, "dict_bytes": 112640}
+{"exp": "E311a", "k_changed": 5, "strategy": "atlas1_full", "bytes": 2878282}
+{"exp": "E311a", "k_changed": 5, "strategy": "atlas4_changed_chunks", "bytes": 2151606}
+{"exp": "E311a", "k_changed": 5, "strategy": "bundle_zstd_patch", "bytes": 25388}
+{"exp": "E311a", "k_changed": 5, "strategy": "individual_changed_files", "bytes": 25150}
+{"exp": "E311a", "k_changed": 25, "strategy": "atlas1_full", "bytes": 2855346}
+{"exp": "E311a", "k_changed": 25, "strategy": "atlas4_changed_chunks", "bytes": 2862654}
+{"exp": "E311a", "k_changed": 25, "strategy": "bundle_zstd_patch", "bytes": 121718}
+{"exp": "E311a", "k_changed": 25, "strategy": "individual_changed_files", "bytes": 126560}
+{"exp": "E311a", "k_changed": 50, "strategy": "atlas1_full", "bytes": 2780068}
+{"exp": "E311a", "k_changed": 50, "strategy": "atlas4_changed_chunks", "bytes": 2760064}
+{"exp": "E311a", "k_changed": 50, "strategy": "bundle_zstd_patch", "bytes": 237085}
+{"exp": "E311a", "k_changed": 50, "strategy": "individual_changed_files", "bytes": 262152}
