@@ -74,6 +74,7 @@ def build_atlas(tiles):
 
 def page(fname, body, preload, ts):
     html = (f"<!DOCTYPE html><html><head><meta charset='utf-8'>"
+            f"<script>performance.setResourceTimingBufferSize(4096)</script>"
             f"<style>body{{margin:0;display:flex;flex-wrap:wrap}}"
             f".tile{{width:{ts}px;height:{ts}px}}</style></head><body>"
             f"{body}<script>const PRELOAD={json.dumps(preload)};</script>"

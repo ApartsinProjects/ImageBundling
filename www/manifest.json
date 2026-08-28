@@ -1,0 +1,156 @@
+[
+ {
+  "cls": "emoji",
+  "n": 10,
+  "cond": "individual",
+  "encoded_bytes": 7205,
+  "files": 10
+ },
+ {
+  "cls": "emoji",
+  "n": 10,
+  "cond": "atlas1",
+  "encoded_bytes": 4328,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 50,
+  "cond": "individual",
+  "encoded_bytes": 35146,
+  "files": 50
+ },
+ {
+  "cls": "emoji",
+  "n": 50,
+  "cond": "atlas1",
+  "encoded_bytes": 19065,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 50,
+  "cond": "atlas4",
+  "encoded_bytes": 20067,
+  "files": 4
+ },
+ {
+  "cls": "emoji",
+  "n": 200,
+  "cond": "individual",
+  "encoded_bytes": 149443,
+  "files": 200
+ },
+ {
+  "cls": "emoji",
+  "n": 200,
+  "cond": "atlas1",
+  "encoded_bytes": 82815,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 200,
+  "cond": "atlas4",
+  "encoded_bytes": 84205,
+  "files": 4
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "cond": "individual",
+  "encoded_bytes": 356843,
+  "files": 500
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "cond": "atlas1",
+  "encoded_bytes": 192887,
+  "files": 1
+ },
+ {
+  "cls": "emoji",
+  "n": 500,
+  "cond": "atlas4",
+  "encoded_bytes": 190980,
+  "files": 4
+ },
+ {
+  "cls": "photos",
+  "n": 10,
+  "cond": "individual",
+  "encoded_bytes": 49676,
+  "files": 10
+ },
+ {
+  "cls": "photos",
+  "n": 10,
+  "cond": "atlas1",
+  "encoded_bytes": 45252,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 50,
+  "cond": "individual",
+  "encoded_bytes": 231398,
+  "files": 50
+ },
+ {
+  "cls": "photos",
+  "n": 50,
+  "cond": "atlas1",
+  "encoded_bytes": 212303,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 50,
+  "cond": "atlas4",
+  "encoded_bytes": 213314,
+  "files": 4
+ },
+ {
+  "cls": "photos",
+  "n": 200,
+  "cond": "individual",
+  "encoded_bytes": 890127,
+  "files": 200
+ },
+ {
+  "cls": "photos",
+  "n": 200,
+  "cond": "atlas1",
+  "encoded_bytes": 818554,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 200,
+  "cond": "atlas4",
+  "encoded_bytes": 817208,
+  "files": 4
+ },
+ {
+  "cls": "photos",
+  "n": 500,
+  "cond": "individual",
+  "encoded_bytes": 2213280,
+  "files": 500
+ },
+ {
+  "cls": "photos",
+  "n": 500,
+  "cond": "atlas1",
+  "encoded_bytes": 2038966,
+  "files": 1
+ },
+ {
+  "cls": "photos",
+  "n": 500,
+  "cond": "atlas4",
+  "encoded_bytes": 2040196,
+  "files": 4
+ }
+]

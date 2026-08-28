@@ -20,21 +20,18 @@ https://localhost:8441, https://127.0.0.1:8441, https://$IP:8441 {
 	tls internal
 	root * /root/www
 	file_server
-	header Cache-Control "no-store"
 }
 
 https://localhost:8442, https://127.0.0.1:8442, https://$IP:8442 {
 	tls internal
 	root * /root/www
 	file_server
-	header Cache-Control "no-store"
 }
 
 https://localhost:8443, https://127.0.0.1:8443, https://$IP:8443 {
 	tls internal
 	root * /root/www
 	file_server
-	header Cache-Control "no-store"
 }
 EOF
 caddy stop >/dev/null 2>&1

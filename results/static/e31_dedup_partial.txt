@@ -1,0 +1,11 @@
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'baseline', 'chunks': 1, 'bytes': 27101240, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 17.25}
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'random_0', 'chunks': 1, 'bytes': 27128321, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 17.41}
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'random_1', 'chunks': 1, 'bytes': 27102863, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 17.3}
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'meancolor', 'chunks': 1, 'bytes': 27078277, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 17.22}
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'kmeans', 'chunks': 1, 'bytes': 27044823, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 17.08}
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'chunk_random', 'chunks': 4, 'bytes': 27031020, 'ssim_mean': 1.0}
+{'cls': 'photos', 'n': 500, 'codec': 'png', 'q': None, 'order': 'chunk_kmeans', 'chunks': 4, 'bytes': 27029830, 'ssim_mean': 1.0}
+{'cls': 'photos', 'n': 500, 'codec': 'webp_ll', 'q': None, 'order': 'baseline', 'chunks': 1, 'bytes': 17374894, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 107.27}
+{'cls': 'photos', 'n': 500, 'codec': 'webp_ll', 'q': None, 'order': 'random_0', 'chunks': 1, 'bytes': 17387038, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 105.01}
+{'cls': 'photos', 'n': 500, 'codec': 'webp_ll', 'q': None, 'order': 'random_1', 'chunks': 1, 'bytes': 17380956, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 103.17}
+{'cls': 'photos', 'n': 500, 'codec': 'webp_ll', 'q': None, 'order': 'meancolor', 'chunks': 1, 'bytes': 17374338, 'ssim_mean': 1.0, 'ssim_min': 1.0, 'enc_s': 106.1}

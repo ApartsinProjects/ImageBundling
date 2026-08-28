@@ -1,0 +1,6 @@
+{"profile": "slow3g", "proto": "h2", "page": "atlas1_photos_500", "rep": 0, "proto_ok": true, "allVisibleMs": 11741.699999988079, "wall_s": 11.753, "nRendered": 500, "bytes": 2039266, "nres": 1, "protocols": ["h2"]}
+{"profile": "slow3g", "proto": "h2", "page": "atlas1_photos_500", "rep": 1, "proto_ok": true, "allVisibleMs": 11853.699999988079, "wall_s": 11.88, "nRendered": 500, "bytes": 2039266, "nres": 1, "protocols": ["h2"]}
+{"profile": "slow3g", "proto": "h2", "page": "atlas1_photos_500", "rep": 2, "proto_ok": true, "allVisibleMs": 11759.600000023842, "wall_s": 11.765, "nRendered": 500, "bytes": 2039266, "nres": 1, "protocols": ["h2"]}
+{"profile": "slow3g", "proto": "h2", "page": "individual_photos_500", "rep": 0, "proto_ok": true, "allVisibleMs": 12634.5, "wall_s": 12.672, "nRendered": 500, "bytes": 2363280, "nres": 500, "protocols": ["h2"]}
+{"profile": "slow3g", "proto": "h2", "page": "individual_photos_500", "rep": 1, "proto_ok": true, "allVisibleMs": 12524.300000011921, "wall_s": 12.557, "nRendered": 500, "bytes": 2363280, "nres": 500, "protocols": ["h2"]}
+{"profile": "slow3g", "proto": "h2", "page": "individual_photos_500", "rep": 2, "proto_ok": true, "allVisibleMs": 12563.5, "wall_s": 12.603, "nRendered": 500, "bytes": 2363280, "nres": 500, "protocols": ["h2"]}

@@ -53,6 +53,109 @@ def load(tag):
                       "matched_quality_savings.json").open())
 
 
+def load_network(tag="phase2_full"):
+    f = ROOT / "results" / "network" / tag / "summary.json"
+    return json.load(f.open()) if f.exists() else None
+
+
+def network_results_html():
+    """Table 2 + Figure 4 from the network summary; empty string if not yet run."""
+    summ = load_network()
+    if not summ:
+        return ""
+    med = {(s["profile"], s["proto"], s["cls"], s["n"], s["cond"]): s["median_ms"]
+           for s in summ}
+    profiles = [("localhost", "localhost"), ("fast", "100 Mbit / 20 ms"),
+                ("cell4g", "9 Mbit / 60 ms"), ("slow3g", "1.6 Mbit / 150 ms"),
+                ("lossy4g", "9 Mbit / 60 ms / 1% loss")]
+    trows = []
+    for cls in ["emoji", "photos"]:
+        for pkey, plabel in profiles:
+            cells = []
+            for proto in ["h1", "h2", "h3"]:
+                i = med.get((pkey, proto, cls, 500, "individual"))
+                a = med.get((pkey, proto, cls, 500, "atlas1"))
+                cells.append(f"<td>{i:,.0f}</td><td>{a:,.0f}</td>"
+                             f"<td><b>{i/a:.1f}x</b></td>" if i and a
+                             else "<td>&mdash;</td>" * 3)
+            trows.append(f"<tr><td>{cls}</td><td>{plabel}</td>{''.join(cells)}</tr>")
+    table2 = ("<div class='tablewrap'><table>"
+              "<caption><b>Table 2.</b> Median time to all 500 tiles visible (ms), "
+              "individual files vs one atlas, and the atlas speedup, per protocol and "
+              "network profile (8 cold loads per cell, first load dropped; WebP-class "
+              "payload sizes).</caption>"
+              "<thead><tr><th>class</th><th>network</th>"
+              "<th>h1 ind</th><th>h1 atl</th><th>x</th>"
+              "<th>h2 ind</th><th>h2 atl</th><th>x</th>"
+              "<th>h3 ind</th><th>h3 atl</th><th>x</th></tr></thead>"
+              f"<tbody>{''.join(trows)}</tbody></table></div>")
+
+    # Figure 4: speedup bars, groups = profile, bars = protocol, panel per class
+    def panel(cls, label):
+        W, H, ML, MB, MT, MR = 520, 260, 56, 46, 16, 96
+        vals = {}
+        for pi, (pkey, _) in enumerate(profiles):
+            for proto in ["h1", "h2", "h3"]:
+                i = med.get((pkey, proto, cls, 500, "individual"))
+                a = med.get((pkey, proto, cls, 500, "atlas1"))
+                if i and a:
+                    vals[(pkey, proto)] = i / a
+        ymax = max(vals.values()) + 1
+        gw = (W - ML - MR) / len(profiles)
+        bw = min(16.0, (gw - 12) / 3)
+        pc = {"h1": "#c0392b", "h2": "#2980b9", "h3": "#8e44ad"}
+        out = [f'<svg viewBox="0 0 {W} {H}" style="max-width:100%" '
+               f'font-family="Georgia,serif" role="img" aria-label="Atlas speedup, {cls}">']
+
+        def Y(s):
+            return (H - MB) - (H - MB - MT) * s / ymax
+        for g in range(0, int(ymax) + 1, 2):
+            out.append(f'<line x1="{ML}" y1="{Y(g):.0f}" x2="{W-MR}" y2="{Y(g):.0f}" '
+                       f'stroke="#eee"/><text x="{ML-6}" y="{Y(g)+4:.0f}" font-size="10" '
+                       f'text-anchor="end" fill="#5a626c">{g}x</text>')
+        out.append(f'<line x1="{ML}" y1="{Y(0):.0f}" x2="{W-MR}" y2="{Y(0):.0f}" stroke="#999"/>')
+        for pi, (pkey, _) in enumerate(profiles):
+            x0 = ML + pi * gw + (gw - bw * 3) / 2
+            for bi, proto in enumerate(["h1", "h2", "h3"]):
+                s = vals.get((pkey, proto))
+                if not s:
+                    continue
+                out.append(f'<rect x="{x0+bi*bw:.1f}" y="{Y(s):.1f}" width="{bw-2:.1f}" '
+                           f'height="{Y(0)-Y(s):.1f}" fill="{pc[proto]}"/>')
+            short = {"localhost": "local", "fast": "fast", "cell4g": "4G",
+                     "slow3g": "3G", "lossy4g": "4G+loss"}[pkey]
+            out.append(f'<text x="{ML+pi*gw+gw/2:.0f}" y="{H-MB+16}" font-size="10" '
+                       f'text-anchor="middle" fill="#5a626c">{short}</text>')
+        out.append(f'<line x1="{ML}" y1="{Y(1):.1f}" x2="{W-MR}" y2="{Y(1):.1f}" '
+                   f'stroke="#111418" stroke-dasharray="4 3"/>')
+        out.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-8}" font-size="11" '
+                   f'text-anchor="middle" fill="#111418">network profile</text>')
+        out.append(f'<text x="14" y="{(MT+H-MB)/2:.0f}" font-size="11" text-anchor="middle" '
+                   f'fill="#111418" transform="rotate(-90 14 {(MT+H-MB)/2:.0f})">'
+                   f'atlas speedup (individual / atlas)</text>')
+        out.append(f'<text x="{ML+6}" y="{MT+12}" font-size="12" font-weight="bold" '
+                   f'fill="#111418">{label}</text>')
+        lx, ly, lh = W - MR + 12, MT + 6, 17
+        out.append(f'<rect x="{lx-6}" y="{ly-12}" width="{MR-14}" height="{3*lh+16}" '
+                   f'fill="#fff" stroke="#d1d4d8"/>')
+        for i, proto in enumerate(["h1", "h2", "h3"]):
+            yy = ly + i * lh
+            lab = {"h1": "HTTP/1.1", "h2": "HTTP/2", "h3": "HTTP/3"}[proto]
+            out.append(f'<rect x="{lx}" y="{yy-7}" width="12" height="10" fill="{pc[proto]}"/>'
+                       f'<text x="{lx+16}" y="{yy+2}" font-size="9" fill="#111418">{lab}</text>')
+        out.append('</svg>')
+        return "".join(out)
+
+    fig4 = (f"<figure>{panel('emoji', '(a) flat art, 72px, N=500')}"
+            f"{panel('photos', '(b) photos, 224px, N=500')}"
+            "<figcaption><b>Figure 4.</b> Time-to-all-tiles-visible speedup from "
+            "bundling (median individual / median single atlas) at N&nbsp;=&nbsp;500, "
+            "per protocol and network profile. The dashed line marks parity. "
+            "Multiplexing (HTTP/2/3) narrows the gap relative to HTTP/1.1 but never "
+            "closes it.</figcaption></figure>")
+    return table2 + fig4
+
+
 def main():
     rows = load("phase1_emoji") + load("phase1_photos")
     ex = json.load((ROOT / "docs" / "img" / "examples.json").open())

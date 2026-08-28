@@ -1,0 +1,4 @@
+{"cls": "photos", "n": 500, "codec": "webp_ll", "q": null, "order": "baseline", "chunks": 1, "bytes": 17374894, "ssim_mean": 1.0, "ssim_min": 1.0, "enc_s": 68.85}
+{"cls": "photos", "n": 500, "codec": "webp_ll", "q": null, "order": "kmeans", "chunks": 1, "bytes": 17373552, "ssim_mean": 1.0, "ssim_min": 1.0, "enc_s": 68.77}
+{"cls": "photos", "n": 500, "codec": "webp_ll", "q": null, "order": "chunk_random", "chunks": 4, "bytes": 17028066, "ssim_mean": 1.0}
+{"cls": "photos", "n": 500, "codec": "webp_ll", "q": null, "order": "chunk_kmeans", "chunks": 4, "bytes": 17003968, "ssim_mean": 1.0}
