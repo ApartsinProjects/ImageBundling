@@ -53,6 +53,36 @@ def load(tag):
                       "matched_quality_savings.json").open())
 
 
+def icon_table():
+    f = ROOT / "results" / "static" / "e_icons" / "results.json"
+    if not f.exists():
+        return ""
+    rows = json.load(f.open())
+    order = [("webpll_strip", "WebP-lossless strip"),
+             ("png_strip_shared_palette", "PNG shared-palette strip"),
+             ("png_strip_rgba", "PNG strip (RGBA)"),
+             ("webpll_grid", "WebP-lossless grid"),
+             ("jpeg_grid_atlas_ssim97", "JPEG atlas (matched SSIM 0.97)")]
+    trows = []
+    for cond, label in order:
+        cells = []
+        for corpus in ("clean", "dup"):
+            for size in (24, 48):
+                r = next((x for x in rows if x["cond"] == cond and
+                          x["corpus"] == corpus and x["size"] == size), None)
+                cells.append(f"<td>{r['bytes']:,}</td>" if r else "<td>&mdash;</td>")
+        trows.append(f"<tr><td>{label}</td>{''.join(cells)}</tr>")
+    return ("<div class='tablewrap'><table>"
+            "<caption><b>Table 3.</b> Bundle bytes for 200 synthetic flat icons (fixed "
+            "12-color palette, alpha), lossless unless noted, on a clean corpus and one "
+            "with 20% exact + 20% near-duplicate tiles. Lossless bundles are byte-exact "
+            "(palette conversion verified identical after decode); the JPEG row is the "
+            "matched-SSIM-0.97 grid atlas. Smaller is better.</caption>"
+            "<thead><tr><th>bundle</th><th>clean 24px</th><th>clean 48px</th>"
+            "<th>dup 24px</th><th>dup 48px</th></tr></thead>"
+            f"<tbody>{''.join(trows)}</tbody></table></div>")
+
+
 def load_network(tag="phase2v3"):
     f = ROOT / "results" / "network" / tag / "summary.json"
     return json.load(f.open()) if f.exists() else None
@@ -222,6 +252,7 @@ def main():
                   "per-codec container floors.</figcaption></figure>")
 
     net_html = network_results_html()
+    icon_html = icon_table()
     html = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Image Bundling Revisited</title><style>{CSS}</style></head><body>
@@ -511,7 +542,26 @@ per-tile random access matters. This places every method on one coupling axis: w
 tiles share, transport only (byte-bundle and its container siblings), or transport plus
 tables (shared-table bundles), or the full pixel model (atlas). Savings come from
 sharing fixed costs; losses come from sharing adaptive state.</p>
-<h3>7.3&nbsp;&nbsp;The optimizer</h3>
+<h3>7.3&nbsp;&nbsp;The winning case: flat, limited-palette art</h3>
+<p>The largest bundling wins in the whole study belong to lossless flat art, the
+content of design-system icon sets, map-marker sprites, and flag pickers. On 200
+synthetic flat icons with a small shared palette and alpha (Table&nbsp;3), a
+WebP-lossless vertical-strip atlas is the smallest option at every size, 42&ndash;68%
+below individual files and <b>7.6x smaller than the matched-quality JPEG atlas</b>: a
+lossless bundle beats the best lossy one outright, because JPEG must spend heavily to
+avoid ringing on hard edges while the lossless codecs are both smaller and pixel-exact.
+A shared-palette PNG (one pooled palette across the strip, verified byte-identical after
+decode) wins 90&ndash;97% over individual paletted PNGs when the pooled palette fits,
+and remains 4.9x smaller than the JPEG atlas. Strip layout beats grid for WebP-lossless
+at both sizes, and the duplicate-heavy corpus widens the WebP-lossless strip win from
+60% to 68% as the LZ window folds repeats. Two boundaries keep this honest: the fixed
+12-color corpus is the ideal case for shared palettes, so anti-aliased real icons with
+hundreds of colors will see a smaller palette win (WebP-lossless, which does not depend
+on palette size, is the robust default there); and for these alpha-bearing assets JPEG
+is structurally disqualified, so the operative comparison is PNG versus WebP, both of
+which the strip atlas improves.</p>
+{icon_html}
+<h3>7.4&nbsp;&nbsp;The optimizer</h3>
 <p>These rules are implemented as a command-line tool (<code>tools/atlas_optimizer.py</code>
 in the study repository): it folds exact duplicates into shared coordinates,
 partitions by cadence, lossless requirement, and tile dimensions, routes each group
@@ -576,7 +626,7 @@ https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html
     for canary in ["Table 1.", "Table 2.", "Figure 1.", "Figure 2.", "Figure 3.",
                    "Figure 4.", "<svg",
                    "atlas_emoji_100.png", "Abstract", "References",
-                   "background-position", "object-view-box", "Cache-Control"]:
+                   "background-position", "object-view-box", "Cache-Control", "Table 3."]:
         assert canary in html, f"CANARY FAILED: {canary}"
     assert html.count("<svg") >= 4, "CANARY FAILED: expected 4 charts"
     assert html.count("aria-label") >= 4, "CANARY FAILED: chart accessibility labels"

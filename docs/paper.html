@@ -319,7 +319,26 @@ per-tile random access matters. This places every method on one coupling axis: w
 tiles share, transport only (byte-bundle and its container siblings), or transport plus
 tables (shared-table bundles), or the full pixel model (atlas). Savings come from
 sharing fixed costs; losses come from sharing adaptive state.</p>
-<h3>7.3&nbsp;&nbsp;The optimizer</h3>
+<h3>7.3&nbsp;&nbsp;The winning case: flat, limited-palette art</h3>
+<p>The largest bundling wins in the whole study belong to lossless flat art, the
+content of design-system icon sets, map-marker sprites, and flag pickers. On 200
+synthetic flat icons with a small shared palette and alpha (Table&nbsp;3), a
+WebP-lossless vertical-strip atlas is the smallest option at every size, 42&ndash;68%
+below individual files and <b>7.6x smaller than the matched-quality JPEG atlas</b>: a
+lossless bundle beats the best lossy one outright, because JPEG must spend heavily to
+avoid ringing on hard edges while the lossless codecs are both smaller and pixel-exact.
+A shared-palette PNG (one pooled palette across the strip, verified byte-identical after
+decode) wins 90&ndash;97% over individual paletted PNGs when the pooled palette fits,
+and remains 4.9x smaller than the JPEG atlas. Strip layout beats grid for WebP-lossless
+at both sizes, and the duplicate-heavy corpus widens the WebP-lossless strip win from
+60% to 68% as the LZ window folds repeats. Two boundaries keep this honest: the fixed
+12-color corpus is the ideal case for shared palettes, so anti-aliased real icons with
+hundreds of colors will see a smaller palette win (WebP-lossless, which does not depend
+on palette size, is the robust default there); and for these alpha-bearing assets JPEG
+is structurally disqualified, so the operative comparison is PNG versus WebP, both of
+which the strip atlas improves.</p>
+<div class='tablewrap'><table><caption><b>Table 3.</b> Bundle bytes for 200 synthetic flat icons (fixed 12-color palette, alpha), lossless unless noted, on a clean corpus and one with 20% exact + 20% near-duplicate tiles. Lossless bundles are byte-exact (palette conversion verified identical after decode); the JPEG row is the matched-SSIM-0.97 grid atlas. Smaller is better.</caption><thead><tr><th>bundle</th><th>clean 24px</th><th>clean 48px</th><th>dup 24px</th><th>dup 48px</th></tr></thead><tbody><tr><td>WebP-lossless strip</td><td>6,966</td><td>13,580</td><td>5,422</td><td>10,606</td></tr><tr><td>PNG shared-palette strip</td><td>10,900</td><td>23,089</td><td>6,750</td><td>14,855</td></tr><tr><td>PNG strip (RGBA)</td><td>18,636</td><td>38,598</td><td>17,802</td><td>37,906</td></tr><tr><td>WebP-lossless grid</td><td>7,780</td><td>15,290</td><td>7,618</td><td>14,910</td></tr><tr><td>JPEG atlas (matched SSIM 0.97)</td><td>53,266</td><td>122,387</td><td>51,953</td><td>117,377</td></tr></tbody></table></div>
+<h3>7.4&nbsp;&nbsp;The optimizer</h3>
 <p>These rules are implemented as a command-line tool (<code>tools/atlas_optimizer.py</code>
 in the study repository): it folds exact duplicates into shared coordinates,
 partitions by cadence, lossless requirement, and tile dimensions, routes each group

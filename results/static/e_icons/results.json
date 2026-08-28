@@ -1,0 +1,250 @@
+[
+ {
+  "corpus": "clean",
+  "size": 24,
+  "n": 200,
+  "cond": "png_grid_rgba",
+  "fmt": "PNG",
+  "bytes": 19204,
+  "individual": 38166,
+  "saving_pct": 49.7
+ },
+ {
+  "corpus": "clean",
+  "size": 24,
+  "n": 200,
+  "cond": "png_strip_rgba",
+  "fmt": "PNG",
+  "bytes": 18636,
+  "individual": 38166,
+  "saving_pct": 51.2
+ },
+ {
+  "corpus": "clean",
+  "size": 24,
+  "n": 200,
+  "cond": "png_strip_shared_palette",
+  "fmt": "PNG-P",
+  "bytes": 10900,
+  "individual": 232099,
+  "saving_pct": 95.3,
+  "palette_exact": true,
+  "saving_vs_rgba": 71.4
+ },
+ {
+  "corpus": "clean",
+  "size": 24,
+  "n": 200,
+  "cond": "webpll_grid",
+  "fmt": "WEBP",
+  "bytes": 7780,
+  "individual": 17346,
+  "saving_pct": 55.1
+ },
+ {
+  "corpus": "clean",
+  "size": 24,
+  "n": 200,
+  "cond": "webpll_strip",
+  "fmt": "WEBP",
+  "bytes": 6966,
+  "individual": 17346,
+  "saving_pct": 59.8
+ },
+ {
+  "corpus": "clean",
+  "size": 24,
+  "n": 200,
+  "cond": "jpeg_grid_atlas_ssim97",
+  "fmt": "JPEG",
+  "bytes": 53266,
+  "individual": 119572,
+  "saving_pct": 55.5
+ },
+ {
+  "corpus": "clean",
+  "size": 48,
+  "n": 200,
+  "cond": "png_grid_rgba",
+  "fmt": "PNG",
+  "bytes": 36767,
+  "individual": 58855,
+  "saving_pct": 37.5
+ },
+ {
+  "corpus": "clean",
+  "size": 48,
+  "n": 200,
+  "cond": "png_strip_rgba",
+  "fmt": "PNG",
+  "bytes": 38598,
+  "individual": 58855,
+  "saving_pct": 34.4
+ },
+ {
+  "corpus": "clean",
+  "size": 48,
+  "n": 200,
+  "cond": "png_strip_shared_palette",
+  "fmt": "PNG-P",
+  "bytes": 23089,
+  "individual": 240590,
+  "saving_pct": 90.4,
+  "palette_exact": true,
+  "saving_vs_rgba": 60.8
+ },
+ {
+  "corpus": "clean",
+  "size": 48,
+  "n": 200,
+  "cond": "webpll_grid",
+  "fmt": "WEBP",
+  "bytes": 15290,
+  "individual": 23520,
+  "saving_pct": 35.0
+ },
+ {
+  "corpus": "clean",
+  "size": 48,
+  "n": 200,
+  "cond": "webpll_strip",
+  "fmt": "WEBP",
+  "bytes": 13580,
+  "individual": 23520,
+  "saving_pct": 42.3
+ },
+ {
+  "corpus": "clean",
+  "size": 48,
+  "n": 200,
+  "cond": "jpeg_grid_atlas_ssim97",
+  "fmt": "JPEG",
+  "bytes": 122387,
+  "individual": 187094,
+  "saving_pct": 34.6
+ },
+ {
+  "corpus": "dup",
+  "size": 24,
+  "n": 200,
+  "cond": "png_grid_rgba",
+  "fmt": "PNG",
+  "bytes": 18636,
+  "individual": 37507,
+  "saving_pct": 50.3
+ },
+ {
+  "corpus": "dup",
+  "size": 24,
+  "n": 200,
+  "cond": "png_strip_rgba",
+  "fmt": "PNG",
+  "bytes": 17802,
+  "individual": 37507,
+  "saving_pct": 52.5
+ },
+ {
+  "corpus": "dup",
+  "size": 24,
+  "n": 200,
+  "cond": "png_strip_shared_palette",
+  "fmt": "PNG-P",
+  "bytes": 6750,
+  "individual": 231781,
+  "saving_pct": 97.1,
+  "palette_exact": true,
+  "saving_vs_rgba": 82.0
+ },
+ {
+  "corpus": "dup",
+  "size": 24,
+  "n": 200,
+  "cond": "webpll_grid",
+  "fmt": "WEBP",
+  "bytes": 7618,
+  "individual": 17072,
+  "saving_pct": 55.4
+ },
+ {
+  "corpus": "dup",
+  "size": 24,
+  "n": 200,
+  "cond": "webpll_strip",
+  "fmt": "WEBP",
+  "bytes": 5422,
+  "individual": 17072,
+  "saving_pct": 68.2
+ },
+ {
+  "corpus": "dup",
+  "size": 24,
+  "n": 200,
+  "cond": "jpeg_grid_atlas_ssim97",
+  "fmt": "JPEG",
+  "bytes": 51953,
+  "individual": 119267,
+  "saving_pct": 56.4
+ },
+ {
+  "corpus": "dup",
+  "size": 48,
+  "n": 200,
+  "cond": "png_grid_rgba",
+  "fmt": "PNG",
+  "bytes": 36275,
+  "individual": 58367,
+  "saving_pct": 37.9
+ },
+ {
+  "corpus": "dup",
+  "size": 48,
+  "n": 200,
+  "cond": "png_strip_rgba",
+  "fmt": "PNG",
+  "bytes": 37906,
+  "individual": 58367,
+  "saving_pct": 35.1
+ },
+ {
+  "corpus": "dup",
+  "size": 48,
+  "n": 200,
+  "cond": "png_strip_shared_palette",
+  "fmt": "PNG-P",
+  "bytes": 14855,
+  "individual": 240140,
+  "saving_pct": 93.8,
+  "palette_exact": true,
+  "saving_vs_rgba": 74.5
+ },
+ {
+  "corpus": "dup",
+  "size": 48,
+  "n": 200,
+  "cond": "webpll_grid",
+  "fmt": "WEBP",
+  "bytes": 14910,
+  "individual": 23018,
+  "saving_pct": 35.2
+ },
+ {
+  "corpus": "dup",
+  "size": 48,
+  "n": 200,
+  "cond": "webpll_strip",
+  "fmt": "WEBP",
+  "bytes": 10606,
+  "individual": 23018,
+  "saving_pct": 53.9
+ },
+ {
+  "corpus": "dup",
+  "size": 48,
+  "n": 200,
+  "cond": "jpeg_grid_atlas_ssim97",
+  "fmt": "JPEG",
+  "bytes": 117377,
+  "individual": 181770,
+  "saving_pct": 35.4
+ }
+]
