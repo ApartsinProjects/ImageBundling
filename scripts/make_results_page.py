@@ -7,7 +7,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FAMS = ["jpeg", "webp", "avif", "jxl", "png", "webp_ll", "jxl_ll"]
+# Research scope limited 2026-08-28 to the universally-deployed trio (user decision):
+# JPEG, WebP (lossy+lossless), PNG. AVIF/JXL data remains in results/ but is not shown.
+FAMS = ["jpeg", "webp", "png", "webp_ll"]
 COLORS = {"jpeg": "#c0392b", "webp": "#2980b9", "avif": "#8e44ad", "jxl": "#27ae60",
           "png": "#7f8c8d", "webp_ll": "#16a085", "jxl_ll": "#d35400"}
 
@@ -201,7 +203,8 @@ tiles as individual files, at equal interpolated per-tile SSIM. Positive = atlas
             fignum += 1
             cap = "; ".join(
                 f"{k}: {v['individual']:,} B as {ex['n']} files vs {v['atlas']:,} B "
-                f"as one atlas ({v['saving_pct']:+.1f}%)" for k, v in s.items())
+                f"as one atlas ({v['saving_pct']:+.1f}%)" for k, v in s.items()
+                if not k.startswith(("AVIF", "JXL")))
             html.append(
                 f'<figure style="margin:1rem 0"><img src="img/{ex["file"]}" '
                 f'style="max-width:100%;height:auto;border:1px solid #ddd" '

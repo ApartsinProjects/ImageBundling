@@ -67,8 +67,8 @@ def main():
                 return f"<td{klass}>{mark}{s:.1f}</td>"
         return "<td>&mdash;</td>"
 
-    codecs = ["avif", "jpeg", "jxl", "webp", "png", "webp_ll", "jxl_ll"]
-    heads = ["AVIF", "JPEG", "JXL", "WebP", "PNG", "WebP-ll", "JXL-ll"]
+    codecs = ["jpeg", "webp", "png", "webp_ll"]
+    heads = ["JPEG", "WebP", "PNG", "WebP-lossless"]
     trows = []
     for cls, label in [("emoji", "flat art 72px"), ("photos", "photos 224px")]:
         for n in [10, 50, 200, 500]:
@@ -83,13 +83,13 @@ def main():
               f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
     emoji_ex = next(e for e in ex if e["class"] == "emoji")
-    s = emoji_ex["stats"]["AVIF q50"]
+    s = emoji_ex["stats"]["JPEG q80"]
     fig_atlas = (f"<figure><img src='img/{emoji_ex['file']}' alt='100-emoji atlas'>"
                  f"<figcaption><b>Figure 1.</b> A {emoji_ex['n']}-tile atlas "
                  f"({emoji_ex['grid']} grid of {emoji_ex['tile']}px tiles, "
-                 f"{emoji_ex['atlas_px']}px). Encoded with identical AVIF settings, the "
-                 f"{emoji_ex['n']} tiles cost {s['individual']:,} bytes as separate files and "
-                 f"{s['atlas']:,} bytes as this single image ({s['saving_pct']:.0f}% less), "
+                 f"{emoji_ex['atlas_px']}px). Encoded with identical settings both ways, the "
+                 f"{emoji_ex['n']} tiles cost {s['individual']:,} bytes as separate JPEG files and "
+                 f"{s['atlas']:,} bytes as this single JPEG ({s['saving_pct']:.0f}% less), "
                  f"while {emoji_ex['n']} HTTP requests become one. Each tile is displayed "
                  f"with CSS <code>background-position</code>.</figcaption></figure>")
 
@@ -125,17 +125,19 @@ and Protocols</h1>
 <p>Web pages routinely load tens to hundreds of small images; the median mobile page
 carries 13 image elements and the 90th percentile carries 56. Serving each image as a
 separate resource pays three costs: per-request protocol overhead, a fixed per-file
-container cost that reaches 303 bytes for AVIF, and the loss of cross-image redundancy
-that a codec can exploit only within one file. This report measures how much of these
-costs bundling recovers when many small images are packed into a single atlas image and
-displayed with standard CSS. At matched per-tile quality (SSIM 0.97), atlasing 500
-72-pixel flat-art tiles saves 60% of bytes under AVIF, 26% under JPEG and lossy
-JPEG&nbsp;XL, and 8% under WebP, and the saving is protocol-independent. The saving is
-governed by the container-overhead-to-content ratio: for 224-pixel photographic
-thumbnails it shrinks to 3&ndash;7%, and for lossless codecs atlasing inverts into a cost,
-reaching 35% extra bytes for lossless JPEG&nbsp;XL, whose per-image adaptation outperforms
-any single global model. These measurements yield a codec-aware bundling rule: atlas
-small lossy tiles, serve them as AVIF, and never atlas lossless assets. Beyond the
+structural cost (headers, coding tables, container chunks; roughly 600 bytes for a
+JPEG), and the loss of cross-image redundancy that a codec can exploit only within one
+file. This report measures how much of these costs bundling recovers when many small
+images are packed into a single atlas image and displayed with standard CSS. The study
+focuses on the three formats that carry the overwhelming majority of web images today
+and decode in every browser: JPEG, PNG, and WebP. At matched per-tile quality (SSIM
+0.97), atlasing 500 72-pixel flat-art tiles saves 26&ndash;34% of bytes under JPEG and
+8&ndash;17% under WebP, and the saving is protocol-independent. The saving is governed
+by the ratio of per-file structural cost to content bytes: for 224-pixel photographic
+thumbnails it shrinks to a few percent under JPEG and inverts into a cost under WebP
+and the lossless formats, whose per-image adaptation outperforms any single global
+model. These measurements yield a codec-aware bundling rule: atlas small lossy tiles,
+never lossless assets or large photographic tiles. Beyond the
 binary decision, the report formulates atlas construction as an optimization problem:
 partition a page's image set into bundles, and order tiles within each bundle, to
 minimize a cost combining bytes per deploy under cache invalidation, load latency for
@@ -152,11 +154,14 @@ addressed only the request-count cost. Two byte-level costs survive multiplexing
 untouched: every image file carries a fixed container overhead (headers, quantization
 tables, ISOBMFF boxes), and every file boundary prevents the codec from sharing entropy
 context, palettes, and predictors across images.</p>
-<p>Modern codecs move these costs in opposite directions. AVIF carries roughly 303 bytes
-of mandatory container structure per file, an order of magnitude more than JPEG&nbsp;XL's
-24-byte floor, so the format that compresses large images best is also the format most
-penalized on small files; Cloudinary's delivery pipeline refuses AVIF outright for
-images under 5,000 pixels. This report quantifies what bundling recovers, per codec,
+<p>The study is deliberately scoped to the popular, universally-supported compressed
+formats: JPEG, PNG, and WebP together carry over 70% of images served on the web (HTTP
+Archive 2024: JPEG 32.4%, PNG 28.4%, WebP 12.0%), decode in every browser, and are
+where the practical savings live. The three formats price the per-file costs very
+differently: a JPEG file carries roughly 600 bytes of Huffman and quantization table
+definitions plus headers, a PNG a 67-byte structural floor plus per-image filter
+adaptation, and a WebP as little as 30 bytes of container around a heavily
+image-adapted VP8 payload. This report quantifies what bundling recovers, per codec,
 tile size, and image count, under a matched-quality protocol, and describes a testbed
 that measures the timing consequences under HTTP/1.1, HTTP/2, and HTTP/3.</p>
 <p>The display side needs no special machinery: a bundled tile is shown by any of CSS
@@ -182,7 +187,7 @@ practice in game engines addresses GPU sampling, not codec efficiency [9].</p>
 <p>A bundled page references one image resource and displays each tile by cropping a
 window into it. Four standard mechanisms cover every deployment context. The classic and
 universal one positions the atlas behind a fixed-size element as a background:</p>
-<pre>&lt;div class="tile" style="background-image:url(atlas.avif);
+<pre>&lt;div class="tile" style="background-image:url(atlas.webp);
      background-position:-144px -216px"&gt;&lt;/div&gt;
 /* .tile has width:72px; height:72px */</pre>
 <p>The element shows the 72x72 region whose top-left corner sits at (144,&nbsp;216);
@@ -190,12 +195,12 @@ universal one positions the atlas behind a fixed-size element as a background:</
 stored size. Chromium additionally supports cropping a real <code>&lt;img&gt;</code>
 element, which preserves alt text, native lazy loading, and
 <code>fetchpriority</code>:</p>
-<pre>&lt;img src="atlas.avif" style="width:72px;height:72px;
+<pre>&lt;img src="atlas.webp" style="width:72px;height:72px;
      object-view-box:xywh(144px 216px 72px 72px)"&gt;</pre>
 <p>Where a real image element is needed cross-browser, a fixed-size wrapper with
 <code>overflow:hidden</code> around a negatively-offset <code>&lt;img&gt;</code> gives
 the same window, and SVG gives it declaratively
-(<code>&lt;svg viewBox="144 216 72 72"&gt;&lt;image href="atlas.avif"/&gt;</code>).
+(<code>&lt;svg viewBox="144 216 72 72"&gt;&lt;image href="atlas.webp"/&gt;</code>).
 Canvas completes the set for programmatic UIs:
 <code>ctx.drawImage(atlas, 144, 216, 72, 72, dx, dy, 72, 72)</code> blits any region
 after a single decode. In every mechanism the browser fetches and decodes the atlas
@@ -204,7 +209,7 @@ a decode. The experiments in Section&nbsp;6 use <code>background-position</code>
 mechanism with universal support.</p>
 <h3>3.2&nbsp;&nbsp;Delivery, caching, and memory</h3>
 <p>An atlas changes the unit of caching from the tile to the bundle. With standard
-immutable content-addressed URLs (<code>atlas.3fe2a1.avif</code>,
+immutable content-addressed URLs (<code>atlas.3fe2a1.webp</code>,
 <code>Cache-Control: immutable</code>), an unchanged atlas costs zero requests on a warm
 cache, and the decode-once property still applies. The cost appears on content change:
 editing one tile invalidates the whole bundle, so the expected re-download per deploy
@@ -230,9 +235,9 @@ over white) and 520 photographic 224x224 thumbnails. Tiles are packed row-major 
 near-square grid; a padding variant edge-replicates each tile by 8 or 16 pixels. All
 conditions consume identical source pixels.</p>
 <h3>4.2&nbsp;&nbsp;Codecs and matched-quality protocol</h3>
-<p>Five codec families (libjpeg-turbo JPEG, WebP, AVIF, JPEG&nbsp;XL, PNG; WebP and
-JPEG&nbsp;XL also lossless) encode each condition at a quality ladder q &isin;
-{{30,50,65,80,90}}. Per-tile quality is measured as luma SSIM after cropping the tile
+<p>Following the study's scope, the three dominant web formats encode each condition:
+libjpeg-turbo JPEG, WebP (lossy and lossless), and PNG, with the lossy codecs swept
+over a quality ladder q &isin; {{30,50,65,80,90}}. Per-tile quality is measured as luma SSIM after cropping the tile
 back out of the decoded artifact, so atlas border bleed is charged to the atlas. Bytes
 are compared at equal quality by log-linear interpolation of each condition's
 rate-distortion curve at fixed SSIM targets; when an atlas's entire ladder exceeds the
@@ -244,30 +249,36 @@ individual file; padding never reduces atlas bytes.</p>
 <h2>5&nbsp;&nbsp;Static results: bytes at matched quality</h2>
 {fig_atlas}
 <p>Table 1 reports the saving from atlasing at SSIM 0.97 across both classes. Three
-regularities organize the table. First, savings scale with the
-container-overhead-to-content ratio: 72-pixel flat-art tiles encode to 1&ndash;3 KB, so
-AVIF's 303-byte floor alone accounts for a large fraction of the measured 48&ndash;60%
-saving, and the per-codec ordering of savings (AVIF &gt; JPEG &gt; JPEG&nbsp;XL &gt;
-WebP) follows the per-codec ordering of container floors. Second, savings grow with N
-and saturate near N&nbsp;=&nbsp;200: amortization is essentially complete once hundreds
-of per-file overheads collapse into one. Third, the same 500 tiles that save 60% at 72
-pixels save 5.8% at 224 pixels: tile size, not image count, is the dominant variable.</p>
+regularities organize the table. First, savings scale with the ratio of per-file
+structural cost to content bytes: 72-pixel flat-art tiles encode to 1&ndash;3 KB, so
+JPEG's roughly 600 bytes of per-file tables and headers alone account for most of its
+measured 26&ndash;34% saving, while WebP's 30-byte floor leaves it the smallest lossy
+gain (8&ndash;17%). Second, savings grow with N and saturate near N&nbsp;=&nbsp;200:
+amortization is essentially complete once hundreds of per-file overheads collapse into
+one. Third, the same 500 tiles that save 26% under JPEG at 72 pixels save 3% at 224
+pixels: tile size, not image count, is the dominant variable.</p>
 {table1}
 {fig_bars}
-<p>Atlasing is not free where per-image adaptation matters. Every lossless codec loses
-from atlasing at N&nbsp;&ge;&nbsp;200, and lossless JPEG&nbsp;XL loses 35&ndash;44%:
-its modular mode fits palettes and context models per image, and one global model over
-hundreds of heterogeneous tiles cannot match five hundred specialized ones. The effect
-persists at maximum encoder effort, so it is a property of the representation, not of
-encoder tuning. WebP shows the same inversion on photographic tiles (&minus;8.5% at
-N&nbsp;=&nbsp;500). Edge-replicated padding costs roughly six percentage points of
-saving per 8-pixel step (AVIF, flat art), pricing the block-alignment mitigations
-against chroma bleed.</p>
+<p>Atlasing is not free where per-image adaptation matters. Both lossless formats lose
+from atlasing at N&nbsp;&ge;&nbsp;200 (PNG &minus;3 to &minus;6%, lossless WebP &minus;4
+to &minus;5%): PNG chooses its prediction filter per scanline and an atlas scanline
+crosses dozens of unrelated tiles, while lossless WebP fits transforms and entropy
+codes per image, and one global model over hundreds of heterogeneous tiles cannot match
+hundreds of specialized ones. Lossy WebP shows the same inversion on photographic tiles
+(&minus;8.5% at N&nbsp;=&nbsp;500): VP8 adapts entropy tables per image and allows at
+most four quantizer segments per frame, so an atlas of 500 diverse photos shares four
+segments where individual files had four each; the raw byte cost is near zero, and the
+penalty appears as reduced per-tile quality that the matched-quality protocol correctly
+prices as bytes. Edge-replicated padding costs roughly 7 percentage points of saving
+per 8-pixel step for JPEG and roughly 10 for WebP (flat art, N&nbsp;=&nbsp;200),
+pricing the block-alignment mitigations against chroma bleed.</p>
 {fig_charts}
-<p>The absolute comparison compounds codec choice with bundling: at N&nbsp;=&nbsp;500 and
-SSIM 0.97, the best individually-served option (WebP, 240 KB) is more than twice the
-size of the AVIF atlas (114 KB). A deployment that adopts atlasing without changing
-codec, or AVIF without atlasing, captures less than half of the available saving.</p>
+<p>The absolute comparison compounds codec choice with bundling: at N&nbsp;=&nbsp;500
+and SSIM 0.97 on flat art, individual JPEG files cost 630 KB, the JPEG atlas 464 KB,
+individual WebP files 240 KB, and the WebP atlas 220 KB. Moving a legacy
+individual-JPEG deployment to a WebP atlas cuts bytes by 65%; the format change
+contributes most of it, and bundling contributes the rest while also collapsing 500
+requests into one.</p>
 
 <h2>6&nbsp;&nbsp;Network study design</h2>
 <p>Byte savings are protocol-independent; timing effects are not. The companion testbed
@@ -309,14 +320,16 @@ images with a manifest of update rates and quality targets and emits the partiti
 per-bundle codec, atlas files, and CSS coordinate map.</p>
 
 <h2>8&nbsp;&nbsp;Practical guidance</h2>
-<p>The static study supports a codec-aware bundling rule. Atlas small lossy assets:
-icon-class tiles gain 26&ndash;60% at matched quality under every DCT-family codec, and
-AVIF gains most. Do not atlas lossless assets: per-image adaptation beats the shared
-context, and the loss grows with N. Do not atlas 200-pixel-class photographs for byte
-reasons: the 3&ndash;7% saving is real but small, and whether the request-count
-reduction pays on latency is a protocol question, not a compression question. Pack
-without padding unless measured chroma bleed on the target content demands alignment,
-and price that padding at roughly six points of saving per 8 pixels.</p>
+<p>The static study supports a codec-aware bundling rule for the deployed-everywhere
+formats. Atlas small lossy assets: icon-class tiles gain 26&ndash;34% at matched
+quality under JPEG and 8&ndash;17% under WebP, and the WebP atlas is the smallest
+absolute payload. Do not atlas lossless assets (PNG, lossless WebP): per-image
+adaptation beats the shared context, and the loss grows with N. Do not atlas
+200-pixel-class photographs for byte reasons: the JPEG saving is a few percent and
+WebP inverts; whether the request-count reduction pays on latency is a protocol
+question, not a compression question. Pack without padding unless measured chroma
+bleed on the target content demands alignment, and price that padding at roughly
+7&ndash;10 points of saving per 8 pixels.</p>
 
 <h2 class="refs-head">References</h2>
 <div class="refs">
