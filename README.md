@@ -8,6 +8,7 @@ AVIF, JPEG XL) and protocols (HTTP/1.1, HTTP/2, HTTP/3).
 - Plan: [ANALYSIS_AND_PLAN.md](ANALYSIS_AND_PLAN.md)
 - Prior-art scout: [scout/PHASE0_SCOUT.md](scout/PHASE0_SCOUT.md)
 - Results site: https://apartsinprojects.github.io/ImageBundling/
+- Optimizer tool: [tools/](tools/)
 - Experiment registry: [experiments/INDEX.md](experiments/INDEX.md)
 
 ## Author

@@ -301,12 +301,16 @@ so the optimizer prices it as a measured dup-rate term: deduplicate exactly-repe
 tiles at the coordinate-map level (many CSS entries, one atlas region), and sort
 near-duplicates adjacent so the encoder captures the rest.</p>
 <h3>7.3&nbsp;&nbsp;The optimizer</h3>
-<p>The deliverable is an atlas-optimizer tool that takes a directory of images with a
-manifest of update rates and quality targets and emits the partition, per-bundle
-codec, atlas files, and CSS coordinate map: cadence-partition first, then group by
-family within cadence (Section&nbsp;7.1), collapse exact duplicates into shared
-coordinates and sort near-duplicates adjacent (Section&nbsp;7.2), and choose the
-chunk count k from the measured J(k) trade-off.</p>
+<p>These rules are implemented as a command-line tool (<code>tools/atlas_optimizer.py</code>
+in the study repository): it folds exact duplicates into shared coordinates,
+partitions by cadence, lossless requirement, and tile dimensions, routes each group
+to a pixel atlas (small lossy tiles), a byte-bundle (large or lossless tiles), or
+individual files (tiny groups), chunks each bundle, and emits the atlas and bundle
+files, a CSS coordinate map, a loader snippet, and a per-group savings report.
+Validated against the study's own asset sets, it converts 521 icon-class tiles into
+four atlas chunks at 19% fewer bytes, and 521 photo thumbnails, of which 21.6% are
+exact repeats, into four byte-bundle chunks at 21% fewer bytes, with 521 requests
+becoming four in both cases.</p>
 
 <h2>8&nbsp;&nbsp;Practical guidance</h2>
 <p>The static study supports a codec-aware bundling rule for the deployed-everywhere
