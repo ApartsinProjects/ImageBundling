@@ -1,0 +1,16 @@
+{"page": "individual_photos_200", "proto": "h2", "rep": 0, "allVisibleMs": 3343.399999976158, "n": 200, "peakConcurrency": 18, "protocols": ["h2"], "spanMs": 402.9000000357628}
+{"page": "individual_photos_200", "proto": "h2", "rep": 1, "allVisibleMs": 305.89999997615814, "n": 200, "peakConcurrency": 12, "protocols": ["h2"], "spanMs": 180.29999995231628}
+{"page": "individual_photos_200", "proto": "h2", "rep": 2, "allVisibleMs": 298.10000002384186, "n": 200, "peakConcurrency": 14, "protocols": ["h2"], "spanMs": 177.60000002384186}
+{"page": "individual_photos_200", "proto": "h2", "rep": 3, "allVisibleMs": 326.69999998807907, "n": 200, "peakConcurrency": 12, "protocols": ["h2"], "spanMs": 170}
+{"page": "individual_photos_200", "proto": "h3", "rep": 0, "allVisibleMs": 818.2000000476837, "n": 200, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 346.5}
+{"page": "individual_photos_200", "proto": "h3", "rep": 1, "allVisibleMs": 475.69999998807907, "n": 200, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 214.39999997615814}
+{"page": "individual_photos_200", "proto": "h3", "rep": 2, "allVisibleMs": 355.69999998807907, "n": 200, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 267.19999998807907}
+{"page": "individual_photos_200", "proto": "h3", "rep": 3, "allVisibleMs": 317.10000002384186, "n": 200, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 247.20000004768372}
+{"page": "individual_photos_500", "proto": "h2", "rep": 0, "allVisibleMs": 722.5, "n": 500, "peakConcurrency": 14, "protocols": ["h2"], "spanMs": 441.69999998807907}
+{"page": "individual_photos_500", "proto": "h2", "rep": 1, "allVisibleMs": 666.9000000357628, "n": 500, "peakConcurrency": 14, "protocols": ["h2"], "spanMs": 453}
+{"page": "individual_photos_500", "proto": "h2", "rep": 2, "allVisibleMs": 699.5, "n": 500, "peakConcurrency": 14, "protocols": ["h2"], "spanMs": 452.7999999523163}
+{"page": "individual_photos_500", "proto": "h2", "rep": 3, "allVisibleMs": 655.3999999761581, "n": 500, "peakConcurrency": 12, "protocols": ["h2"], "spanMs": 491.19999998807907}
+{"page": "individual_photos_500", "proto": "h3", "rep": 0, "allVisibleMs": 856.6999999880791, "n": 500, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 678.3000000119209}
+{"page": "individual_photos_500", "proto": "h3", "rep": 1, "allVisibleMs": 1006.6999999880791, "n": 500, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 808.5}
+{"page": "individual_photos_500", "proto": "h3", "rep": 2, "allVisibleMs": 1080.1000000238419, "n": 500, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 922.8000000119209}
+{"page": "individual_photos_500", "proto": "h3", "rep": 3, "allVisibleMs": 910.8000000119209, "n": 500, "peakConcurrency": 6, "protocols": ["h3"], "spanMs": 735.8000000119209}

@@ -93,6 +93,31 @@ def icon_table():
             f"<tbody>{''.join(trows)}</tbody></table></div>")
 
 
+def warmcache_table():
+    f = ROOT / "results" / "static" / "e_warmcache" / "results.json"
+    if not f.exists():
+        return ""
+    d = json.load(f.open())
+    cols = [("individual", "individual"), ("atlas1", "1 atlas"),
+            ("atlas4", "4 chunks"), ("atlas16", "16 chunks"),
+            ("bytebundle4", "byte-bundle x4"), ("dict_delta", "dict-delta")]
+    trows = []
+    for r in d["rows"]:
+        cells = "".join(f"<td>{r[k]:,}</td>" for k, _ in cols)
+        trows.append(f"<tr><td>{r['churn_pct']:.0f}%</td><td>{r['tiles_changed']}</td>{cells}</tr>")
+    return ("<div class='tablewrap'><table>"
+            "<caption><b>Table 4.</b> Warm-cache re-download: bytes a returning client "
+            "must fetch after a deploy changes a fraction of a 200-tile WebP collection "
+            f"(full fresh download {d['total_fresh_download']:,} B), by serving strategy, "
+            "mean of 20 random deploys per churn rate. Immutable individual files fetch "
+            "only changed tiles; a monolithic atlas re-fetches everything on any change; "
+            "dictionary-delta serving tracks the individual-file optimum and beats it at "
+            "high churn.</caption>"
+            "<thead><tr><th>churn</th><th>tiles</th><th>individual</th><th>1 atlas</th>"
+            "<th>4 chunks</th><th>16 chunks</th><th>byte-bundle x4</th><th>dict-delta</th>"
+            f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
+
+
 def load_network(tag="phase2v3"):
     f = ROOT / "results" / "network" / tag / "summary.json"
     return json.load(f.open()) if f.exists() else None
@@ -265,6 +290,7 @@ def main():
 
     net_html = network_results_html()
     icon_html = icon_table()
+    warm_html = warmcache_table()
 
     _sec, _sub = [0], [0]
 
@@ -547,15 +573,18 @@ multiplexing loads 500 individual images almost as fast as the atlas on
 bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
 bundling small tiles rests chiefly on the 15&ndash;26% byte saving rather than on
 latency. Third, on this testbed HTTP/3's individual-file loads run 4&ndash;5x slower
-than HTTP/2's on the same links, including at zero loss. This is a property of the
-measured configuration (Caddy over QUIC on WSL2's UDP path, driven by Chromium), not an
-inherent property of HTTP/3, which also multiplexes independent streams over one
-connection; the likely cause is a low negotiated concurrent-stream limit serializing the
-500 requests into more waves, and we did not capture qlog stream-concurrency traces to
-confirm it. The finding to carry away is the narrow one, that a default HTTP/3
-deployment can fail to multiplex a many-small-image page as well as HTTP/2, which makes
-bundling valuable there; the mechanism and its generality across servers and native
-Linux are left to future work. Chunking is loss insurance:
+than HTTP/2's on the same links, including at zero loss, and a concurrency diagnostic
+locates the cause. Reconstructing each request's in-flight interval from the Resource
+Timing API and sweeping for the peak number of simultaneous image requests, HTTP/2
+sustained 13&ndash;14 concurrent requests while HTTP/3 sustained only 6, roughly halving
+effective parallelism, and the slowdown tracks that gap. This is a QUIC stream-limit and
+flow-control effect (quic-go/Caddy defaults plus Chromium's QUIC stream pacing), a
+configuration property of the deployment, not an inherent property of HTTP/3, which also
+multiplexes independent streams over one connection. The finding to carry away is that a
+default HTTP/3 deployment can under-multiplex a many-small-image page relative to
+HTTP/2, which makes bundling valuable there; confirming the mechanism with qlog traces
+and testing its generality across servers and native Linux is future work. Chunking is
+loss insurance:
 under 1% packet loss on HTTP/1.1, the single 3.6&nbsp;MB photo atlas on one TCP
 connection drops to 0.9x (a stall risk the byte study cannot see), while four chunks
 restore 1.8x by spreading the transfer over parallel connections. The byte-bundle
@@ -702,6 +731,19 @@ WebP bundle, a zstd delta against the prior bundle cost 25&nbsp;KB for 5 changed
 and 237&nbsp;KB for 50, tracking the changed-files optimum and beating whole-atlas
 re-download (2.8&nbsp;MB) by two orders of magnitude. The structural weakness thus
 becomes proportional to churn rather than to bundle size.</p>
+<p>A warm-cache simulation over a 200-tile WebP collection makes the full trade-off
+explicit (Table&nbsp;4). Serving immutable individual files is the granularity ideal, a
+returning client fetches only the changed tiles (12&nbsp;KB at 1% churn). A single
+monolithic atlas is the opposite extreme: any change re-downloads the entire
+1.47&nbsp;MB, 126x the individual cost at 1% churn. Chunking closes the gap
+proportionally, 16 chunks cost 170&nbsp;KB at 1% churn against one atlas's 1.47&nbsp;MB,
+but never reaches per-tile granularity. Dictionary-delta serving does: at 12&nbsp;KB for
+1% churn it matches the individual-file optimum within one percent, and at 20% churn it
+undercuts it (192 vs 218&nbsp;KB) because the shared dictionary compresses each new tile
+against the old ones. The practical consequence is that an update-heavy collection can
+keep the cold-load benefits of bundling and still get individual-file cache granularity,
+by serving deltas rather than whole bundles.</p>
+{warm_html}
 {H3('A calibrated construction heuristic')}
 <p>The cost above is not minimized by search; instead the measured curves calibrate a
 greedy heuristic that lands in its low-cost region, implemented as a command-line tool
@@ -811,7 +853,7 @@ Platform Status, 2024. https://datatracker.ietf.org/doc/draft-ietf-httpbis-compr
     # content canaries
     for canary in ["Table 1.", "Table 2.", "Figure 1.", "Figure 2.", "Figure 3.",
                    "Figure 4.", "<svg",
-                   "atlas_emoji_100.png", "Abstract", "References",
+                   "atlas_emoji_100.png", "Abstract", "References", "Table 4.",
                    "background-position", "object-view-box", "Cache-Control", "Table 3."]:
         assert canary in html, f"CANARY FAILED: {canary}"
     assert html.count("<svg") >= 4, "CANARY FAILED: expected 4 charts"

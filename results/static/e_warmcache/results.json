@@ -1,0 +1,55 @@
+{
+ "total_fresh_download": 1474036,
+ "rows": [
+  {
+   "churn_pct": 1.0,
+   "tiles_changed": 2,
+   "individual": 11694,
+   "atlas1": 1472628,
+   "atlas4": 598532,
+   "atlas16": 169988,
+   "bytebundle4": 604500,
+   "dict_delta": 11827
+  },
+  {
+   "churn_pct": 2.0,
+   "tiles_changed": 4,
+   "individual": 21628,
+   "atlas1": 1466141,
+   "atlas4": 980777,
+   "atlas16": 352607,
+   "bytebundle4": 991148,
+   "dict_delta": 21744
+  },
+  {
+   "churn_pct": 5.0,
+   "tiles_changed": 10,
+   "individual": 56484,
+   "atlas1": 1459551,
+   "atlas4": 1406193,
+   "atlas16": 730563,
+   "bytebundle4": 1419316,
+   "dict_delta": 56540
+  },
+  {
+   "churn_pct": 10.0,
+   "tiles_changed": 20,
+   "individual": 105356,
+   "atlas1": 1436425,
+   "atlas4": 1420714,
+   "atlas16": 1053707,
+   "bytebundle4": 1432165,
+   "dict_delta": 105269
+  },
+  {
+   "churn_pct": 20.0,
+   "tiles_changed": 40,
+   "individual": 217536,
+   "atlas1": 1398161,
+   "atlas4": 1393311,
+   "atlas16": 1303706,
+   "bytebundle4": 1399153,
+   "dict_delta": 192374
+  }
+ ]
+}
