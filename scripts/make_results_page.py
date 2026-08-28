@@ -234,7 +234,7 @@ tiles as individual files, at equal interpolated per-tile SSIM. Positive = atlas
                         f"<td>{r['ssim_target'] or 'lossless'}</td><td>{r['bytes_individual']:,}</td>"
                         f"<td>{r['bytes_atlas']:,}</td><td class='{c}'>{r['saving_pct']:.1f}%</td></tr>")
         html.append("</table></details>")
-    html.append('<p class="muted">Alexander Apartsin &middot; original project MPCode 2001 &middot; revisited 2026</p>')
+    html.append('<p class="muted">Alexander Apartsin &middot; 2026</p>')
     html.append("</body></html>")
     out = ROOT / "docs" / "results-phase1.html"
     out.write_text("\n".join(html), encoding="utf-8")
