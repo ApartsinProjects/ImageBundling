@@ -399,7 +399,12 @@ construction heuristic that emits deployable bundles from a directory of images.
 HTTP/1.1 era. Whether bundling still pays under HTTP/2 multiplexing has been examined
 mainly for JavaScript and CSS: Khan Academy found unbundled JS slower than bundles under
 HTTP/2, attributing the gap to worse per-file compression [1], and practitioner analyses
-reach the same conclusion for concatenated assets [2, 11]. For images specifically, a
+reach the same conclusion for concatenated assets [2, 11]. The closest academic work is
+Marx et al. [29], who test concatenation, embedding, and sharding under HTTP/2 and find
+the HTTP/1 packaging habits still often help; broader page-load studies show load time
+is governed by resource dependencies and compute, not bytes alone (WProf [26], How
+Speedy is SPDY? [27], Polaris [28]), so request-count reductions are only part of the
+story. For images specifically, a
 CSS-Tricks case study reports a 223-icon sprite at roughly 10&nbsp;KB versus 115&nbsp;KB
 unbundled [2], but without protocol-level timing. We find no published measurement that
 quantifies image atlasing under HTTP/2 or HTTP/3, nor a codec-by-tile-size atlasing
@@ -411,8 +416,8 @@ recovery. Measurement studies characterize HTTP/2 adoption and page-load behavio
 [3] and server push [4], and both controlled benchmarks [5] and adoption studies [14]
 report HTTP/3 gaining most under packet loss while sitting near parity at zero loss.
 Domain sharding, the historical technique of spreading resources across hosts to widen
-HTTP/1.1 concurrency [15], is the opposite of bundling and motivates our
-condition set. None of this work isolates a many-small-images payload against a bundled
+HTTP/1.1 concurrency [15], is the opposite of bundling; recent measurement finds such
+HTTP/1-era habits persist even under HTTP/2 [30], which motivates our condition set. None of this work isolates a many-small-images payload against a bundled
 baseline.</p>
 {H3('Codec container overhead and small-image efficiency')}
 <p>The fixed per-file cost each codec carries is documented through minimal one-pixel
@@ -421,11 +426,14 @@ files: JPEG&nbsp;XL 24&nbsp;B, WebP 30&nbsp;B, PNG 67&nbsp;B, JPEG 155&nbsp;B, A
 containers, and production pipelines act on it: Cloudinary declines AVIF for images
 below 5,000 pixels because the box overhead outweighs the coding gain [16]. The JPEG
 [17], PNG [18], and WebP [19] format definitions specify the table, chunk, and
-container structures our measurements amortize. We are not aware of prior work that
+container structures our measurements amortize, and peer-reviewed rate-distortion
+studies compare these formats against newer codecs [31]. Perceptual image-quality
+assessment, on which our matched-quality protocol rests, is grounded in the structural
+similarity index [25]. We are not aware of prior work that
 measures how bundling recovers this overhead as a function of codec and tile size.</p>
 {H3('Texture atlases and dictionary compression')}
 <p>Packing many images into one is standard in real-time graphics, where texture atlases
-[9, 20] and skyline/MaxRects bin-packing [21] minimize GPU state changes and padding is
+[9, 20, 32] and skyline/MaxRects bin-packing [21] minimize GPU state changes and padding is
 tuned for mip-sampling rather than codec efficiency. On the delivery side, shared-window
 and trained-dictionary compression (Brotli [22], zstd [23]) and Compression Dictionary
 Transport [24] let an update be encoded against previously cached bytes; we apply the
@@ -492,7 +500,7 @@ one tile per row band. All conditions consume identical source pixels.</p>
 <p>Following the study's scope, the three dominant web formats encode each condition:
 libjpeg-turbo JPEG, WebP (lossy and lossless), and PNG, with the lossy codecs swept
 over a quality ladder q &isin; {{30,50,65,80,90}}. Quality is the mean over tiles of the
-per-tile luma SSIM, each tile scored after cropping it back out of the decoded artifact
+per-tile luma SSIM [25], each tile scored after cropping it back out of the decoded artifact
 so atlas border bleed is charged to the atlas; the matched target of 0.97 is therefore a
 mean-tile floor, and Section&nbsp;5.4 reports the per-tile spread where it is
 load-bearing. Bytes are compared at equal quality by log-linear interpolation of each
@@ -805,7 +813,9 @@ heuristic, which turns a directory of images into deployable bundles.</p>
 https://blog.khanacademy.org/forgo-js-packaging-not-so-fast/</p>
 <p>[2] C. Coyier. Musings on HTTP/2 and bundling. CSS-Tricks.
 https://css-tricks.com/musings-on-http2-and-bundling/</p>
-<p>[3] M. Varvello et al. Is the Web HTTP/2 yet? PAM 2016.</p>
+<p>[3] M. Varvello, K. Schomp, D. Naylor, J. Blackburn, A. Finamore, K. Papagiannaki.
+Is the Web HTTP/2 Yet? Passive and Active Measurement (PAM), LNCS 9631, 2016.
+doi:10.1007/978-3-319-30505-9_17</p>
 <p>[4] S. R. Dahal et al. HTTP/2 server push: a performance study. arXiv:2207.05885.</p>
 <p>[5] T. Hunter. HTTP/3 is fast. Request Metrics, 2022.
 https://requestmetrics.com/web-performance/http3-is-fast/</p>
@@ -844,6 +854,25 @@ algorithms (skyline, MaxRects), 2010.</p>
 Type. RFC 8878, IETF, 2021.</p>
 <p>[24] P. Meenan, Y. Weiss. Compression Dictionary Transport. IETF draft / Chrome
 Platform Status, 2024. https://datatracker.ietf.org/doc/draft-ietf-httpbis-compression-dictionary/</p>
+<p>[25] Z. Wang, A. C. Bovik, H. R. Sheikh, E. P. Simoncelli. Image Quality Assessment:
+From Error Visibility to Structural Similarity. IEEE Trans. Image Processing 13(4):600-612,
+2004. doi:10.1109/TIP.2003.819861</p>
+<p>[26] X. S. Wang, A. Balasubramanian, A. Krishnamurthy, D. Wetherall. Demystifying Page
+Load Performance with WProf. USENIX NSDI, 2013.</p>
+<p>[27] X. S. Wang, A. Balasubramanian, A. Krishnamurthy, D. Wetherall. How Speedy is
+SPDY? USENIX NSDI, 2014.</p>
+<p>[28] R. Netravali, A. Goyal, J. Mickens, H. Balakrishnan. Polaris: Faster Page Loads
+Using Fine-grained Dependency Tracking. USENIX NSDI, 2016.</p>
+<p>[29] R. Marx, T. Wijnants, P. Quax, A. Faes, W. Lamotte. Concatenation, Embedding and
+Sharding: Do HTTP/1 Performance Best Practices Make Sense in HTTP/2? WEBIST, 2017.</p>
+<p>[30] C. Sander, I. Kunze, K. Wehrle, J. Rüth. Sharding and HTTP/2 Connection Reuse
+Revisited: Why Are There Still Redundant Connections? ACM IMC, 2021.
+doi:10.1145/3487552.3487832</p>
+<p>[31] N. Barman, M. G. Martini. An Evaluation of the Next-Generation Image Coding
+Standard AVIF. IEEE QoMEX, 2020. doi:10.1109/QoMEX48832.2020.9123131</p>
+<p>[32] B. Lévy, S. Petitjean, N. Ray, J. Maillot. Least Squares Conformal Maps for
+Automatic Texture Atlas Generation. ACM SIGGRAPH / ACM TOG 21(3), 2002.
+doi:10.1145/566654.566590</p>
 </div>
 <div class="footer">Alexander Apartsin &middot; 2026</div>
 </body></html>"""
