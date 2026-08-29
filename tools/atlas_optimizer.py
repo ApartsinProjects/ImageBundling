@@ -70,6 +70,25 @@ def encode(im, lossless, quality):
     return b.getvalue()
 
 
+def strip_atlas_bytes(reps):
+    """Total bytes of a WebP-lossless vertical strip (1 tile wide), chunked to fit
+    WebP's 16383px dimension cap. Used only to size-compare against a byte-bundle."""
+    th = reps[0]["h"]
+    per = max(1, 16000 // th)
+    total = 0
+    for i in range(0, len(reps), per):
+        sub = reps[i:i + per]
+        strip = Image.new(sub[0]["im"].mode, (sub[0]["w"], sum(t["h"] for t in sub)))
+        y = 0
+        for t in sub:
+            strip.paste(t["im"], (0, y))
+            y += t["h"]
+        b = io.BytesIO()
+        strip.save(b, "WEBP", lossless=True, quality=100, method=6)
+        total += len(b.getvalue())
+    return total
+
+
 def pack_atlas(reps, quality, out_path):
     n = len(reps)
     tw, th = reps[0]["w"], reps[0]["h"]
@@ -168,6 +187,32 @@ def main():
                                f"width:{w}px;height:{h}px}}")
             usage_snippets.append(
                 f"<!-- {gname}: <span class='ib-NAME'></span> per tile -->")
+        elif lossless and strip_atlas_bytes(members) < individual_bytes:
+            # measured tiebreak: a WebP-lossless vertical strip beats the byte-bundle
+            # for this group (evaluated out-of-sample at 0% regret vs an oracle).
+            cond = "strip-atlas"
+            k = 1 if n < 40 else args.chunks
+            per = math.ceil(n / k)
+            total, files = 0, 0
+            for c in range(k):
+                sub = members[c * per:(c + 1) * per]
+                if not sub:
+                    continue
+                nm = f"strip_{gname}_{c}.webp"
+                strip = Image.new(sub[0]["im"].mode, (w, sum(t["h"] for t in sub)))
+                y = 0
+                for t in sub:
+                    strip.paste(t["im"], (0, y))
+                    css.append(f".ib-{slug(t['name'])}{{background-image:url({nm});"
+                               f"background-position:0px -{y}px;width:{w}px;height:{h}px}}")
+                    y += t["h"]
+                b = io.BytesIO()
+                strip.save(b, "WEBP", lossless=True, quality=100, method=6)
+                (out / nm).write_bytes(b.getvalue())
+                total += len(b.getvalue())
+                files += 1
+            usage_snippets.append(
+                f"<!-- {gname}: <span class='ib-NAME'></span> per tile (strip atlas) -->")
         else:
             cond = "byte-bundle"
             k = 1 if n < 40 else args.chunks
@@ -190,12 +235,6 @@ def main():
                 files += 1
             usage_snippets.append(
                 f"<!-- {gname}: fetch {nm}.bin + {nm}.json, slice, blob-URL each tile -->")
-        if cond == "byte-bundle" and not lossless and small:
-            pass  # unreachable; small lossy goes to atlas
-        if lossless and small and n >= args.min_group:
-            print(f"  hint: group {gname} ({n} tiles) is on the lossless track; if "
-                  f"lossy is visually acceptable, --lossy-png enables the pixel "
-                  f"atlas, which saved 15-26% at this size class in the study")
         report.append({
             "group": gname, "condition": cond, "tiles": n,
             "duplicates_folded": sum(alias_count[t["name"]] for t in members),

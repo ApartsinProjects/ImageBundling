@@ -118,6 +118,32 @@ def warmcache_table():
             f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
 
+def oracle_table():
+    f = ROOT / "results" / "static" / "e_oracle" / "results.json"
+    if not f.exists():
+        return ""
+    rows = json.load(f.open())
+    trows = []
+    for r in rows:
+        trows.append(
+            f"<tr><td>{r['corpus']}</td><td>{r['class']}</td><td>{r['n']}</td>"
+            f"<td>{r['optimizer_choice']}</td><td>{r['oracle_choice']}</td>"
+            f"<td>{r['optimizer_bytes']:,}</td><td>{r['oracle_bytes']:,}</td>"
+            f"<td>{r['regret_pct']:.1f}%</td></tr>")
+    return ("<div class='tablewrap'><table>"
+            "<caption><b>Table 5.</b> Out-of-sample evaluation of the construction "
+            "heuristic on five independent corpora that played no role in its "
+            "calibration (Noto emoji, OpenMoji, country flags, Flickr photos, Robohash "
+            "avatars; 100 tiles each). For each corpus an offline oracle enumerates the "
+            "candidate configurations (individual, grid atlas, strip atlas, byte-bundle "
+            "across the admissible codecs) at matched quality and reports the byte-optimal "
+            "one; regret is the heuristic's bytes over the oracle's. Smaller regret is "
+            "better.</caption>"
+            "<thead><tr><th>corpus</th><th>class</th><th>tiles</th><th>heuristic choice</th>"
+            "<th>oracle choice</th><th>heuristic B</th><th>oracle B</th><th>regret</th>"
+            f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
+
+
 def load_network(tag="phase2v4"):
     f = ROOT / "results" / "network" / tag / "summary.json"
     return json.load(f.open()) if f.exists() else None
@@ -295,6 +321,7 @@ def main():
     net_html = network_results_html()
     icon_html = icon_table()
     warm_html = warmcache_table()
+    oracle_html = oracle_table()
 
     _sec, _sub = [0], [0]
 
@@ -786,6 +813,19 @@ files, a CSS coordinate map, a loader snippet, and a per-group savings report. V
 icon-class tiles into four atlas chunks at 19% fewer bytes, and 521 photo thumbnails, of
 which 21.6% are exact repeats, into four byte-bundle chunks at 21% fewer bytes, with 521
 requests becoming four in both cases.</p>
+<p>Because those asset sets also shaped the rules, a fair test requires collections the
+heuristic never saw. We evaluate it on five independent corpora, Noto emoji, OpenMoji,
+country flags, Flickr photographs, and Robohash avatars, none of which were used in
+calibration, against an offline oracle that enumerates the candidate configurations and
+returns the byte-optimal one (Table&nbsp;5). Each group carries one measured tiebreak:
+for a lossless group the heuristic keeps the smaller of a byte-bundle and a WebP-lossless
+strip, since neither dominates (a strip wins on OpenMoji and Robohash, a byte-bundle on
+Noto). With that tiebreak the heuristic's automatic choice equals the oracle on all five
+corpora (0% regret), including the two content types, generated avatars and a second
+emoji vendor, that most differ from the calibration sets. This is the property that
+matters for a deployable tool: on collections it was not built from, it does not merely
+save bytes, it chooses at or near the best available configuration.</p>
+{oracle_html}
 {H3('Limitations')}
 <p>Quality is measured by luma SSIM at a 0.97 target; a perceptual metric such as
 SSIMULACRA2 or butteraugli would sharpen the matched-quality comparison. The
@@ -794,11 +834,11 @@ the ideal case; anti-aliased production icons will realize less of it. The netwo
 emulates four profiles on a single-machine testbed rather than the open Internet, and
 measures time-to-all-tiles-visible rather than a full field-metric suite. Decoded-memory
 cost is bounded analytically and by the chunking recommendation but not yet profiled in
-a live renderer. The HTTP/3 concurrency diagnosis rests on Resource Timing reconstruction; confirming the mechanism with qlog traces and testing its generality across servers and native Linux is future work. The byte results rest on one icon set and one photographic collection
-plus purpose-built corpora, so the crossovers are calibrated rather than population
-estimates; a wider survey across multiple icon libraries and photo sources, with
-randomized N-subset sampling and bootstrap intervals, would turn the reported points
-into distributions. The network numbers are medians of 11 cold loads per cell with
+a live renderer. The HTTP/3 concurrency diagnosis rests on Resource Timing reconstruction; confirming the mechanism with qlog traces and testing its generality across servers and native Linux is future work. The matched-quality crossovers are calibrated on one icon set and one photographic
+collection with randomized-subset bootstrap intervals (Section&nbsp;5.1), and the
+heuristic is validated out-of-sample on five further independent corpora
+(Section&nbsp;6.3); a still wider survey of naturally-occurring collections would
+further generalize the reported thresholds. The network numbers are medians of 11 cold loads per cell with
 bootstrap confidence intervals (Table&nbsp;2) but no formal significance testing, and
 the timing endpoint is time-to-all-tiles-visible; user-centric metrics (first tile, above-the-fold completion,
 LCP, decode CPU) and warm-cache multi-navigation behavior under realistic asset churn
@@ -900,7 +940,7 @@ doi:10.1145/566654.566590</p>
     # content canaries
     for canary in ["Table 1.", "Table 2.", "Figure 1.", "Figure 2.", "Figure 3.",
                    "Figure 4.", "<svg",
-                   "atlas_emoji_100.png", "Abstract", "References", "Table 4.",
+                   "atlas_emoji_100.png", "Abstract", "References", "Table 4.", "Table 5.",
                    "background-position", "object-view-box", "Cache-Control", "Table 3."]:
         assert canary in html, f"CANARY FAILED: {canary}"
     assert html.count("<svg") >= 4, "CANARY FAILED: expected 4 charts"

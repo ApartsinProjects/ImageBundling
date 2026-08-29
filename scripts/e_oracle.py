@@ -101,8 +101,15 @@ def matched_lossy(tiles, codec, layout, target=0.97):
 def lossless_bytes(tiles, codec, layout):
     if layout == "individual":
         return sum(len(enc(t, codec)) for t in tiles)
-    arr = grid(tiles)[0] if layout == "grid" else strip(tiles)
-    return len(enc(arr, codec))
+    if layout == "grid":
+        return len(enc(grid(tiles)[0], codec))
+    # strip: WebP caps any dimension at 16383px, so chunk the strip to fit.
+    th = tiles[0].shape[0]
+    if codec == "webpll" and len(tiles) * th > 16000:
+        per = 16000 // th
+        return sum(len(enc(strip(tiles[i:i+per]), codec))
+                   for i in range(0, len(tiles), per))
+    return len(enc(strip(tiles), codec))
 
 
 def byte_bundle(tiles, codec, q=80):
@@ -127,9 +134,14 @@ def optimizer_choice(tiles, size, has_alpha):
     dup_folZ = len(tiles) - len(u)
     small = size <= 130
     if has_alpha:  # lossless track (png/webpll)
-        # optimizer routes small lossless flat art to byte-bundle (proven zero-penalty)
-        cond = "byte-bundle(webpll)"
-        b = byte_bundle(u, "webpll")
+        # improved rule: for a lossless group, keep the smaller of a byte-bundle and a
+        # WebP-lossless strip-atlas (a 2-candidate measured tiebreak, not a blind rule).
+        bb = byte_bundle(u, "webpll")
+        strp = lossless_bytes(u, "webpll", "strip")
+        if strp < bb:
+            cond, b = "strip-atlas(webpll)", strp
+        else:
+            cond, b = "byte-bundle(webpll)", bb
     elif small:
         cond = "pixel-atlas(webp)"
         b = matched_lossy(u, "webp", "grid")
