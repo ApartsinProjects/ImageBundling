@@ -1,0 +1,122 @@
+[
+ {
+  "cls": "photos",
+  "size": 56,
+  "N": 50,
+  "codec": "jpeg",
+  "k_subsets": 20,
+  "median_saving": 28.4,
+  "ci_lo": 26.8,
+  "ci_hi": 30.1
+ },
+ {
+  "cls": "photos",
+  "size": 56,
+  "N": 50,
+  "codec": "webp",
+  "k_subsets": 20,
+  "median_saving": 17.3,
+  "ci_lo": 8.9,
+  "ci_hi": 21.1
+ },
+ {
+  "cls": "photos",
+  "size": 56,
+  "N": 200,
+  "codec": "jpeg",
+  "k_subsets": 20,
+  "median_saving": 29.1,
+  "ci_lo": 28.4,
+  "ci_hi": 29.5
+ },
+ {
+  "cls": "photos",
+  "size": 56,
+  "N": 200,
+  "codec": "webp",
+  "k_subsets": 20,
+  "median_saving": 14.8,
+  "ci_lo": 10.0,
+  "ci_hi": 17.4
+ },
+ {
+  "cls": "photos",
+  "size": 112,
+  "N": 50,
+  "codec": "jpeg",
+  "k_subsets": 20,
+  "median_saving": 8.5,
+  "ci_lo": 7.5,
+  "ci_hi": 9.5
+ },
+ {
+  "cls": "photos",
+  "size": 112,
+  "N": 50,
+  "codec": "webp",
+  "k_subsets": 20,
+  "median_saving": 1.1,
+  "ci_lo": -0.9,
+  "ci_hi": 3.4
+ },
+ {
+  "cls": "photos",
+  "size": 112,
+  "N": 200,
+  "codec": "jpeg",
+  "k_subsets": 20,
+  "median_saving": 9.3,
+  "ci_lo": 8.9,
+  "ci_hi": 9.8
+ },
+ {
+  "cls": "photos",
+  "size": 112,
+  "N": 200,
+  "codec": "webp",
+  "k_subsets": 20,
+  "median_saving": -0.3,
+  "ci_lo": -1.6,
+  "ci_hi": 1.9
+ },
+ {
+  "cls": "photos",
+  "size": 224,
+  "N": 50,
+  "codec": "jpeg",
+  "k_subsets": 20,
+  "median_saving": 2.0,
+  "ci_lo": 1.8,
+  "ci_hi": 2.4
+ },
+ {
+  "cls": "photos",
+  "size": 224,
+  "N": 50,
+  "codec": "webp",
+  "k_subsets": 20,
+  "median_saving": -7.0,
+  "ci_lo": -7.9,
+  "ci_hi": -5.7
+ },
+ {
+  "cls": "photos",
+  "size": 224,
+  "N": 200,
+  "codec": "jpeg",
+  "k_subsets": 20,
+  "median_saving": 2.6,
+  "ci_lo": 2.4,
+  "ci_hi": 2.8
+ },
+ {
+  "cls": "photos",
+  "size": 224,
+  "N": 200,
+  "codec": "webp",
+  "k_subsets": 20,
+  "median_saving": -8.0,
+  "ci_lo": -12.0,
+  "ci_hi": -6.7
+ }
+]

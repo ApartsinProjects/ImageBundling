@@ -559,6 +559,16 @@ break-even near 100-pixel tiles. Search-result and recommendation thumbnails
 (48&ndash;120&nbsp;px) therefore sit squarely in the paying regime for both formats,
 while product-grid images (200&nbsp;px and up) pay only under JPEG, and only a few
 percent.</p>
+<p>To confirm the crossover is not an artifact of the single deterministic subset each
+Table&nbsp;1 cell uses, we resampled it: for each (tile size, N, codec) we drew 20 random
+N-tile subsets from the full pool and computed the matched-quality saving of each. The
+medians track Table&nbsp;1 and the 95% bootstrap intervals are tight and separate the
+regimes. For photos the JPEG saving is 29.1% (95% CI [28.4, 29.5]) at 56&nbsp;px,
+9.3% [8.9, 9.8] at 112&nbsp;px, and 2.6% [2.4, 2.8] at 224&nbsp;px, all clearly positive;
+WebP is 14.8% [10.0, 17.4] at 56&nbsp;px, straddles zero at 112&nbsp;px
+([&minus;1.6, 1.9]), and is clearly negative at 224&nbsp;px (&minus;8.0% [&minus;12.0,
+&minus;6.7]). The WebP break-even near 100&nbsp;px is thus the point where its interval
+crosses zero, not a single-sample coincidence.</p>
 {table1}
 {fig_bars}
 <p>Atlasing is not free where per-image adaptation matters. On flat art, both lossless
