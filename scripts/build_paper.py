@@ -407,11 +407,10 @@ quality floor, and calibrates a heuristic that navigates it. An ordering-and-par
 bundles save 3 percentage points for lossless flat art, and for collections with
 repeated tiles, a similarity-sorted atlas dedupes copies inside the codec's matching
 window, cutting PNG bytes by 17&ndash;18% at a 21.6% duplicate rate, a saving
-separately-served files cannot reach on any protocol. A network study over 2,515 validated
-cold loads across HTTP/1.1, HTTP/2, and HTTP/3 under emulated network conditions
-completes the picture: bundling 500 flat tiles is 4.5&ndash;8.6x faster to full visibility
-on HTTP/1.1 and 4.8&ndash;7.7x on HTTP/3, while HTTP/2's multiplexing narrows the gap
-(1.1&ndash;3.5x) and leaves bundling there as chiefly a byte optimization.</p></div>
+separately-served files cannot reach on any protocol. A supporting single-testbed
+browser study finds the byte savings translate into faster loads on HTTP/1.1 and HTTP/3
+(4.5&ndash;8.6x and 4.8&ndash;7.7x for 500 flat tiles) while HTTP/2's multiplexing leaves
+bundling there as chiefly a byte optimization.</p></div>
 
 {H2('Introduction')}
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -672,36 +671,7 @@ floor rather than a mean should treat the WebP pixel atlas accordingly, or use t
 byte-bundle, which preserves each tile's own encoding.</p>
 {tail_html}
 
-{H3('Network timing under HTTP/1.1, HTTP/2, and HTTP/3')}
-{net_html}
-<p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
-HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
-4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.5&ndash;2.8x
-for photos. Across cells, added network impairment never speeds a condition up, and the reported speedups carry tight bootstrap intervals (Table&nbsp;2). Second, HTTP/2 is the strongest protocol for many small files: its
-multiplexing loads 500 individual images almost as fast as the atlas on
-bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
-bundling small tiles rests chiefly on the byte saving of Table&nbsp;1 (up to 26% for
-flat art) rather than on latency. Third, on this testbed HTTP/3's individual-file loads run 4&ndash;5x slower
-than HTTP/2's on the same links, including at zero loss, and a concurrency diagnostic
-locates the cause. The diagnostic reconstructs each request's in-flight interval from the Resource Timing
-API and finds the peak number of simultaneous image requests: HTTP/2 sustained
-13&ndash;14 at once while HTTP/3 sustained only 6, roughly half the parallelism, and the
-slowdown tracks that gap. This is a QUIC stream-limit and
-flow-control effect (quic-go/Caddy defaults plus Chromium's QUIC stream pacing), a
-configuration property of the deployment, not an inherent property of HTTP/3, which also
-multiplexes independent streams over one connection. A default HTTP/3 deployment can therefore under-multiplex a many-small-image page
-relative to HTTP/2, which makes bundling valuable there. Under the 1% packet-loss
-profile every serving condition becomes noise-dominated on this testbed: per-cell
-coefficients of variation reach 0.4 and the atlas-vs-individual and chunk-vs-atlas
-differences fall inside overlapping confidence intervals (for example lossy4g photos on
-HTTP/1.1 give a single atlas at 1.50x and four chunks at 1.54x, indistinguishable). We
-therefore make no loss-recovery claim for chunking from the timing data; chunking's
-demonstrated benefit is cache granularity and bounded invalidation (Section&nbsp;6.2,
-Table&nbsp;4), not packet-loss resilience. The byte-bundle beats individual serving nearly everywhere on HTTP/1.1 and HTTP/3
-(up to 5.7x) at exactly the individual conditions' byte cost, which makes it the
-bundling method of choice for content whose pixels should not share a codec model
-(photos, lossless assets); the pixel atlas remains faster where its byte savings
-compound with the request savings.</p>
+
 
 {H3('Ordering, duplicates, and layout')}
 <p>We re-encode identical tile sets under eight within-atlas orders (source
@@ -786,6 +756,38 @@ not for a tuned one. These controls are reachable through libwebp's configuratio
 (the <code>cwebp -sns 100 -pass 10 -af</code> equivalents) though not through every
 image library's default binding.</p>
 
+{H3('Supporting measurements: network timing')}
+<p>The byte and construction results above are protocol-independent. This section reports how the byte savings translate to load time on a single-testbed browser study; it is supporting evidence for the deployment guidance, not a protocol-measurement contribution, and its absolute timings are environment-dependent.</p>
+{net_html}
+<p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
+HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
+4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.5&ndash;2.8x
+for photos. Across cells, added network impairment never speeds a condition up, and the reported speedups carry tight bootstrap intervals (Table&nbsp;2). Second, HTTP/2 is the strongest protocol for many small files: its
+multiplexing loads 500 individual images almost as fast as the atlas on
+bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
+bundling small tiles rests chiefly on the byte saving of Table&nbsp;1 (up to 26% for
+flat art) rather than on latency. Third, on this testbed HTTP/3's individual-file loads run 4&ndash;5x slower
+than HTTP/2's on the same links, including at zero loss, and a concurrency diagnostic
+locates the cause. The diagnostic reconstructs each request's in-flight interval from the Resource Timing
+API and finds the peak number of simultaneous image requests: HTTP/2 sustained
+13&ndash;14 at once while HTTP/3 sustained only 6, roughly half the parallelism, and the
+slowdown tracks that gap. This is a QUIC stream-limit and
+flow-control effect (quic-go/Caddy defaults plus Chromium's QUIC stream pacing), a
+configuration property of the deployment, not an inherent property of HTTP/3, which also
+multiplexes independent streams over one connection. A default HTTP/3 deployment can therefore under-multiplex a many-small-image page
+relative to HTTP/2, which makes bundling valuable there. Under the 1% packet-loss
+profile every serving condition becomes noise-dominated on this testbed: per-cell
+coefficients of variation reach 0.4 and the atlas-vs-individual and chunk-vs-atlas
+differences fall inside overlapping confidence intervals (for example lossy4g photos on
+HTTP/1.1 give a single atlas at 1.50x and four chunks at 1.54x, indistinguishable). We
+therefore make no loss-recovery claim for chunking from the timing data; chunking's
+demonstrated benefit is cache granularity and bounded invalidation (Section&nbsp;6.2,
+Table&nbsp;4), not packet-loss resilience. The byte-bundle beats individual serving nearly everywhere on HTTP/1.1 and HTTP/3
+(up to 5.7x) at exactly the individual conditions' byte cost, which makes it the
+bundling method of choice for content whose pixels should not share a codec model
+(photos, lossless assets); the pixel atlas remains faster where its byte savings
+compound with the request savings.</p>
+
 {H2('Discussion')}
 {H3('The coupling spectrum')}
 <p>The results organize on a single axis: what a set of tiles is made to share. At one
@@ -818,6 +820,18 @@ modeled; JPEG always wins because its shared cost is large and its adaptive coup
 weak, lossless flat art wins because a shared palette is pure fixed-cost saving, and
 photographic WebP loses under the default encoder because the shared segments are
 adaptive state, recovering once adaptive deblocking neutralizes the artifact.</p>
+<p>A first step toward modeling the second term rather than only naming it: adding a
+content-heterogeneity feature (the mean pairwise distance of tile thumbnails) with a
+per-codec penalty coefficient lifts a pooled cross-codec fit from
+R<sup>2</sup>&nbsp;=&nbsp;0.73 (fixed-cost term alone) to 0.78, and the learned penalties
+order the codecs by their adaptive coupling exactly as the mechanism predicts (JPEG 1.2,
+PNG 5.5, lossless WebP 12.7, lossy WebP 21.0). The modest lift shows a generic
+heterogeneity proxy captures the direction but not the full magnitude of the penalty; a
+predictive model accurate across codecs will need codec-specific structure (the
+four-segment allocation for VP8, the per-scanline filter for PNG), which we leave to
+future work. The practical takeaway stands without the full model: measure the two
+candidate representations for a group and keep the smaller, which is what the heuristic
+of Section&nbsp;6.3 does and why it reaches the oracle out-of-sample.</p>
 <p>The spectrum has a hard end. Individual serving costs
 &Sigma;<sub>i</sub>&nbsp;(H<sub>i</sub>&nbsp;+&nbsp;C<sub>i</sub>(x<sub>i</sub>)), where
 H<sub>i</sub> is a file's fixed overhead and C<sub>i</sub> its compressed payload under
@@ -998,6 +1012,17 @@ doi:10.1145/566654.566590</p>
 <div class="footer">Alexander Apartsin &middot; 2026</div>
 </body></html>"""
 
+    # Renumber tables to document order (captions <b>Table N.</b> define the order;
+    # references "Table&nbsp;N" and "Table N" are remapped to match). Keeps numbering
+    # correct after any subsection reordering.
+    import re as _re
+    order = [int(m.group(1)) for m in _re.finditer(r"<b>Table (\d+)\.</b>", html)]
+    remap = {old: new for new, old in enumerate(order, 1)}
+    if remap != {k: k for k in remap}:
+        for old in sorted(remap, reverse=True):  # placeholder pass avoids collisions
+            html = html.replace(f"<b>Table {old}.</b>", f"<b>Table \x00{remap[old]}.</b>")
+            html = html.replace(f"Table&nbsp;{old}", f"Table&nbsp;\x00{remap[old]}")
+        html = html.replace("\x00", "")
     out = ROOT / "docs" / "paper.html"
     out.write_text(html, encoding="utf-8")
     # the paper IS the site landing page
