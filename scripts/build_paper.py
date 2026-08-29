@@ -478,9 +478,9 @@ cache, and the decode-once property still applies. The cost appears on content c
 editing one tile invalidates the whole bundle, so the expected re-download per deploy
 grows with bundle size. Splitting the collection into k chunked atlases bounds the
 worst-case invalidation at 1/k of the collection while retaining nearly all of the byte and
-request savings (Section&nbsp;5.1, Table&nbsp;1: four chunks price within one percentage
-point of one atlas), which makes chunking the practical default for collections that
-update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
+request savings (the ordering study of Section&nbsp;5.3 finds four chunks price within
+about a percentage point of one atlas), which makes chunking the practical default for
+collections that update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
 weekly seasonal art in another) further confines invalidation to the chunk that
 actually changed.</p>
 <p>The second resource to budget is decoded memory: a decoded atlas occupies
@@ -798,9 +798,9 @@ a live renderer. The HTTP/3 concurrency diagnosis rests on Resource Timing recon
 plus purpose-built corpora, so the crossovers are calibrated rather than population
 estimates; a wider survey across multiple icon libraries and photo sources, with
 randomized N-subset sampling and bootstrap intervals, would turn the reported points
-into distributions. The network numbers are medians of 7 cold loads per cell
-without reported dispersion or significance tests, and the timing endpoint is
-time-to-all-tiles-visible; user-centric metrics (first tile, above-the-fold completion,
+into distributions. The network numbers are medians of 11 cold loads per cell with
+bootstrap confidence intervals (Table&nbsp;2) but no formal significance testing, and
+the timing endpoint is time-to-all-tiles-visible; user-centric metrics (first tile, above-the-fold completion,
 LCP, decode CPU) and warm-cache multi-navigation behavior under realistic asset churn
 are not measured and could change the recommended bundle size. Finally, AVIF and
 JPEG&nbsp;XL are excluded by scope, though AVIF is now a material share of web imagery;
