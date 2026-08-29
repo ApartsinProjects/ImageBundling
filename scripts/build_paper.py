@@ -262,7 +262,7 @@ def main():
     fig_atlas = (f"<figure><img src='img/{emoji_ex['file']}' alt='100-emoji atlas'>"
                  f"<figcaption><b>Figure 1.</b> A {emoji_ex['n']}-tile atlas "
                  f"({emoji_ex['grid']} grid of {emoji_ex['tile']}px tiles, "
-                 f"{emoji_ex['atlas_px']}px). Encoded with identical settings both ways, the "
+                 f"{emoji_ex['atlas_px']}px). Encoded with identical encoder settings both ways (distinct from Table&nbsp;1's matched-quality protocol), the "
                  f"{emoji_ex['n']} tiles cost {s['individual']:,} bytes as separate JPEG files and "
                  f"{s['atlas']:,} bytes as this single JPEG ({s['saving_pct']:.0f}% less), "
                  f"while {emoji_ex['n']} HTTP requests become one. Each tile is displayed "
@@ -321,8 +321,8 @@ file. This report measures how much of these costs bundling recovers when many s
 images are packed into a single atlas image and displayed with standard CSS. The study
 focuses on the three formats that carry the overwhelming majority of web images today
 and decode in every browser: JPEG, PNG, and WebP. At matched per-tile quality (structural similarity, SSIM, where 1.0 is a
-pixel-exact match; target 0.97), atlasing 500 72-pixel flat-art tiles saves 26&ndash;34% of bytes under JPEG and
-8&ndash;15% under WebP, and the saving is protocol-independent. The saving is governed
+pixel-exact match; target 0.97), atlasing 72-pixel flat-art tiles saves up to 26% of bytes under JPEG and up to 15%
+under WebP at matched quality, and the saving is protocol-independent. The saving is governed
 by the ratio of per-file structural cost to content bytes, and the photographic
 size sweep traces the crossover: 56-pixel thumbnails save 29.8% (JPEG) and 15.3%
 (WebP), 112-pixel thumbnails 9.8% and &minus;1.4%, and 224-pixel thumbnails 3.0% and
@@ -335,7 +335,7 @@ codec-aware packing (vertical strips, shared palettes), so the rule is about how
 pack, not a blanket prohibition. Beyond the binary decision, the report treats atlas
 construction as a cost to minimize, bytes per deploy under cache invalidation, load
 latency for the target protocol and network, and decoded memory, subject to a per-tile
-quality floor, and calibrates a heuristic that navigates it. An ordering-and-partition study calibrates the optimizer's levers: cluster-pure
+quality floor, and calibrates a heuristic that navigates it. An ordering-and-partition study calibrates the heuristic's levers: cluster-pure
 bundles save 3 percentage points for lossless flat art, and for collections with
 repeated tiles, a similarity-sorted atlas dedupes copies inside the codec's matching
 window, cutting PNG bytes by 17&ndash;18% at a 21.6% duplicate rate, a saving
@@ -378,8 +378,9 @@ its expected saving off the measured curves.</p>
 <code>background-position</code> (universal), <code>object-view-box</code> (Chromium),
 canvas <code>drawImage</code> region blits, or SVG <code>viewBox</code> cropping. The
 browser decodes the atlas once and paints windows into it.</p>
-<p><b>Contributions.</b> This report contributes (i) the first matched-quality sweep of
-image atlasing across the three universally-supported web codecs (JPEG, PNG, WebP) over
+<p><b>Contributions.</b> This report contributes (i) a matched-quality sweep of
+image atlasing across the three universally-supported web codecs, which we believe is
+the first to appear in the peer-reviewed literature, (JPEG, PNG, WebP) over
 tile size and image count, establishing that the byte saving is governed by the ratio
 of per-file structural cost to content bytes; (ii) a network study of 2,515 validated
 cold browser loads that separates the timing effect of bundling across HTTP/1.1,
@@ -389,7 +390,7 @@ duplicate exploitation, chunking for loss resilience, delta updates via compress
 dictionaries, and encoder-parameter tuning that flips WebP's photographic-atlas penalty
 to a gain; (iv) a coupling-spectrum account that unifies the results, savings arise from
 sharing fixed costs and losses from sharing adaptive state; and (v) an open-source
-optimizer that emits deployable bundles from a directory of images.</p>
+construction heuristic that emits deployable bundles from a directory of images.</p>
 
 {H2('Related work')}
 {H3('Sprites, bundling, and HTTP multiplexing')}
@@ -463,8 +464,8 @@ immutable content-addressed URLs (<code>atlas.3fe2a1.webp</code>,
 <code>Cache-Control: immutable</code>), an unchanged atlas costs zero requests on a warm
 cache, and the decode-once property still applies. The cost appears on content change:
 editing one tile invalidates the whole bundle, so the expected re-download per deploy
-grows with bundle size. Splitting the collection into k chunked atlases bounds this
-blast radius at 1/k of the collection while retaining nearly all of the byte and
+grows with bundle size. Splitting the collection into k chunked atlases bounds the
+worst-case invalidation at 1/k of the collection while retaining nearly all of the byte and
 request savings (Section&nbsp;5.1, Table&nbsp;1: four chunks price within one percentage
 point of one atlas), which makes chunking the practical default for collections that
 update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
@@ -519,6 +520,16 @@ tile from its own bytes, retaining per-file codec adaptation while collapsing N 
 into one). The sweep crosses these with N&nbsp;&isin;&nbsp;{{50, 200, 500}}, both asset
 classes as WebP q80, three protocols, and four network profiles, 2,515 validated cold
 loads in total.</p>
+{H3('Artifact availability')}
+<p>All code, asset manifests, raw per-run measurements, and the construction heuristic
+are released at <a href="https://github.com/ApartsinProjects/ImageBundling">github.com/ApartsinProjects/ImageBundling</a>,
+and every table and figure in this report is regenerated from that data by a single
+build command. The measurements use Pillow&nbsp;12.2 (libwebp&nbsp;1.6.0, libjpeg-turbo
+via libjpeg&nbsp;8.0, zlib-ng&nbsp;1.3.1), Python&nbsp;3.14, zstandard and Brotli for the
+delta-update study, Caddy&nbsp;2.11.4 for the three-protocol server, and Playwright&nbsp;1.58
+driving Chromium&nbsp;145 for the network loads. The photographic corpus is drawn from
+Lorem&nbsp;Picsum and the flat-art corpus from the Twemoji set; both frozen manifests are
+in the repository so every condition consumes identical source pixels.</p>
 
 {H2('Results')}
 {H3('Byte savings at matched quality')}
@@ -527,8 +538,8 @@ loads in total.</p>
 regularities organize the table. First, savings scale with the ratio of per-file
 structural cost to content bytes: 72-pixel flat-art tiles encode to 1&ndash;3 KB, so
 JPEG's roughly 600 bytes of per-file tables and headers alone account for most of its
-measured 26&ndash;34% saving, while WebP's 30-byte floor leaves it the smallest lossy
-gain (8&ndash;15%). Second, savings broadly increase with N and flatten by a few
+measured 19&ndash;26% saving across N, while WebP's 30-byte floor leaves it the smallest
+lossy gain (8&ndash;15%). Second, savings broadly increase with N and flatten by a few
 hundred tiles as amortization completes (the trend is not strictly monotonic; because
 each N draws one deterministic subset, small non-monotonicities such as WebP flat art
 at 8.3/15.2/8.2% for N&nbsp;=&nbsp;50/200/500 reflect subset composition, not a scaling
@@ -542,8 +553,8 @@ while product-grid images (200&nbsp;px and up) pay only under JPEG, and only a f
 percent.</p>
 {table1}
 {fig_bars}
-<p>Atlasing is not free where per-image adaptation matters. Both lossless formats lose
-from atlasing at N&nbsp;&ge;&nbsp;200 (PNG &minus;3 to &minus;6%, lossless WebP &minus;4
+<p>Atlasing is not free where per-image adaptation matters. On flat art, both lossless
+formats lose from atlasing at N&nbsp;&ge;&nbsp;200 (PNG &minus;3 to &minus;6%, lossless WebP &minus;4
 to &minus;5%): PNG chooses its prediction filter per scanline and an atlas scanline
 crosses dozens of unrelated tiles, while lossless WebP fits transforms and entropy
 codes per image, and one global model over hundreds of heterogeneous tiles cannot match
@@ -571,8 +582,8 @@ respectively for 500 flat-art tiles, and 1.3&ndash;2.8x for photos, across every
 network profile. Second, HTTP/2 is the strongest protocol for many small files: its
 multiplexing loads 500 individual images almost as fast as the atlas on
 bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
-bundling small tiles rests chiefly on the 15&ndash;26% byte saving rather than on
-latency. Third, on this testbed HTTP/3's individual-file loads run 4&ndash;5x slower
+bundling small tiles rests chiefly on the byte saving of Table&nbsp;1 (up to 26% for
+flat art) rather than on latency. Third, on this testbed HTTP/3's individual-file loads run 4&ndash;5x slower
 than HTTP/2's on the same links, including at zero loss, and a concurrency diagnostic
 locates the cause. The diagnostic reconstructs each request's in-flight interval from the Resource Timing
 API and finds the peak number of simultaneous image requests: HTTP/2 sustained
@@ -597,7 +608,7 @@ order, three random shuffles, luminance-sorted, mean-color-sorted, k-means
 cluster-grouped, greedy nearest-neighbor) and two 4-way partitions (random split vs
 cluster-pure split), for every in-scope codec at N&nbsp;=&nbsp;500. Three calibrated
 rules emerge. For lossy codecs, ordering is worth at most one percent: the placement
-of tiles does not recover the shared-model penalty, so the optimizer can ignore order
+of tiles does not recover the shared-model penalty, so the heuristic can ignore order
 for JPEG and lossy WebP and spend its freedom elsewhere. For lossless flat art, order
 and partition are real levers: source order (which groups semantically related icons)
 is already near-optimal, random shuffling costs 2&ndash;4%, and cluster-pure chunks
@@ -621,7 +632,7 @@ which dedupes them. Exactly-identical tiles are already handled on the web by
 content-addressed URLs (the browser fetches one copy and many elements reuse it), so
 the atlas's unique contribution here is compressing near-duplicates: variant and recolored tiles that share most but not all pixels, which per-URL caching cannot merge.
 The gain applies precisely to the LZ-class codecs and scales with the duplicate rate,
-so the optimizer prices it as a measured dup-rate term: deduplicate exactly-repeated
+so the heuristic prices it as a measured dup-rate term: deduplicate exactly-repeated
 tiles at the coordinate-map level (many CSS entries, one atlas region), and sort
 near-duplicates adjacent so the encoder captures the rest.</p>
 {H3('Winning content classes: icons, thumbnails, avatars')}
@@ -702,8 +713,9 @@ one shared adaptive state &theta;. Bundling wins only when the saved overhead
 &Sigma;<sub>i</sub>&nbsp;H<sub>i</sub>&nbsp;&minus;&nbsp;H exceeds the cost of replacing
 each image's optimal state by the shared &theta;. For large, unrelated photographs
 H<sub>i</sub>/C<sub>i</sub>&nbsp;&rarr;&nbsp;0: almost no fixed overhead remains to
-amortize while any adaptation penalty persists, so no single browser-decodable pixel
-atlas can beat independently-optimized files for every heterogeneous corpus. This is the
+amortize while any adaptation penalty persists, so a single browser-decodable pixel
+atlas is not expected to beat independently-optimized files for a sufficiently large,
+heterogeneous photographic corpus. This is the
 boundary the measurements trace, JPEG's advantage falling from +30% at 56&nbsp;px to +3%
 at 224&nbsp;px, and it is why the byte-bundle, which shares only transport, is the
 principled zero-coupling endpoint rather than a fallback. The open direction is to
@@ -774,7 +786,7 @@ AVIF is the first codec a follow-up should add.</p>
 {H2('Conclusion')}
 <p>Bundling small web images pays, and the study makes precise when and by how much for
 the three formats that carry most of the web's images. Atlas small lossy tiles: icons
-and thumbnails gain 26&ndash;34% under JPEG and 8&ndash;15% under WebP at matched
+and thumbnails gain up to 30% under JPEG and up to 19% under WebP at matched
 quality, and lossless flat art, the icon-set and map-marker case, gains 40&ndash;95%
 with a strip-packed or shared-palette bundle that is smaller than even the best lossy
 option. Serve larger photographs and lossless assets as a byte-bundle, which collapses

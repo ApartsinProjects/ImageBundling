@@ -110,13 +110,18 @@ def main():
     outdir.mkdir(parents=True, exist_ok=True)
     out = (outdir / "loads.jsonl").open("a")
 
+    import random as _random
     with sync_playwright() as pw:
         for profile in args.profiles.split(","):
             set_netem(profile)
             try:
-                for proto in args.protocols.split(","):
-                    for page_name in args.pages.split(","):
-                        for rep in range(args.reps):
+                # randomized run order within a profile: shuffle (proto,page,rep) triples
+                order = [(pr, pg, rp) for pr in args.protocols.split(",")
+                         for pg in args.pages.split(",") for rp in range(args.reps)]
+                _random.Random(1).shuffle(order)
+                for proto, page_name, rep in order:
+                    if True:
+                        if True:
                             try:
                                 r = one_load(pw, ip, proto, page_name, spki)
                                 ok = EXPECT_PROTO[proto] in r["protocols"] and len(r["protocols"]) == 1
