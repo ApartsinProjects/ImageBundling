@@ -1,0 +1,446 @@
+[
+ {
+  "size": 56,
+  "codec": "jpeg",
+  "target": 50,
+  "bytes_individual": null,
+  "bytes_atlas": null,
+  "saving_pct": null
+ },
+ {
+  "size": 56,
+  "codec": "jpeg",
+  "target": 60,
+  "bytes_individual": 72296,
+  "bytes_atlas": 41816,
+  "saving_pct": 42.16
+ },
+ {
+  "size": 56,
+  "codec": "jpeg",
+  "target": 70,
+  "bytes_individual": 94884,
+  "bytes_atlas": 63156,
+  "saving_pct": 33.44
+ },
+ {
+  "size": 56,
+  "codec": "jpeg",
+  "curves": {
+   "individual": [
+    [
+     58.19885931,
+     69106
+    ],
+    [
+     66.08582289,
+     84203
+    ],
+    [
+     70.78210959,
+     97175
+    ],
+    [
+     76.4795294,
+     121420
+    ],
+    [
+     82.19894207,
+     160267
+    ]
+   ],
+   "atlas": [
+    [
+     57.32835802,
+     37977
+    ],
+    [
+     66.17067473,
+     52232
+    ],
+    [
+     70.45636961,
+     64602
+    ],
+    [
+     76.26008516,
+     88311
+    ],
+    [
+     82.15860486,
+     125962
+    ]
+   ]
+  }
+ },
+ {
+  "size": 56,
+  "codec": "webp",
+  "target": 50,
+  "bytes_individual": null,
+  "bytes_atlas": null,
+  "saving_pct": null
+ },
+ {
+  "size": 56,
+  "codec": "webp",
+  "target": 60,
+  "bytes_individual": 45474,
+  "bytes_atlas": 44196,
+  "saving_pct": 2.81
+ },
+ {
+  "size": 56,
+  "codec": "webp",
+  "target": 70,
+  "bytes_individual": 63809,
+  "bytes_atlas": 56235,
+  "saving_pct": 11.87
+ },
+ {
+  "size": 56,
+  "codec": "webp",
+  "curves": {
+   "individual": [
+    [
+     59.79341651,
+     45164
+    ],
+    [
+     67.66389798,
+     58598
+    ],
+    [
+     71.9889516,
+     68610
+    ],
+    [
+     77.77261148,
+     90106
+    ],
+    [
+     83.19515916,
+     134726
+    ]
+   ],
+   "atlas": [
+    [
+     55.28298951,
+     36028
+    ],
+    [
+     62.37899597,
+     48994
+    ],
+    [
+     71.498104,
+     57780
+    ],
+    [
+     76.53341323,
+     76300
+    ],
+    [
+     83.58596005,
+     115260
+    ]
+   ]
+  }
+ },
+ {
+  "size": 112,
+  "codec": "jpeg",
+  "target": 50,
+  "bytes_individual": null,
+  "bytes_atlas": null,
+  "saving_pct": null
+ },
+ {
+  "size": 112,
+  "codec": "jpeg",
+  "target": 60,
+  "bytes_individual": 175749,
+  "bytes_atlas": 145658,
+  "saving_pct": 17.12
+ },
+ {
+  "size": 112,
+  "codec": "jpeg",
+  "target": 70,
+  "bytes_individual": 239484,
+  "bytes_atlas": 209580,
+  "saving_pct": 12.49
+ },
+ {
+  "size": 112,
+  "codec": "jpeg",
+  "curves": {
+   "individual": [
+    [
+     54.98697768,
+     153723
+    ],
+    [
+     65.411068,
+     203078
+    ],
+    [
+     70.77075084,
+     246210
+    ],
+    [
+     77.32686327,
+     328662
+    ],
+    [
+     83.87942258,
+     461635
+    ]
+   ],
+   "atlas": [
+    [
+     55.07175474,
+     124295
+    ],
+    [
+     65.41847667,
+     173408
+    ],
+    [
+     70.73933304,
+     216086
+    ],
+    [
+     77.19668074,
+     298321
+    ],
+    [
+     83.70927433,
+     431369
+    ]
+   ]
+  }
+ },
+ {
+  "size": 112,
+  "codec": "webp",
+  "target": 50,
+  "bytes_individual": null,
+  "bytes_atlas": 111338,
+  "saving_pct": null
+ },
+ {
+  "size": 112,
+  "codec": "webp",
+  "target": 60,
+  "bytes_individual": 130237,
+  "bytes_atlas": 158638,
+  "saving_pct": -21.81
+ },
+ {
+  "size": 112,
+  "codec": "webp",
+  "target": 70,
+  "bytes_individual": 179534,
+  "bytes_atlas": 223230,
+  "saving_pct": -24.34
+ },
+ {
+  "size": 112,
+  "codec": "webp",
+  "curves": {
+   "individual": [
+    [
+     56.15733221,
+     115938
+    ],
+    [
+     66.00569451,
+     156196
+    ],
+    [
+     70.99784602,
+     185890
+    ],
+    [
+     77.96495042,
+     252874
+    ],
+    [
+     85.12315516,
+     388774
+    ]
+   ],
+   "atlas": [
+    [
+     49.22375521,
+     108302
+    ],
+    [
+     58.29589463,
+     149618
+    ],
+    [
+     63.65240817,
+     179844
+    ],
+    [
+     72.87689972,
+     246202
+    ],
+    [
+     80.83658055,
+     380236
+    ]
+   ]
+  }
+ },
+ {
+  "size": 224,
+  "codec": "jpeg",
+  "target": 50,
+  "bytes_individual": null,
+  "bytes_atlas": null,
+  "saving_pct": null
+ },
+ {
+  "size": 224,
+  "codec": "jpeg",
+  "target": 60,
+  "bytes_individual": 600539,
+  "bytes_atlas": 576516,
+  "saving_pct": 4.0
+ },
+ {
+  "size": 224,
+  "codec": "jpeg",
+  "target": 70,
+  "bytes_individual": 742329,
+  "bytes_atlas": 719995,
+  "saving_pct": 3.01
+ },
+ {
+  "size": 224,
+  "codec": "jpeg",
+  "curves": {
+   "individual": [
+    [
+     52.53592961,
+     452559
+    ],
+    [
+     63.64054038,
+     689395
+    ],
+    [
+     78.5734394,
+     820180
+    ],
+    [
+     87.0579196,
+     939928
+    ],
+    [
+     89.86748356,
+     1093328
+    ]
+   ],
+   "atlas": [
+    [
+     52.57753224,
+     428172
+    ],
+    [
+     63.61806615,
+     666478
+    ],
+    [
+     78.49125076,
+     797922
+    ],
+    [
+     86.47504751,
+     917087
+    ],
+    [
+     88.80938742,
+     1070492
+    ]
+   ]
+  }
+ },
+ {
+  "size": 224,
+  "codec": "webp",
+  "target": 50,
+  "bytes_individual": null,
+  "bytes_atlas": 371495,
+  "saving_pct": null
+ },
+ {
+  "size": 224,
+  "codec": "webp",
+  "target": 60,
+  "bytes_individual": 421407,
+  "bytes_atlas": 540291,
+  "saving_pct": -28.21
+ },
+ {
+  "size": 224,
+  "codec": "webp",
+  "target": 70,
+  "bytes_individual": 573915,
+  "bytes_atlas": 742367,
+  "saving_pct": -29.35
+ },
+ {
+  "size": 224,
+  "codec": "webp",
+  "curves": {
+   "individual": [
+    [
+     53.73335045,
+     351630
+    ],
+    [
+     64.33028781,
+     477558
+    ],
+    [
+     69.75438832,
+     568494
+    ],
+    [
+     77.36482974,
+     762852
+    ],
+    [
+     85.3356319,
+     1137050
+    ]
+   ],
+   "atlas": [
+    [
+     47.80923163,
+     343852
+    ],
+    [
+     56.78935864,
+     472088
+    ],
+    [
+     61.04189212,
+     564476
+    ],
+    [
+     70.781741,
+     760328
+    ],
+    [
+     85.22219744,
+     1141958
+    ]
+   ]
+  }
+ }
+]

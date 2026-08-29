@@ -45,8 +45,23 @@ and map where it stops paying. Plan: ANALYSIS_AND_PLAN.md.
 - fetch_assets.sh: Python on Windows emits CRLF; `$(python_gen)` kept trailing `\r` in
   codepoints, corrupting every emoji URL except the last line. Fix: `| tr -d '\r'`.
 
+| 2026-08-29 | e_ssim2 SSIMULACRA2 robustness cross-check (reference ssimulacra2_rs, N=100 photos, full-grid scoring) | JPEG atlas saving stays positive at 56/112/224px (+33/+12/+3% @ss2=70); WebP +12% at 56px, -24% at 112px, -29% at 224px. Crossover survives metric change, moves to smaller tile, penalty LARGER than luma-SSIM (-29 vs -8.5%) | invariant PASS: at equal q WebP atlas scores below individual (72.9 vs 78.0 @112 q80) while JPEG does not (77.2 vs 77.3) -> confirms shared-quantizer adaptive-state penalty | Coupling claim robust to perceptual metric; SSIMULACRA2 prices VP8 segment-sharing higher than luma SSIM. Now Table 7 (renumbered 3) |
+| 2026-08-29 | Prior-art re-scout (image spriting) | Found Marszalkowski et al. TWEB 2016 (DOI 10.1145/2818377): peer-reviewed CSS-sprite PACKING (PNG geometry/area, load-time), codec fixed. NOT codec x tile-size matched-quality | verified via PDF (PNG-only, aspect-ratio->file-size) | Novelty NARROWED not refuted: cited [33], claim reworded to "first matched-quality, cross-codec, tile-size-resolved" |
+
+## SPE strength-review revisions (2026-08-29, GPTConsult + prior-art/citation scouts)
+Related work rebuilt into 5 threads (2.1 bundling/spriting, 2.2 protocols, 2.3 small-image
+coding & multi-image containers, 2.4 texture atlases, 2.5 cache granularity & delta),
+refs 32->45 (all verified: Marszalkowski, Butkiewicz, Souders, de Saxce, Kakhki, JPEG XL,
+RFC 3229/3284/9111, SDCH, HEIF, WebP-study). Novelty narrowed + [33] cited. Figures:
+Fig 2 crossover now bootstrap medians + 95% CI bands + break-even marker; Fig 3 network
+bars -> dot-and-whisker on shared log axis; NEW Fig 6 (renum 5) heuristic decision-flow
+diagram; Table 5 gained naive-baseline regret columns (always-atlas +5.8%, always-bundle
++9.4%, always-strip +186% mean vs heuristic 0%); NEW Table 7 (renum 3) SSIMULACRA2. Fixed
+warm-cache Table 4 -> Figure cross-ref. Reference SSIMULACRA2 via cargo install
+ssimulacra2_rs --no-default-features (vapoursynth link error with defaults).
+
 ## Current standing + next
-Phases 0-2 COMPLETE and published (paper carries static, ordering/partition, and
-network results; all invariants pass). Remaining backlog: E3.7-E3.11 method upgrades,
-optimizer CLI (E3.5), display-mechanism/memory sub-experiments, DOCX build.
+Phases 0-2 COMPLETE and published; SPE strength revisions landed (related work, CI figures,
+heuristic flowchart, naive baselines, SSIMULACRA2 robustness). Optional remaining: HTTP/3
+qlog confirmation (item 4, deferred), bibtest pass on the 13 new refs, DOCX build.
 Paper: https://apartsinprojects.github.io/ImageBundling/
