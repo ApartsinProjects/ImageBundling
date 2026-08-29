@@ -37,12 +37,32 @@ def main():
         cond = r["page"].split("_")[0]
         cells[(r["profile"], r["proto"], cls, n, cond)].append(r["allVisibleMs"])
 
+    import random as _r
+    _r.seed(1)
+
+    def boot_ci(ind, atl, B=2000):
+        rs = []
+        for _ in range(B):
+            i = st.median(_r.choices(ind, k=len(ind)))
+            a = st.median(_r.choices(atl, k=len(atl)))
+            rs.append(i / a)
+        rs.sort()
+        return round(rs[int(0.025 * B)], 2), round(rs[int(0.975 * B)], 2)
+
     summary = []
     for k, v in sorted(cells.items()):
-        summary.append({"profile": k[0], "proto": k[1], "cls": k[2], "n": k[3],
-                        "cond": k[4], "median_ms": round(st.median(v), 1),
-                        "p25": round(st.quantiles(v, n=4)[0], 1),
-                        "p75": round(st.quantiles(v, n=4)[2], 1), "n_loads": len(v)})
+        rec = {"profile": k[0], "proto": k[1], "cls": k[2], "n": k[3],
+               "cond": k[4], "median_ms": round(st.median(v), 1),
+               "p25": round(st.quantiles(v, n=4)[0], 1) if len(v) >= 4 else None,
+               "p75": round(st.quantiles(v, n=4)[2], 1) if len(v) >= 4 else None,
+               "n_loads": len(v)}
+        # atlas speedup CI relative to the individual condition of the same cell
+        if k[4] == "atlas1":
+            ind = cells.get((k[0], k[1], k[2], k[3], "individual"))
+            if ind:
+                lo, hi = boot_ci(ind, v)
+                rec["speedup_ci_lo"], rec["speedup_ci_hi"] = lo, hi
+        summary.append(rec)
     json.dump(summary, (ROOT / "results" / "network" / args.tag /
                         "summary.json").open("w"), indent=1)
 

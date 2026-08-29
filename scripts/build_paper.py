@@ -118,7 +118,7 @@ def warmcache_table():
             f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
 
-def load_network(tag="phase2v3"):
+def load_network(tag="phase2v4"):
     f = ROOT / "results" / "network" / tag / "summary.json"
     return json.load(f.open()) if f.exists() else None
 
@@ -142,11 +142,16 @@ def network_results_html():
                 bb = med.get((pkey, proto, cls, 500, "bundlebin"))
                 if not (i and a1):
                     continue
+                arec = next((s for s in summ if s["profile"] == pkey and
+                             s["proto"] == proto and s["cls"] == cls and
+                             s["n"] == 500 and s["cond"] == "atlas1"), {})
+                ci = (f" [{arec['speedup_ci_lo']:.1f},{arec['speedup_ci_hi']:.1f}]"
+                      if arec.get("speedup_ci_lo") is not None else "")
                 trows.append(
                     f"<tr><td>{clabel}</td><td>{plabel}</td><td>{proto}</td>"
                     f"<td>{i:,.0f}</td><td>{a1:,.0f}</td>"
                     f"<td>{a4:,.0f}</td><td>{bb:,.0f}</td>"
-                    f"<td><b>{i/a1:.1f}x</b></td><td>{i/bb:.1f}x</td></tr>")
+                    f"<td><b>{i/a1:.1f}x</b>{ci}</td><td>{i/bb:.1f}x</td></tr>")
     table2 = ("<div class='tablewrap'><table>"
               "<caption><b>Table 2.</b> Median time to all 500 tiles visible (ms) per "
               "serving condition, protocol, and network profile (n&nbsp;=&nbsp;7 cold "
@@ -341,9 +346,9 @@ repeated tiles, a similarity-sorted atlas dedupes copies inside the codec's matc
 window, cutting PNG bytes by 17&ndash;18% at a 21.6% duplicate rate, a saving
 separately-served files cannot reach on any protocol. A network study over 2,515 validated
 cold loads across HTTP/1.1, HTTP/2, and HTTP/3 under emulated network conditions
-completes the picture: bundling 500 flat tiles is 7&ndash;9x faster to full visibility
-on HTTP/1.1 and 4&ndash;8x on HTTP/3, while HTTP/2's multiplexing closes most of the
-latency gap and leaves bundling there as chiefly a byte optimization; under packet
+completes the picture: bundling 500 flat tiles is 4.5&ndash;8.6x faster to full visibility
+on HTTP/1.1 and 4.8&ndash;7.7x on HTTP/3, while HTTP/2's multiplexing narrows the gap
+(1.1&ndash;3.5x) and leaves bundling there as chiefly a byte optimization; under packet
 loss, chunked atlases outperform one large atlas by spreading the transfer across
 connections.</p></div>
 
@@ -526,8 +531,10 @@ atlas, four chunked atlases, and a byte-bundle (the N encoded files concatenated
 one binary resource plus an offset index; the client slices the buffer and decodes each
 tile from its own bytes, retaining per-file codec adaptation while collapsing N requests
 into one). The sweep crosses these with N&nbsp;&isin;&nbsp;{{50, 200, 500}}, both asset
-classes as WebP q80, three protocols, and four network profiles, 2,515 validated cold
-loads in total.</p>
+classes as WebP q80, three protocols, and four network profiles. Within each
+profile the load order is randomized across conditions, protocols, and repetitions, and
+the first repetition of each cell is discarded as a warm-up, leaving 11 measured loads
+per cell.</p>
 {H3('Artifact availability')}
 <p>All code, asset manifests, raw per-run measurements, and the construction heuristic
 are released at <a href="https://github.com/ApartsinProjects/ImageBundling">github.com/ApartsinProjects/ImageBundling</a>,
@@ -595,9 +602,9 @@ requests into one.</p>
 {H3('Network timing under HTTP/1.1, HTTP/2, and HTTP/3')}
 {net_html}
 <p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
-HTTP/1.1 and HTTP/3, bundling remains a large timing win: 7&ndash;9x and 4&ndash;8x
-respectively for 500 flat-art tiles, and 1.3&ndash;2.8x for photos, across every
-network profile. Second, HTTP/2 is the strongest protocol for many small files: its
+HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
+4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.5&ndash;2.8x
+for photos. Across cells, added network impairment never speeds a condition up, and the reported speedups carry tight bootstrap intervals (Table&nbsp;2). Second, HTTP/2 is the strongest protocol for many small files: its
 multiplexing loads 500 individual images almost as fast as the atlas on
 bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
 bundling small tiles rests chiefly on the byte saving of Table&nbsp;1 (up to 26% for
@@ -811,7 +818,7 @@ option. Serve larger photographs and lossless assets as a byte-bundle, which col
 requests at zero byte cost, or, for photographic WebP, tune the encoder (noise shaping
 plus adaptive deblocking) to turn the atlas penalty into a gain. Ship about four chunks
 for loss resilience and bounded cache invalidation, deduplicate repeats explicitly, and
-serve updates as dictionary deltas. On the wire, bundling is 4&ndash;9x faster to full
+serve updates as dictionary deltas. On the wire, bundling is 4.5&ndash;8.6x faster to full
 visibility on HTTP/1.1 and HTTP/3 and chiefly a byte optimization on HTTP/2. The unifying
 account, that savings come from sharing fixed costs and losses from sharing adaptive
 state, predicts every sign in the data and guides the accompanying construction
