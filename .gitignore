@@ -9,3 +9,5 @@ results/static/*_smoke/
 results/static/audit_stdout.txt
 results/static/e31_dedup_results.jsonl
 results/network/phase2v2/
+
+assets_oos/
