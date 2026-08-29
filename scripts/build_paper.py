@@ -1124,11 +1124,16 @@ than HTTP/2's on the same links, including at zero loss, and a concurrency diagn
 locates the cause. The diagnostic reconstructs each request's in-flight interval from the Resource Timing
 API and finds the peak number of simultaneous image requests: HTTP/2 sustained
 13&ndash;14 at once while HTTP/3 sustained only 6, roughly half the parallelism, and the
-slowdown tracks that gap. This is a QUIC stream-limit and
-flow-control effect (quic-go/Caddy defaults plus Chromium's QUIC stream pacing), a
-configuration property of the deployment, not an inherent property of HTTP/3, which also
-multiplexes independent streams over one connection. A default HTTP/3 deployment can therefore under-multiplex a many-small-image page
-relative to HTTP/2, which makes bundling valuable there. Under the 1% packet-loss
+slowdown tracks that gap. The server's own QUIC transport log (quic-go qlog) confirms
+the effect and locates it precisely: across cold HTTP/3 loads of the 500-file page, the
+server records a peak of only 4&ndash;6 request streams open at once (median 5 for
+photographs, 4 for flat art), agreeing with the browser-side count, while its transport
+parameters advertise a 100-stream limit (<code>initial_max_streams_bidi</code>) that is
+never approached. The constraint is thus not a QUIC stream-limit or flow-control effect,
+the server permits 100 concurrent streams, but the client's QUIC request scheduler
+(Chromium's), a property of the deployment, not of HTTP/3, which multiplexes independent
+streams over one connection. A default HTTP/3 client can therefore under-multiplex a
+many-small-image page relative to HTTP/2, which makes bundling valuable there. Under the 1% packet-loss
 profile every serving condition becomes noise-dominated on this testbed: per-cell
 coefficients of variation reach 0.4 and the atlas-vs-individual and chunk-vs-atlas
 differences fall inside overlapping confidence intervals (for example lossy4g photos on
@@ -1276,7 +1281,9 @@ the ideal case; anti-aliased production icons will realize less of it. The netwo
 emulates four profiles on a single-machine testbed rather than the open Internet, and
 measures time-to-all-tiles-visible rather than a full field-metric suite. Decoded-memory
 cost is bounded analytically and by the chunking recommendation but not yet profiled in
-a live renderer. The HTTP/3 concurrency diagnosis rests on Resource Timing reconstruction; confirming the mechanism with qlog traces and testing its generality across servers and native Linux is future work. The matched-quality crossovers are calibrated on one icon set and one photographic
+a live renderer. The HTTP/3 concurrency diagnosis is confirmed from the server's own QUIC
+transport log (Section&nbsp;5.5); testing its generality across a second QUIC
+implementation and native Linux remains future work. The matched-quality crossovers are calibrated on one icon set and one photographic
 collection with randomized-subset bootstrap intervals (Section&nbsp;5.1), and the
 heuristic is validated out-of-sample on five further independent corpora
 (Section&nbsp;6.3); a still wider survey of naturally-occurring collections would
