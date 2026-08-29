@@ -180,6 +180,118 @@ def oracle_table():
             f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
 
+_PAL = {"jpeg": "#c0392b", "webp": "#2980b9", "png": "#7f8c8d", "webp_ll": "#16a085",
+        "individual": "#111418", "atlas1": "#c0392b", "atlas4": "#e67e22",
+        "atlas16": "#2980b9", "dict_delta": "#16a085"}
+_LAB = {"jpeg": "JPEG", "webp": "WebP", "png": "PNG", "webp_ll": "WebP-lossless",
+        "individual": "individual files", "atlas1": "1 atlas", "atlas4": "4 chunks",
+        "atlas16": "16 chunks", "dict_delta": "dict-delta"}
+
+
+def _lineplot(series, xs, xlabel, ylabel, W=560, H=320, logy=False, ytick=None,
+              xticklabel=None, aria=""):
+    """series: dict name -> list of y aligned to xs. Returns an <svg> line chart."""
+    import math
+    ML, MB, MT, MR = 62, 46, 16, 140
+    allys = [v for ys in series.values() for v in ys if v is not None]
+    if logy:
+        ys_t = [math.log10(max(1, v)) for v in allys]
+        ymin, ymax = min(ys_t), max(ys_t)
+    else:
+        ymin, ymax = min(allys + [0]), max(allys)
+    pad = (ymax - ymin) * 0.08 or 1
+    ymin -= pad; ymax += pad
+    xmin, xmax = min(xs), max(xs)
+
+    def X(x):
+        return ML + (W - ML - MR) * (x - xmin) / ((xmax - xmin) or 1)
+
+    def Y(v):
+        t = math.log10(max(1, v)) if logy else v
+        return (H - MB) - (H - MB - MT) * (t - ymin) / ((ymax - ymin) or 1)
+
+    out = [f'<svg viewBox="0 0 {W} {H}" style="max-width:100%" font-family="Georgia,serif" '
+           f'role="img" aria-label="{aria}">']
+    # y gridlines/ticks
+    for gt in (ytick or []):
+        yy = Y(gt)
+        lbl = (f"{gt/1e6:g}M" if gt >= 1e6 else f"{gt/1e3:g}K") if logy else f"{gt:g}"
+        out.append(f'<line x1="{ML}" y1="{yy:.0f}" x2="{W-MR}" y2="{yy:.0f}" stroke="#eee"/>'
+                   f'<text x="{ML-6}" y="{yy+4:.0f}" font-size="10" text-anchor="end" '
+                   f'fill="#5a626c">{lbl}</text>')
+    if not logy:
+        out.append(f'<line x1="{ML}" y1="{Y(0):.0f}" x2="{W-MR}" y2="{Y(0):.0f}" '
+                   f'stroke="#999" stroke-dasharray="4 3"/>')
+    # x ticks
+    for x in xs:
+        out.append(f'<text x="{X(x):.0f}" y="{H-MB+16}" font-size="10" text-anchor="middle" '
+                   f'fill="#5a626c">{(xticklabel(x) if xticklabel else x)}</text>')
+    out.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" font-size="11" text-anchor="middle" '
+               f'fill="#111418">{xlabel}</text>')
+    out.append(f'<text x="14" y="{(MT+H-MB)/2:.0f}" font-size="11" text-anchor="middle" '
+               f'fill="#111418" transform="rotate(-90 14 {(MT+H-MB)/2:.0f})">{ylabel}</text>')
+    # series
+    ly = MT + 6
+    for name, ys in series.items():
+        c = _PAL.get(name, "#333")
+        pts = [(X(x), Y(v)) for x, v in zip(xs, ys) if v is not None]
+        d = " ".join(f"{px:.1f},{py:.1f}" for px, py in pts)
+        out.append(f'<polyline points="{d}" fill="none" stroke="{c}" stroke-width="2"/>')
+        for px, py in pts:
+            out.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{c}"/>')
+        out.append(f'<rect x="{W-MR+10}" y="{ly-8}" width="12" height="3" fill="{c}"/>'
+                   f'<text x="{W-MR+26}" y="{ly-3}" font-size="10" fill="#111418">'
+                   f'{_LAB.get(name, name)}</text>')
+        ly += 16
+    out.append('</svg>')
+    return "".join(out)
+
+
+def crossover_figure():
+    """Photo byte-saving vs tile size, one line per codec, at N=500."""
+    sizes = [(56, "phase1_photos56"), (112, "phase1_photos112"), (224, "phase1_photos")]
+    series = {c: [] for c in ("jpeg", "webp", "png", "webp_ll")}
+    for size, tag in sizes:
+        rows = load(tag)
+        for c in series:
+            r = next((x for x in rows if x["codec"] == c and x["n"] == 500 and
+                      x["pad"] == 0 and x["ssim_target"] in (0.97, None)), None)
+            series[c].append(r["saving_pct"] if r else None)
+    svg = _lineplot(series, [56, 112, 224], "photo tile size (px)",
+                    "bytes saved by atlasing (%)", logy=False,
+                    ytick=[-10, -5, 0, 5, 10, 15, 20, 25, 30],
+                    aria="Photo byte savings vs tile size per codec")
+    return (f"<figure>{svg}<figcaption><b>Figure 2.</b> Byte savings from atlasing 500 "
+            "photographic tiles at matched quality, as tile size grows from 56 to 224 "
+            "pixels (per-codec; lossy at SSIM 0.97, lossless exact). The saving tracks "
+            "the per-file-overhead-to-content ratio and so falls with size: JPEG stays "
+            "positive throughout, WebP crosses zero near 100&nbsp;px, and the lossless "
+            "formats sit at or below zero under a grid. Table&nbsp;1 gives the full grid "
+            "over image count and the flat-art class.</figcaption></figure>")
+
+
+def warmcache_figure():
+    f = ROOT / "results" / "static" / "e_warmcache" / "results.json"
+    if not f.exists():
+        return ""
+    d = json.load(f.open())
+    xs = [r["churn_pct"] for r in d["rows"]]
+    series = {k: [r[k] for r in d["rows"]]
+              for k in ("individual", "atlas1", "atlas16", "dict_delta")}
+    svg = _lineplot(series, xs, "tiles changed per deploy (% of collection)",
+                    "bytes re-downloaded", logy=True,
+                    ytick=[10000, 100000, 1000000],
+                    xticklabel=lambda x: f"{x:g}%",
+                    aria="Warm-cache re-download bytes vs churn by strategy")
+    return (f"<figure>{svg}<figcaption><b>Figure 5.</b> Warm-cache re-download: bytes a "
+            "returning client fetches after a deploy changes a fraction of a 200-tile "
+            "WebP collection (log scale; full fresh download "
+            f"{d['total_fresh_download']:,}&nbsp;B; mean of 20 random deploys per rate). "
+            "A single atlas re-fetches almost everything on any change; 16 chunks scale "
+            "with churn; dictionary-delta serving tracks the individual-file optimum and "
+            "undercuts it at high churn.</figcaption></figure>")
+
+
 def load_network(tag="phase2v4"):
     f = ROOT / "results" / "network" / tag / "summary.json"
     return json.load(f.open()) if f.exists() else None
@@ -334,29 +446,11 @@ def main():
                  f"while {emoji_ex['n']} HTTP requests become one. Each tile is displayed "
                  f"with CSS <code>background-position</code>.</figcaption></figure>")
 
-    bars_e = bar_chart(load("phase1_emoji"), "emoji", 0.97, 0, "(a) flat art, 72px")
-    bars_p = bar_chart(load("phase1_photos"), "photos", 0.97, 0, "(b) photos, 224px")
-    fig_bars = (f"<figure>{bars_e}{bars_p}"
-                "<figcaption><b>Figure 2.</b> Bytes saved by atlasing per codec at matched "
-                "per-tile SSIM 0.97 (lossless codecs compared exactly), for (a) 72px "
-                "flat-art tiles and (b) 224px photographic thumbnails. Bar shade encodes "
-                "the number of bundled images N. Bars below zero mean the atlas is larger "
-                "than the same tiles as individual files.</figcaption></figure>")
-    chart_e = bar_chart(load("phase1_emoji"), "emoji", 0.97, 0,
-                        "(a) flat art, 72px", group_by="n")
-    chart_p = bar_chart(load("phase1_photos"), "photos", 0.97, 0,
-                        "(b) photos, 224px", group_by="n")
-    fig_charts = (f"<figure>{chart_e}{chart_p}"
-                  "<figcaption><b>Figure 3.</b> The same savings as Figure 2 grouped "
-                  "by image count N, one codec-colored bar per group: (a) 72px flat "
-                  "art, (b) 224px photographic thumbnails. Savings grow with N and "
-                  "saturate near N&nbsp;=&nbsp;200, once hundreds of per-file container "
-                  "overheads have collapsed into one; the per-codec ordering follows the "
-                  "per-codec container floors.</figcaption></figure>")
+    fig_cross = crossover_figure()
 
     net_html = network_results_html()
     icon_html = icon_table()
-    warm_html = warmcache_table()
+    warm_html = warmcache_figure()
     oracle_html = oracle_table()
     tail_html = tail_table()
 
@@ -380,37 +474,23 @@ Protocols</h1>
 <div class="venue">Technical Report &middot; 2026</div>
 
 <div class="abstract"><div class="ahead">Abstract</div>
-<p>Web pages routinely load tens to hundreds of small images; the median mobile page
-carries 13 image elements and the 90th percentile carries 56. Serving each image as a
-separate resource pays three costs: per-request protocol overhead, a fixed per-file
-structural cost (headers, coding tables, container chunks; roughly 600 bytes for a
-JPEG), and the loss of cross-image redundancy that a codec can exploit only within one
-file. This report measures how much of these costs bundling recovers when many small
-images are packed into a single atlas image and displayed with standard CSS. The study
-focuses on the three formats that carry the overwhelming majority of web images today
-and decode in every browser: JPEG, PNG, and WebP. At matched per-tile quality (structural similarity, SSIM, where 1.0 is a
-pixel-exact match; target 0.97), atlasing 72-pixel flat-art tiles saves up to 26% of bytes under JPEG and up to 15%
-under WebP at matched quality, and the saving is protocol-independent. The saving is governed
-by the ratio of per-file structural cost to content bytes, and the photographic
-size sweep traces the crossover: 56-pixel thumbnails save 29.8% (JPEG) and 15.3%
-(WebP), 112-pixel thumbnails 9.8% and &minus;1.4%, and 224-pixel thumbnails 3.0% and
-&minus;8.5%, with grid-atlased lossless formats inverting into a cost wherever
-per-scanline or per-image adaptation outperforms a single global model. These
-measurements yield a codec- and layout-aware bundling rule: grid-atlas small lossy
-tiles, and do not grid-atlas heterogeneous lossless or large photographic tiles;
-crucially, the same lossless assets that lose under a grid win by 40&ndash;95% under
-codec-aware packing (vertical strips, shared palettes), so the rule is about how to
-pack, not a blanket prohibition. Beyond the binary decision, the report treats atlas
-construction as a cost to minimize, bytes per deploy under cache invalidation, load
-latency for the target protocol and network, and decoded memory, subject to a per-tile
-quality floor, and calibrates a heuristic that navigates it. An ordering-and-partition study calibrates the heuristic's levers: cluster-pure
-bundles save 3 percentage points for lossless flat art, and for collections with
-repeated tiles, a similarity-sorted atlas dedupes copies inside the codec's matching
-window, cutting PNG bytes by 17&ndash;18% at a 21.6% duplicate rate, a saving
-separately-served files cannot reach on any protocol. A supporting single-testbed
-browser study finds the byte savings translate into faster loads on HTTP/1.1 and HTTP/3
-(4.5&ndash;8.6x and 4.8&ndash;7.7x for 500 flat tiles) while HTTP/2's multiplexing leaves
-bundling there as chiefly a byte optimization.</p></div>
+<p>Web pages load tens to hundreds of small images, and the median mobile page carries
+13. Serving each one separately pays three costs that HTTP/2 multiplexing does not
+remove: per-request overhead, a fixed per-file structural cost (roughly 600 bytes for a
+JPEG), and the loss of cross-image redundancy. We measure how much of this bundling many
+images into one atlas recovers, for the three codecs that carry most web images and
+decode in every browser: JPEG, PNG, and WebP.</p>
+<p>At matched per-tile quality, atlasing small tiles saves up to 26% of bytes under JPEG
+and up to 15% under WebP, independent of protocol. The saving is set by the ratio of
+per-file overhead to content size, so it falls as tiles grow: for photographs it drops
+from about 30% at 56&nbsp;pixels to a few percent at 224&nbsp;pixels, where WebP even
+turns slightly negative. Lossless formats lose under a naive grid but win 40&ndash;95%
+under codec-aware packing (vertical strips, shared palettes), so the question is how to
+pack, not whether. We distil the measurements into a coupling account, savings come from
+sharing fixed costs and losses from sharing adaptive state, and into an open-source tool
+that turns a directory of images into deployable bundles and matches an offline oracle on
+five unseen collections. A supporting browser study shows the byte savings also cut load
+time on HTTP/1.1 and HTTP/3.</p></div>
 
 {H2('Introduction')}
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -637,7 +717,7 @@ WebP is 14.8% [10.0, 17.4] at 56&nbsp;px, straddles zero at 112&nbsp;px
 &minus;6.7]). The WebP break-even near 100&nbsp;px is thus the point where its interval
 crosses zero, not a single-sample coincidence.</p>
 {table1}
-{fig_bars}
+{fig_cross}
 <p>Atlasing is not free where per-image adaptation matters. On flat art, both lossless
 formats lose from atlasing at N&nbsp;&ge;&nbsp;200 (PNG &minus;3 to &minus;6%, lossless WebP &minus;4
 to &minus;5%): PNG chooses its prediction filter per scanline and an atlas scanline
@@ -656,7 +736,6 @@ but the magnitude is metric-dependent, and Section&nbsp;5.5 shows two encoder fl
 reverse it to +5%. Edge-replicated padding costs roughly 7 percentage points of saving
 per 8-pixel step for JPEG and roughly 10 for WebP (flat art, N&nbsp;=&nbsp;200),
 pricing the block-alignment mitigations against chroma bleed.</p>
-{fig_charts}
 <p>The absolute comparison compounds codec choice with bundling: at N&nbsp;=&nbsp;500
 and SSIM 0.97 on flat art, individual JPEG files cost 630 KB, the JPEG atlas 464 KB,
 individual WebP files 240 KB, and the WebP atlas 220 KB. Moving a legacy
@@ -1016,24 +1095,30 @@ doi:10.1145/566654.566590</p>
     # references "Table&nbsp;N" and "Table N" are remapped to match). Keeps numbering
     # correct after any subsection reordering.
     import re as _re
-    order = [int(m.group(1)) for m in _re.finditer(r"<b>Table (\d+)\.</b>", html)]
-    remap = {old: new for new, old in enumerate(order, 1)}
-    if remap != {k: k for k in remap}:
+
+    def _renumber(kind):
+        nonlocal html
+        order = [int(m.group(1)) for m in _re.finditer(rf"<b>{kind} (\d+)\.</b>", html)]
+        remap = {old: new for new, old in enumerate(order, 1)}
+        if remap == {k: k for k in remap}:
+            return
         for old in sorted(remap, reverse=True):  # placeholder pass avoids collisions
-            html = html.replace(f"<b>Table {old}.</b>", f"<b>Table \x00{remap[old]}.</b>")
-            html = html.replace(f"Table&nbsp;{old}", f"Table&nbsp;\x00{remap[old]}")
+            html = html.replace(f"<b>{kind} {old}.</b>", f"<b>{kind} \x00{remap[old]}.</b>")
+            html = html.replace(f"{kind}&nbsp;{old}", f"{kind}&nbsp;\x00{remap[old]}")
         html = html.replace("\x00", "")
+    _renumber("Table")
+    _renumber("Figure")
     out = ROOT / "docs" / "paper.html"
     out.write_text(html, encoding="utf-8")
     # the paper IS the site landing page
     (ROOT / "docs" / "index.html").write_text(html, encoding="utf-8")
     # content canaries
-    for canary in ["Table 1.", "Table 2.", "Figure 1.", "Figure 2.", "Figure 3.",
-                   "Figure 4.", "<svg",
-                   "atlas_emoji_100.png", "Abstract", "References", "Table 4.", "Table 5.", "Table 6.",
-                   "background-position", "object-view-box", "Cache-Control", "Table 3."]:
+    for canary in ["Table 1.", "Table 2.", "Table 3.", "Table 4.", "Table 5.",
+                   "Figure 1.", "Figure 2.", "Figure 3.", "Figure 4.", "<svg",
+                   "atlas_emoji_100.png", "Abstract", "References",
+                   "background-position", "object-view-box", "Cache-Control"]:
         assert canary in html, f"CANARY FAILED: {canary}"
-    assert html.count("<svg") >= 4, "CANARY FAILED: expected 4 charts"
+    assert html.count("<svg") >= 3, "CANARY FAILED: expected chart SVGs"
     assert html.count("aria-label") >= 4, "CANARY FAILED: chart accessibility labels"
     print(f"wrote {out} ({len(html):,} bytes), canaries pass")
 
