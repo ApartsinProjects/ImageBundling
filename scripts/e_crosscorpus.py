@@ -151,5 +151,26 @@ def aggregate():
     print("CROSSCORPUS DONE")
 
 
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--corpus")
+    ap.add_argument("--size", type=int)
+    ap.add_argument("--aggregate", action="store_true")
+    args = ap.parse_args()
+    cdirs = dict(CORPORA)
+    if args.aggregate:
+        aggregate(); return
+    if args.corpus and args.size:
+        run_unit(args.corpus, cdirs[args.corpus], args.size); return
+    # full local run; run_unit skips a codec/size that runs out of memory (low-RAM host).
+    # For AVIF on a memory-constrained machine, prefer per-unit subprocesses or RunPod.
+    (OUT / "results.jsonl").unlink(missing_ok=True)
+    for cname, cdir in CORPORA:
+        if cdir.exists() and any(cdir.iterdir()):
+            for size in SIZES:
+                run_unit(cname, cdir, size)
+    aggregate()
+
+
 if __name__ == "__main__":
     main()
