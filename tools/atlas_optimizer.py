@@ -5,9 +5,12 @@ Applies the decision rules measured in the ImageBundling study
 (https://apartsinprojects.github.io/ImageBundling/):
 
 - exact duplicates are collapsed into one stored tile with many CSS entries;
-- small LOSSY tiles (<= --atlas-max-px, default 130) with uniform dimensions are
-  packed into WebP pixel atlases (byte saving grows as tiles shrink; ~15% for 56px
-  photos, up to ~17% for 72px flat art at WebP; requests collapse to ~1 per chunk);
+- for LOSSY tiles the choice is MEASURED, not taken from tile size alone: for groups
+  whose tiles pass a cheap size pre-filter (<= --atlas-max-px), the tool encodes both a
+  WebP pixel atlas and a byte-bundle and keeps the pixel atlas only if it is strictly
+  smaller AND passes a per-tile quality gate (worst-tile SSIM >= --quality-floor and its
+  5th-percentile within --floor-tol of the byte-bundle's), so it never adopts an atlas
+  that loses bytes or damages a subset of tiles; otherwise the group goes to a byte-bundle;
 - larger lossy tiles and ALL lossless tiles go into a byte-bundle: the
   individually-encoded files are concatenated into ONE self-describing .bin (a 4-byte
   header length, a JSON offset index, then the payloads), so a chunk is one request
@@ -108,6 +111,73 @@ def pack_atlas(reps, quality, out_path):
     return coords, len(blob)
 
 
+def _rgb(im):
+    """RGB numpy array, alpha composited over white (matches the study's protocol)."""
+    if im.mode in ("RGBA", "LA", "P"):
+        bg = Image.new("RGBA", im.size, (255, 255, 255, 255))
+        im = Image.alpha_composite(bg, im.convert("RGBA"))
+    return np.asarray(im.convert("RGB"))
+
+
+def _box(x, w):
+    c = np.cumsum(np.cumsum(x, axis=0), axis=1)
+    c = np.pad(c, ((1, 0), (1, 0)))
+    return (c[w:, w:] - c[:-w, w:] + c[:-w, :-w] - c[w:, :-w]) / (w * w)
+
+
+def _ssim(a, b, window=8):
+    ya = (0.299 * a[..., 0] + 0.587 * a[..., 1] + 0.114 * a[..., 2]).astype(np.float64)
+    yb = (0.299 * b[..., 0] + 0.587 * b[..., 1] + 0.114 * b[..., 2]).astype(np.float64)
+    w = min(window, ya.shape[0], ya.shape[1])
+    C1, C2 = (0.01 * 255) ** 2, (0.03 * 255) ** 2
+    ma, mb = _box(ya, w), _box(yb, w)
+    vaa = _box(ya * ya, w) - ma * ma
+    vbb = _box(yb * yb, w) - mb * mb
+    vab = _box(ya * yb, w) - ma * mb
+    s = ((2 * ma * mb + C1) * (2 * vab + C2)) / ((ma * ma + mb * mb + C1) * (vaa + vbb + C2))
+    return float(s.mean())
+
+
+def lossy_choice(members, quality, floor, floor_tol):
+    """Measured selection for a lossy group: encode both a WebP pixel atlas and a
+    byte-bundle at the same quality, and return whether the atlas should be chosen, with
+    per-tile SSIM tails. The atlas is chosen only if it is strictly smaller in bytes AND
+    passes a per-tile quality gate: its 5th-percentile per-tile SSIM is within `floor_tol`
+    of the byte-bundle's (which carries individual-file quality) and its worst tile is at
+    or above the absolute `floor`. This replaces a hard size threshold with a measurement
+    that will not adopt an atlas that loses bytes or damages a subset of tiles."""
+    refs = [_rgb(t["im"]) for t in members]
+    th, tw = refs[0].shape[:2]
+    # byte-bundle candidate = each tile encoded individually (individual-file quality)
+    bb_bytes, bb_ss = 0, []
+    for t, ref in zip(members, refs):
+        blob = encode(t["im"], False, quality)
+        bb_bytes += len(blob)
+        bb_ss.append(_ssim(ref, _rgb(Image.open(io.BytesIO(blob)))))
+    # pixel-atlas candidate = whole grid at the same quality
+    n = len(members)
+    cols = math.ceil(math.sqrt(n)); rows = math.ceil(n / cols)
+    mode = "RGBA" if any(t["alpha"] for t in members) else "RGB"
+    bg = (255, 255, 255, 0) if mode == "RGBA" else (255, 255, 255)
+    grid = Image.new(mode, (cols * tw, rows * th), bg)
+    coords = []
+    for i, t in enumerate(members):
+        r, c = divmod(i, cols)
+        grid.paste(t["im"].convert(mode), (c * tw, r * th))
+        coords.append((r * th, c * tw))
+    blob = encode(grid, False, quality)
+    atlas_bytes = len(blob)
+    dec = _rgb(Image.open(io.BytesIO(blob)))
+    at_ss = [_ssim(ref, dec[y:y + th, x:x + tw]) for ref, (y, x) in zip(refs, coords)]
+    bb_p5, at_p5, at_min = (float(np.percentile(bb_ss, 5)),
+                            float(np.percentile(at_ss, 5)), float(min(at_ss)))
+    gate = (at_p5 >= bb_p5 - floor_tol) and (at_min >= floor)
+    choose = gate and (atlas_bytes < bb_bytes)
+    return choose, {"atlas_bytes": atlas_bytes, "bundle_bytes": bb_bytes,
+                    "atlas_ssim_p5": round(at_p5, 4), "atlas_ssim_min": round(at_min, 4),
+                    "bundle_ssim_p5": round(bb_p5, 4), "gate_passed": gate}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("input")
@@ -115,7 +185,15 @@ def main():
     ap.add_argument("--manifest")
     ap.add_argument("--quality", type=int, default=80)
     ap.add_argument("--chunks", type=int, default=4)
-    ap.add_argument("--atlas-max-px", type=int, default=130)
+    ap.add_argument("--atlas-max-px", type=int, default=130,
+                    help="cheap pre-filter: only measure a pixel atlas for tiles at or "
+                         "below this size (larger lossy tiles are known net-negative)")
+    ap.add_argument("--quality-floor", type=float, default=0.90,
+                    help="absolute per-tile SSIM floor a pixel atlas must clear on its "
+                         "worst tile to be chosen (W9 hard constraint)")
+    ap.add_argument("--floor-tol", type=float, default=0.005,
+                    help="how far a pixel atlas's 5th-percentile per-tile SSIM may fall "
+                         "below the byte-bundle's before it is rejected")
     ap.add_argument("--min-group", type=int, default=10)
     ap.add_argument("--lossy-png", action="store_true",
                     help="treat PNG inputs as lossy-encodable (flat art like icons "
@@ -162,13 +240,19 @@ def main():
             for t in members)
         small = max(w, h) <= args.atlas_max_px
         n = len(members)
+        # lossy groups: measure pixel-atlas vs byte-bundle and gate on a per-tile quality
+        # floor, rather than deciding from tile size alone (W2/W9).
+        atlas_ok, lossy_m = False, None
+        if not lossless and n >= args.min_group and small:
+            atlas_ok, lossy_m = lossy_choice(members, args.quality,
+                                             args.quality_floor, args.floor_tol)
         if n < args.min_group:
             cond = "individual"
             total = individual_bytes
             files = n
             for t in members:
                 (out / t["name"]).write_bytes(encode(t["im"], lossless, args.quality))
-        elif not lossless and small:
+        elif not lossless and atlas_ok:
             cond = "pixel-atlas"
             k = 1 if n < 40 else args.chunks
             per = math.ceil(n / k)
@@ -242,13 +326,21 @@ def main():
                 files += 1
             usage_snippets.append(
                 f"<!-- {gname}: fetch {nm}.bin (self-describing), slice, blob-URL each tile -->")
-        report.append({
+        rec = {
             "group": gname, "condition": cond, "tiles": n,
             "duplicates_folded": sum(alias_count[t["name"]] for t in members),
             "requests": files, "bytes_out": total,
             "bytes_if_individual": individual_bytes,
             "saving_pct": round(100 * (1 - total / individual_bytes), 1)
-            if individual_bytes else 0.0})
+            if individual_bytes else 0.0}
+        if lossy_m is not None:
+            # measured pixel-atlas-vs-byte-bundle decision + per-tile quality gate (W2/W9)
+            rec["lossy_decision"] = {
+                "atlas_bytes": lossy_m["atlas_bytes"], "bundle_bytes": lossy_m["bundle_bytes"],
+                "atlas_ssim_p5": lossy_m["atlas_ssim_p5"],
+                "atlas_ssim_min": lossy_m["atlas_ssim_min"],
+                "quality_gate_passed": lossy_m["gate_passed"], "chose_atlas": atlas_ok}
+        report.append(rec)
 
     # alias CSS entries point at the representative's region/file
     rep_rule = {r.split("{")[0][1:]: r for r in css}

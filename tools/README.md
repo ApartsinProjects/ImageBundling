@@ -16,9 +16,13 @@ What it does, in order:
 2. **Groups** by update cadence (from the manifest), lossless requirement, and tile
    dimensions, so a change invalidates only its own bundle.
 3. **Chooses the bundle type per group** from the measured curves:
-   - small lossy tiles (max side <= 130px): WebP **pixel atlas**, displayed via CSS
-     `background-position` (saved 15-26% bytes at matched quality in the study, and
-     2-9x time-to-all-visible on HTTP/1.1 and HTTP/3);
+   - lossy tiles: the choice is **measured**, not taken from size alone. For groups whose
+     tiles pass a cheap size pre-filter (`--atlas-max-px`, default 130), the tool encodes
+     both a WebP **pixel atlas** and a byte-bundle and keeps the atlas only if it is
+     strictly smaller **and** passes a per-tile quality gate (worst-tile SSIM
+     >= `--quality-floor`, default 0.90, and 5th-percentile within `--floor-tol` of the
+     byte-bundle's), so it never adopts an atlas that loses bytes or damages a subset of
+     tiles; a passing atlas is displayed via CSS `background-position`;
    - larger lossy tiles and all lossless tiles: **byte-bundle** (files concatenated
      into one self-describing `.bin`, a 4-byte header length plus a JSON offset index
      plus the payloads, decoded client-side via blob URLs), which collapses a chunk to

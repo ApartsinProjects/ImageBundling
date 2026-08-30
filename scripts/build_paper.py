@@ -325,7 +325,7 @@ def heuristic_figure():
     box(L, 120, 250, 30, "group by cadence / lossless / dimensions")
     diamond(L, 184, 150, 54, "group|&lt; 10 tiles?")
     diamond(L, 268, 150, 54, "lossless|required?")
-    diamond(L, 352, 160, 54, "small lossy tile|(&le; 130 px)?")
+    diamond(L, 352, 170, 56, "atlas &lt; bundle|and clears|per-tile floor?")
     box(R, 184, 190, 30, "individual files", fill="#f4f5f7", stroke="#5a626c")
     box(R, 268, 200, 34, "keep smaller of byte-bundle|or WebP-lossless strip",
         fill="#e8f3ef", stroke="#16a085")
@@ -361,8 +361,10 @@ def heuristic_figure():
             "as implemented in <code>atlas_optimizer</code>. Exact duplicates collapse to "
             "shared coordinates; tiles are grouped by update cadence, lossless requirement, "
             "and dimensions; each group is routed by a short decision cascade to individual "
-            "files, a pixel atlas, or a byte-bundle, with a measured tiebreak for lossless "
-            "groups (keep the smaller of a byte-bundle and a WebP-lossless strip). Groups "
+            "files, a pixel atlas, or a byte-bundle. The lossy branch is decided by "
+            "measurement: a pixel atlas is chosen only if it is smaller than the byte-bundle "
+            "and clears a per-tile SSIM floor, and lossless groups keep the smaller of a "
+            "byte-bundle and a WebP-lossless strip. Groups "
             "are chunked for bounded cache invalidation and memory, and the tool emits the "
             "atlas and bundle files, a CSS coordinate map, a loader, and a savings report; "
             "piecewise updates can be served as dictionary deltas. This is the procedure "
@@ -982,7 +984,9 @@ Canvas completes the set for programmatic UIs:
 after a single decode. In every mechanism the browser fetches and decodes the atlas
 once, holds one decoded copy, and paints windows into it; per-tile cost is a paint, not
 a decode. The experiments use <code>background-position</code>, the mechanism with
-universal support.</p>
+universal support; the four mechanisms differ in image semantics, accessibility, loading
+control, and browser support, compared for deployment in Table&nbsp;10
+(Section&nbsp;6.4).</p>
 {H3('Delivery, caching, and memory')}
 <p>An atlas changes the unit of caching from the tile to the bundle. With standard
 immutable content-addressed URLs (<code>atlas.3fe2a1.webp</code>,
@@ -1393,20 +1397,29 @@ keep the cold-load benefits of bundling and still get individual-file cache gran
 by serving deltas rather than whole bundles.</p>
 {warm_html}
 {H3('A calibrated construction heuristic')}
-<p>The cost above is not minimized by search; instead the measured curves calibrate a
+<p>The cost above is not minimized by blind search; instead the measured curves calibrate a
 greedy heuristic, implemented as a command-line tool (<code>atlas_optimizer</code>,
 released with the study). The tool folds exact duplicates into shared coordinates;
-partitions tiles by update cadence, lossless requirement, and dimensions; routes each
-group to a pixel atlas (small lossy tiles), a byte-bundle (large or lossless tiles), or
-individual files (tiny groups); and chunks each bundle (Figure&nbsp;6). It emits the atlas
-and bundle files, a CSS coordinate map, a loader snippet, and a per-group savings report.
+partitions tiles by update cadence, lossless requirement, and dimensions; and routes each
+group (Figure&nbsp;6). For a lossy group the routing is not decided by tile size alone: the
+tool encodes both a pixel atlas and a byte-bundle and keeps the atlas only if it is
+strictly smaller <em>and</em> passes a per-tile quality gate, so it never adopts an atlas
+that loses bytes or damages a subset of tiles. The gate is exactly the tail constraint of
+Section&nbsp;5.1: the atlas's worst per-tile SSIM must clear an absolute floor (default
+0.90) and its 5th percentile must stay within a small tolerance of the byte-bundle's,
+which carries individual-file quality. On the flat-art set treated as lossy, for instance,
+a pixel atlas would save 19% of bytes but drives one tile to 0.87 SSIM, so the tool
+rejects it and emits the byte-bundle instead. Lossless groups take the smaller of a
+byte-bundle and a WebP-lossless strip, tiny groups stay individual, and every bundle is
+chunked. It emits the atlas and bundle files, a CSS coordinate map, a loader snippet, and
+a per-group savings report that records the measured decision and the per-tile SSIM tails.
 Validated against the study's own asset sets, it converts 521
-flat-art tiles into four WebP-lossless strip-atlas chunks, the byte-optimal choice for
-this lossless class (or into four pixel-atlas chunks at 19% fewer bytes when the tiles are
-declared lossy-encodable), and 521 photographic thumbnails, 119 of them exact repeats,
-into four self-describing byte-bundle chunks at 21% fewer bytes, with 521 requests
-becoming four in both cases. An accounting check confirms the emitted bytes and request
-count equal what the tool reports.</p>
+flat-art tiles into four WebP-lossless strip-atlas chunks (the byte-optimal choice for
+this lossless class; declaring them lossy-encodable instead routes them to a byte-bundle,
+since the pixel atlas that would save 19% of bytes fails the quality gate), and 521
+photographic thumbnails, 119 of them exact repeats, into four self-describing byte-bundle
+chunks at 21% fewer bytes, with 521 requests becoming four in both cases. An accounting
+check confirms the emitted bytes and request count equal what the tool reports.</p>
 {heuristic_html}
 <p>Because those asset sets also shaped the rules, a fair test requires collections the
 heuristic never saw. We evaluate it on five independent corpora, Noto emoji, OpenMoji,
@@ -1419,7 +1432,9 @@ Noto). With that tiebreak the heuristic's automatic choice equals the oracle on 
 corpora (0% regret), including the two content types, generated avatars and a second
 emoji vendor, that most differ from the calibration sets. This is the property that
 matters for a deployable tool: on collections it was not built from, it does not merely
-save bytes, it chooses at or near the best available configuration.</p>
+save bytes, it chooses at or near the best available configuration. This comparison is on
+bytes; the per-tile quality floor is an additional safety constraint that overrides a
+byte-optimal atlas only where it would push a tile below the floor.</p>
 <p>The value is in choosing, not in any single layout. Table&nbsp;5 also scores three
 fixed rules a developer might hardcode, each still allowed the best admissible codec:
 always build one pixel atlas, always byte-bundle, or always strip-pack. Every one is
@@ -1430,6 +1445,41 @@ byte-bundle wins on dense Noto and on photographs, a pixel atlas wins on the fla
 flags. The calibrated heuristic tracks those flips to zero regret; no fixed rule
 does.</p>
 {oracle_html}
+{H3('Choosing a rendering mechanism')}
+<p>Selecting a representation is only half of deployment; the four ways to show a bundled
+tile (Section&nbsp;3.1) are not interchangeable in a production page, because they differ
+in native image semantics, accessibility, loading control, and browser support
+(Table&nbsp;10). A CSS pixel atlas shown through <code>background-position</code> is
+universally supported and ideal for decorative icons, but a background image is not an
+<code>&lt;img&gt;</code>: it carries no intrinsic alt text (accessibility must come from
+surrounding ARIA), does not participate in native lazy loading or
+<code>fetchpriority</code>, and is inappropriate for content images that must be
+announced. A cropped <code>&lt;img&gt;</code> in an <code>overflow:hidden</code> wrapper
+keeps alt text and native loading and works cross-browser; <code>object-view-box</code>
+gives the same with less markup but is Chromium-only and should not be treated as a
+generally deployable solution. A byte-bundle reconstructs real per-tile
+<code>&lt;img&gt;</code> elements from blob URLs, so it recovers full image semantics at
+the cost of a small loader script and its content-security-policy implications, which
+makes it the natural choice for heterogeneous or content-bearing photographs. The selector
+of Section&nbsp;6.3 chooses the byte layout; this table chooses the display mechanism, and
+the two decisions compose.</p>
+<div class='tablewrap'><table>
+<caption><b>Table 10.</b> Display mechanisms for a bundled tile and how they differ in
+production. All four paint after a single atlas or bundle fetch; they diverge on image
+semantics, accessibility, loading control, and support. Pick the byte layout with the
+Section&nbsp;6.3 selector and the mechanism here.</caption>
+<thead><tr><th>mechanism</th><th>native &lt;img&gt;</th><th>alt text</th>
+<th>lazy load / priority</th><th>JS / CSP</th><th>support</th><th>best use</th></tr></thead>
+<tbody>
+<tr><td>CSS <code>background-position</code></td><td>no</td><td>via ARIA</td>
+<td>manual</td><td>CSS only</td><td>universal</td><td>decorative icons</td></tr>
+<tr><td>cropped <code>&lt;img&gt;</code> wrapper</td><td>yes</td><td>yes</td>
+<td>native</td><td>CSS only</td><td>broad</td><td>semantic images</td></tr>
+<tr><td><code>object-view-box</code></td><td>yes</td><td>yes</td><td>native</td>
+<td>CSS only</td><td>Chromium only</td><td>native crop (emerging)</td></tr>
+<tr><td>byte-bundle + blob URLs</td><td>yes (after JS)</td><td>yes</td>
+<td>app-controlled</td><td>JS + CSP</td><td>broad APIs</td><td>heterogeneous photos</td></tr>
+</tbody></table></div>
 {H3('Limitations')}
 <p>Quality is measured by luma SSIM at a 0.97 target; the photo crossover is confirmed
 under the SSIMULACRA2 perceptual metric (Section&nbsp;5.1, Table&nbsp;7), and applying it

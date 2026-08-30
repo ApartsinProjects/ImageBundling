@@ -71,12 +71,16 @@ ssimulacra2_rs --no-default-features (vapoursynth link error with defaults).
 
 | 2026-08-30 | W4-strong: HTTP/3 second QUIC stack (aioquic) | Ran aioquic (pure-Python QUIC, != Caddy's quic-go) NATIVELY ON WINDOWS (bypassing dead WSL), same Chromium: browser-side peak concurrency median 13 (range 8-25) vs quic-go/Caddy's qlog-confirmed 6 | confounds (Windows loopback vs WSL, 96px vs 224px tiles) bias AGAINST higher aioquic -> conservative | CORRECTS earlier over-narrow "client scheduler" claim: low h3 concurrency is STACK-SPECIFIC (quic-go/Caddy defaults x Chromium), a 2nd stack ~doubles it. §5.5+conclusion+Limitations updated. WSL died from C:-full (apt install); worked around via Windows-native aioquic per user "use E drive" |
 
+| 2026-08-30 | W2/W9/W12 (optimizer + deployment matrix) | W2/W9: atlas_optimizer lossy branch now MEASURES pixel-atlas vs byte-bundle and gates on a per-tile SSIM floor (--quality-floor 0.90, --floor-tol 0.005) instead of the hard 130px rule; report.json records lossy_decision + per-tile tails. Demo: emoji-as-lossy atlas would save 19% but worst tile 0.87 -> gate rejects -> byte-bundle. W12: added Table (rendering-mechanism deployment/accessibility matrix) + §6.4 | verify_output.py PASS on emoji/photos; flowchart re-rendered (diamond = "atlas<bundle & clears floor?") | Optimizer now embodies the coupling+quality science, not a size cutoff; README+docstring+§6.3+flowchart+§3.1 all synced |
+
 ## Current standing + next
 Phases 0-2 COMPLETE and published; SPE strength revisions + bibtest + HTTP/3 qlog +
 two-author byline + PDF/DOCX + Fable polish + external-review P0 integrity + P1
-(cross-corpus, AVIF, memory/timing, held-out) + W4-strong (aioquic second stack) all
-landed. ALL reviewer P0+P1 items addressed. Machine note: C: was 100% full (WSL crashed);
-reclaimed 133MB cargo cache, C:~154MB free, needs user attention + reboot to restore WSL.
+(cross-corpus, AVIF, memory/timing, held-out) + W4-strong (aioquic) + W2/W9/W12
+(measured optimizer + quality floor + deployment matrix) all landed. EVERY reviewer P0+P1
+item now addressed in code+paper (9 tables, 5 figures, 45 refs). Remaining: submit to SPE
+(user action); optional JPEG XL / native-Linux H3 / real CDT. Machine: C: freed to ~685MB
+(removed rustup, kept ssimulacra2_rs.exe); WSL needs reboot to restore local testbed.
 Byte-bundle artifact bug (reviewer's one blocking issue) fixed and verified; tool emits
 one self-describing .bin/chunk and report matches emitted bytes/requests exactly.
 DECISIONS PENDING for P1 (need user): AVIF in core crossover (conflicts with user's
