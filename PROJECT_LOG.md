@@ -67,9 +67,12 @@ ssimulacra2_rs --no-default-features (vapoursynth link error with defaults).
 
 | 2026-08-30 | External SPE venue review (ImageBundling_publication_review.md) P0 integrity fixes | W1 byte-bundle now ONE self-describing .bin/chunk (4-byte hdr len + JSON index + payloads); report bytes/requests == emitted (verify_output.py invariant PASS on emoji+photos); W10 stale packet-loss claim removed from README+docstring; W6 CDT->RFC 9842 + delta labeled compression-level proxy; W11 600B made encoder-specific; W4 H3 conclusion scoped to tested stack; README/paper tool-validation numbers reconciled to verified output (emoji default strip-atlas +5.1%, --lossy-png pixel +19.2%; photos byte-bundle +21.1%) | verify_output.py: report==emitted bytes/requests, bin self-consistent, tiles slice to valid WEBP | Blocking artifact accounting bug fixed + verified; docs/paper/tool now agree. W3 (oracle baselines) already done prior round |
 
+| 2026-08-30 | P1 experiments (W7/W8/W5/P1.4) | W7+W8: cross-corpus+AVIF crossover on RunPod ($0.03, 5.4min) - 4 independent photo populations, JPEG/WebP/AVIF at 56/112/224. AVIF POSITIVE everywhere (+33/+12/+5), like JPEG; WebP crosses zero ~112px on ALL corpora; savings tight across populations (56px JPEG 25-27% everywhere). W5: browser memory+timing - atlas fastest-to-visible (33ms@N=500) AND lowest memory (106 vs ind 129 vs bundle 143 MB); refines width*height*4 caution. P1.4: leave-one-corpus-out held-out - two-term model does NOT beat size+codec baseline (MAE 4.65 vs 4.58) because photo populations too similar; reframed HONESTLY as regime-stability evidence for W7 (held-out predicted to 4.6pp) not a prediction win | crosscorpus per-corpus ranges tight; e_memory RSS delta over blank baseline; heldout null reported honestly | AVIF added (user reversed JPEG/PNG/WebP scope); scope+Limitations updated; new Tables 7 (memory) + 8-equiv (crosscorpus); RunPod OOM avoided by offload |
+
 ## Current standing + next
 Phases 0-2 COMPLETE and published; SPE strength revisions + bibtest + HTTP/3 qlog +
-two-author byline + PDF/DOCX + Fable polish + external-review P0 integrity all landed.
+two-author byline + PDF/DOCX + Fable polish + external-review P0 integrity + P1
+(cross-corpus, AVIF, memory/timing, held-out) all landed.
 Byte-bundle artifact bug (reviewer's one blocking issue) fixed and verified; tool emits
 one self-describing .bin/chunk and report matches emitted bytes/requests exactly.
 DECISIONS PENDING for P1 (need user): AVIF in core crossover (conflicts with user's

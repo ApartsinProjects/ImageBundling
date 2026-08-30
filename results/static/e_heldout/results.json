@@ -1,0 +1,109 @@
+{
+ "summary": {
+  "mean": {
+   "mae": 9.95,
+   "sign_acc": 0.889
+  },
+  "sizeonly": {
+   "mae": 4.58,
+   "sign_acc": 0.778
+  },
+  "fixedcost": {
+   "mae": 5.74,
+   "sign_acc": 0.889
+  },
+  "twoterm": {
+   "mae": 4.65,
+   "sign_acc": 0.806
+  }
+ },
+ "per_fold": [
+  {
+   "held": "flickr",
+   "n_test": 9,
+   "mean": {
+    "mae": 9.97,
+    "sign_acc": 0.889
+   },
+   "sizeonly": {
+    "mae": 4.8,
+    "sign_acc": 0.778
+   },
+   "fixedcost": {
+    "mae": 5.76,
+    "sign_acc": 0.889
+   },
+   "twoterm": {
+    "mae": 4.45,
+    "sign_acc": 0.778
+   }
+  },
+  {
+   "held": "flickr_food",
+   "n_test": 9,
+   "mean": {
+    "mae": 10.39,
+    "sign_acc": 0.889
+   },
+   "sizeonly": {
+    "mae": 4.21,
+    "sign_acc": 0.778
+   },
+   "fixedcost": {
+    "mae": 6.09,
+    "sign_acc": 0.889
+   },
+   "twoterm": {
+    "mae": 4.93,
+    "sign_acc": 0.778
+   }
+  },
+  {
+   "held": "flickr_nature",
+   "n_test": 9,
+   "mean": {
+    "mae": 9.88,
+    "sign_acc": 0.889
+   },
+   "sizeonly": {
+    "mae": 3.86,
+    "sign_acc": 0.778
+   },
+   "fixedcost": {
+    "mae": 5.91,
+    "sign_acc": 0.889
+   },
+   "twoterm": {
+    "mae": 5.16,
+    "sign_acc": 0.889
+   }
+  },
+  {
+   "held": "picsum",
+   "n_test": 9,
+   "mean": {
+    "mae": 9.54,
+    "sign_acc": 0.889
+   },
+   "sizeonly": {
+    "mae": 5.47,
+    "sign_acc": 0.778
+   },
+   "fixedcost": {
+    "mae": 5.2,
+    "sign_acc": 0.889
+   },
+   "twoterm": {
+    "mae": 4.08,
+    "sign_acc": 0.778
+   }
+  }
+ ],
+ "n_cells": 36,
+ "corpora": [
+  "flickr",
+  "flickr_food",
+  "flickr_nature",
+  "picsum"
+ ]
+}

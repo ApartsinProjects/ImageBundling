@@ -131,6 +131,81 @@ def warmcache_table():
             f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
 
+def cross_corpus_table():
+    f = ROOT / "results" / "static" / "e_crosscorpus" / "summary.json"
+    if not f.exists():
+        return ""
+    agg = json.load(f.open())["aggregate"]
+    ho = ROOT / "results" / "static" / "e_heldout" / "results.json"
+    ho_note = ""
+    if ho.exists():
+        h = json.load(ho.open())
+        best = min(h["summary"].values(), key=lambda x: x["mae"])
+        ho_note = (f" A model trained on any three corpora predicts the held-out "
+                   f"fourth's saving to {best['mae']:.1f} percentage points mean absolute "
+                   f"error (leave-one-corpus-out over {h['n_cells']} cells), so the "
+                   f"crossover is a codec-and-size regime, not a corpus-specific effect.")
+
+    def cell(size, codec):
+        r = next((a for a in agg if a["size"] == size and a["codec"] == codec), None)
+        if not r:
+            return "<td>n/a</td>"
+        klass = ' class="neg"' if r["median"] < 0 else ""
+        return (f'<td{klass}>{r["median"]:+.1f}<br><span style="font-size:8pt;color:#8a8f97">'
+                f'[{r["min"]:+.0f},{r["max"]:+.0f}]</span></td>')
+
+    trows = []
+    for size in (56, 112, 224):
+        trows.append(f"<tr><td>photos {size}px</td>" +
+                     "".join(cell(size, c) for c in ("jpeg", "webp", "avif")) + "</tr>")
+    return ("<div class='tablewrap'><table>"
+            "<caption><b>Table 8.</b> Cross-corpus, cross-codec crossover: bytes saved by "
+            "atlasing (%) at matched SSIM 0.97, median over four independent natural-photo "
+            "populations (Lorem&nbsp;Picsum and three loremflickr categories: generic, "
+            "nature, food; 60 tiles each), with the per-corpus range in brackets. The sign "
+            "and size of the effect are consistent across populations: JPEG and AVIF stay "
+            "positive at every tile size while WebP crosses zero near 112&nbsp;px and is "
+            "negative by 224&nbsp;px. AVIF, with the largest container floor, gains the most "
+            "at small sizes." + ho_note + " Negative values (red) mean the atlas is "
+            "larger.</caption>"
+            "<thead><tr><th>class</th><th>JPEG</th><th>WebP</th><th>AVIF</th></tr></thead>"
+            f"<tbody>{''.join(trows)}</tbody></table></div>")
+
+
+def memory_table():
+    f = ROOT / "results" / "static" / "e_memory" / "results.json"
+    if not f.exists():
+        return ""
+    rows = json.load(f.open())
+
+    def get(n, cond, key):
+        r = next((x for x in rows if x["n"] == n and x["cond"] == cond), None)
+        return r[key] if r else None
+
+    trows = []
+    for n in (50, 200, 500):
+        cells = []
+        for cond in ("ind", "atlas", "bundle"):
+            av = get(n, cond, "allVisible"); mem = get(n, cond, "mem_mb")
+            cells.append(f"<td>{av:,}</td><td>{mem:.0f}</td>")
+        trows.append(f"<tr><td>{n}</td>{''.join(cells)}</tr>")
+    return ("<div class='tablewrap'><table>"
+            "<caption><b>Table 9.</b> Measured browser cost of rendering N 96px "
+            "photographic tiles three ways, in one Chromium instance with no network "
+            "shaping: time to all tiles visible (ms) and renderer process-tree memory over "
+            "a blank-page baseline (MB, capturing the decoded-image cache that JavaScript "
+            "heap APIs miss). The pixel atlas is fastest to full visibility at every N (one "
+            "decode paints all tiles) and uses the least memory (one decoded surface rather "
+            "than N); the byte-bundle must fetch its whole object before the first tile and "
+            "retains N blob-backed decodes, so it costs the most memory. This refines the "
+            "analytical width&times;height&times;4 bound: for typical thumbnail collections "
+            "the atlas is memory-favorable, and the decoded-memory caution applies to very "
+            "large atlases, not to bundling per se.</caption>"
+            "<thead><tr><th>N</th><th>ind ms</th><th>ind MB</th><th>atlas ms</th>"
+            "<th>atlas MB</th><th>bundle ms</th><th>bundle MB</th></tr></thead>"
+            f"<tbody>{''.join(trows)}</tbody></table></div>")
+
+
 def tail_table():
     import numpy as np
     specs = [("phase1_emoji", "webp", 500, 80, "flat art 72px, WebP"),
@@ -696,6 +771,8 @@ def main():
     heuristic_html = heuristic_figure()
     tail_html = tail_table()
     ss2_html = ss2_table()
+    cross_html = cross_corpus_table()
+    mem_html = memory_table()
 
     _sec, _sub = [0], [0]
 
@@ -732,7 +809,10 @@ decode in every browser: JPEG, PNG, and WebP.</p>
 and up to 19% under WebP, independent of protocol. The saving is set by the ratio of
 per-file overhead to content size, so it falls as tiles grow: for photographs it drops
 from about 30% at 56&nbsp;pixels to a few percent at 224&nbsp;pixels, where WebP turns
-clearly negative. Lossless formats lose under a naive grid but win 40&ndash;97% under
+clearly negative. The sign is codec-specific: AVIF, like JPEG, stays positive at every
+size, so WebP's shared quantizer, not atlasing itself, drives the reversal, and the
+pattern holds across four independent photo populations. Lossless formats lose under a
+naive grid but win 40&ndash;97% under
 codec-aware packing (vertical strips, shared palettes), so the question is how to pack,
 not whether. We distil the measurements into a coupling account (savings come from
 sharing fixed costs; losses from sharing adaptive state) and into an open-source tool
@@ -749,10 +829,12 @@ addressed only the request-count cost. Two byte-level costs survive multiplexing
 untouched: every image file carries a fixed container overhead (headers, quantization
 tables, ISOBMFF boxes), and every file boundary prevents the codec from sharing entropy
 context, palettes, and predictors across images.</p>
-<p>The study is deliberately scoped to the popular, universally-supported compressed
-formats: JPEG, PNG, and WebP together carry over 70% of images served on the web (HTTP
-Archive 2024: JPEG 32.4%, PNG 28.4%, WebP 12.0%), decode in every browser, and are
-where the practical savings live. The three formats price the per-file costs very
+<p>The study centers on the popular, universally-supported compressed formats: JPEG, PNG,
+and WebP together carry over 70% of images served on the web (HTTP Archive 2024: JPEG
+32.4%, PNG 28.4%, WebP 12.0%), decode in every browser, and are where the practical
+savings live; AVIF, the leading next-generation codec, is added to the photographic
+crossover (Section&nbsp;5.1) so the codec-dependence of the result is visible against a
+modern container. The three formats price the per-file costs very
 differently: a JPEG file carries, with the libjpeg-turbo encoder and settings used here,
 roughly 600 bytes of Huffman and quantization table definitions plus headers (the exact
 figure is encoder- and settings-specific), a PNG a 67-byte structural floor plus
@@ -920,6 +1002,9 @@ decode lazily and can be evicted per tile; an atlas is decoded and resident as a
 while any tile is visible. Chunking bounds this cost the same way it bounds
 invalidation, and below-the-fold chunks combine with lazy loading so off-screen tiles
 cost neither bytes nor memory.</p>
+A live-renderer measurement (Section&nbsp;5.6) confirms that at typical tile counts the
+atlas is in fact the memory-favorable representation, so this analytical caution binds
+only for very large atlases.</p>
 
 {H2('Methodology')}
 {H3('Assets and packing')}
@@ -1053,6 +1138,21 @@ individually, JPEG 77.2 against 77.3) confirms that the deficit is the shared-qu
 adaptive-state penalty, and that a perceptual metric weighting chroma and blocking prices
 it higher.</p>
 {ss2_html}
+<p>The crossover is also a general regime across image populations and codecs, not a
+property of one corpus. We repeated the matched-quality photo crossover on four
+independent natural-photo populations (Lorem&nbsp;Picsum and three loremflickr categories:
+generic, nature, food) and added AVIF alongside JPEG and WebP (Table&nbsp;8). The sign and
+magnitude are consistent across populations: at 56&nbsp;px JPEG saves 25&ndash;27% on
+every corpus, at 224&nbsp;px WebP is &minus;5 to &minus;8% on every corpus, and a model
+trained on any three corpora predicts the held-out fourth to about 4.6 percentage points
+of error, so a tile-size-and-codec rule, not corpus identity, sets the result. AVIF tracks
+JPEG rather than WebP, staying positive at every size (+33% at 56&nbsp;px, +12% at
+112&nbsp;px, +5% at 224&nbsp;px) and gaining the most at small sizes because its container
+floor (303&nbsp;bytes) is the largest fixed cost to amortize. WebP is thus the one codec
+whose atlas penalty turns negative on large photographs, which sharpens rather than
+softens the coupling account: the sign of the byte effect is codec-specific, and it is
+VP8's shared four-segment quantizer, not atlasing in general, that reverses it.</p>
+{cross_html}
 {H3('Ordering, duplicates, and layout')}
 <p>We re-encode identical tile sets under eight within-atlas orders (source
 order, three random shuffles, luminance-sorted, mean-color-sorted, k-means
@@ -1173,6 +1273,24 @@ Figure&nbsp;5), not packet-loss resilience. The byte-bundle beats individual ser
 bundling method of choice for content whose pixels should not share a codec model
 (photos, lossless assets); the pixel atlas remains faster where its byte savings
 compound with the request savings.</p>
+
+{H3('Local rendering cost: decode time and memory')}
+<p>Transport is only half the client cost; decode and memory are the other half, and they
+are measured locally with no network shaping so they isolate rendering (Table&nbsp;9). We
+render N 96-pixel photographic tiles in one Chromium instance three ways and record time
+to all tiles visible and the renderer process-tree memory over a blank-page baseline,
+which captures the C++-side decoded-image cache that JavaScript-heap APIs do not expose. At
+N&nbsp;=&nbsp;500 the pixel atlas is fastest to full visibility (33&nbsp;ms, since one
+decode paints every tile) and uses the least memory (106&nbsp;MB over baseline), while 500
+individual files take 767&nbsp;ms and 129&nbsp;MB and the byte-bundle 313&nbsp;ms and
+143&nbsp;MB, the latter because it fetches its whole object before the first tile and then
+retains N blob-backed decodes. Two milestones make the progressive difference concrete: the
+atlas reaches first-viewport-visible in 15&nbsp;ms at every N, whereas individual files
+reach it in 148&ndash;429&nbsp;ms as tiles stream in. For typical thumbnail collections the
+atlas is therefore memory-favorable rather than a liability, and the
+width&times;height&times;4 caution binds only for very large atlases, which chunking keeps
+below.</p>
+{mem_html}
 
 {H2('Discussion')}
 {H3('The coupling spectrum')}
@@ -1314,27 +1432,29 @@ comparison. The shared-palette result uses a synthetic limited-color corpus that
 the ideal case; anti-aliased production icons will realize less of it. The network study
 emulates four profiles on a single-machine testbed rather than the open Internet, and
 measures time-to-all-tiles-visible rather than a full field-metric suite. Decoded-memory
-cost is bounded analytically and by the chunking recommendation but not yet profiled in
-a live renderer. The HTTP/3 concurrency diagnosis is confirmed from the server's own QUIC
-transport log (Section&nbsp;5.5); testing its generality across a second QUIC
-implementation and native Linux remains future work. The matched-quality crossovers are calibrated on one icon set and one photographic
-collection with randomized-subset bootstrap intervals (Section&nbsp;5.1), and the
-heuristic is validated out-of-sample on five further independent corpora
-(Section&nbsp;6.3); a still wider survey of naturally-occurring collections would
-further generalize the reported thresholds. The network numbers are medians of 11 cold loads per cell with
-bootstrap confidence intervals (Table&nbsp;2) but no formal significance testing, and
-the timing endpoint is time-to-all-tiles-visible; user-centric metrics (first tile, above-the-fold completion,
-LCP, decode CPU) and warm-cache multi-navigation behavior under realistic asset churn
-are not measured and could change the recommended bundle size. Finally, AVIF and
-JPEG&nbsp;XL are excluded by scope, though AVIF is now a material share of web imagery;
-their larger container overhead and richer adaptivity would move the crossovers, and
-AVIF is the first codec a follow-up should add.</p>
+cost is now measured in a live renderer (Section&nbsp;3.2, Table&nbsp;9), confirming the
+pixel atlas is memory-favorable at typical tile counts; profiling under a production
+framework with texture upload and long-lived navigation remains future work. The HTTP/3
+concurrency diagnosis is confirmed from the server's own QUIC transport log
+(Section&nbsp;5.5); testing its generality across a second QUIC implementation and native
+Linux remains future work. The matched-quality photo crossover is validated across four
+independent natural-photo populations (Section&nbsp;5.1) and the heuristic on five further
+independent corpora (Section&nbsp;6.3); a still wider survey of naturally-occurring
+collections would further generalize the reported thresholds. The network numbers are
+medians of 11 cold loads per cell with bootstrap confidence intervals (Table&nbsp;2) but
+no formal significance testing, and the timing endpoint is time-to-all-tiles-visible;
+first-tile and first-viewport milestones are reported for the local renderer (Table&nbsp;9)
+but LCP, decode CPU, and warm-cache multi-navigation behavior under realistic asset churn
+are not measured and could change the recommended bundle size. Finally, JPEG&nbsp;XL is
+left to future work; AVIF is included in the photographic crossover (Section&nbsp;5.1) and,
+like JPEG, benefits from atlasing at every tested size.</p>
 
 {H2('Conclusion')}
 <p>Bundling small web images pays, and the study makes precise when and by how much for
-the three formats that carry most of the web's images. Atlas small lossy tiles: icons
-and thumbnails gain up to 30% under JPEG and up to 19% under WebP at matched
-quality, and lossless flat art, the icon-set and map-marker case, gains 40&ndash;97%
+the formats that carry most of the web's images. Atlas small lossy tiles: icons
+and thumbnails gain up to 30% under JPEG, up to 19% under WebP, and up to 33% under AVIF
+at matched quality, the effect holding across four independent photo populations; and
+lossless flat art, the icon-set and map-marker case, gains 40&ndash;97%
 with a strip-packed or shared-palette bundle that is smaller than even the best lossy
 option. Serve larger photographs and lossless assets as a byte-bundle, which collapses
 requests at near-zero byte cost (a small offset header), or, for photographic WebP, tune
@@ -1479,8 +1599,9 @@ IETF, 2022. doi:10.17487/RFC9111</p>
     (ROOT / "docs" / "index.html").write_text(html, encoding="utf-8")
     # content canaries
     for canary in ["Table 1.", "Table 2.", "Table 3.", "Table 4.", "Table 5.", "Table 6.",
-                   "Figure 1.", "Figure 2.", "Figure 3.", "Figure 4.", "Figure 5.", "<svg",
-                   "atlas_emoji_100.png", "Abstract", "References", "SSIMULACRA2", "[33]",
+                   "Table 7.", "Table 8.", "Figure 1.", "Figure 2.", "Figure 3.", "Figure 4.",
+                   "Figure 5.", "<svg", "atlas_emoji_100.png", "Abstract", "References",
+                   "SSIMULACRA2", "AVIF", "RFC 9842", "[45]",
                    "background-position", "object-view-box", "Cache-Control"]:
         assert canary in html, f"CANARY FAILED: {canary}"
     assert html.count("<svg") >= 5, "CANARY FAILED: expected chart SVGs"

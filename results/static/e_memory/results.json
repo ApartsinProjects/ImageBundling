@@ -1,0 +1,74 @@
+[
+ {
+  "n": 50,
+  "cond": "ind",
+  "firstTile": 16,
+  "firstViewport": 148,
+  "allVisible": 164,
+  "mem_mb": 89.3
+ },
+ {
+  "n": 50,
+  "cond": "atlas",
+  "firstTile": 22,
+  "firstViewport": 23,
+  "allVisible": 36,
+  "mem_mb": 81.3
+ },
+ {
+  "n": 50,
+  "cond": "bundle",
+  "firstTile": 35,
+  "firstViewport": 36,
+  "allVisible": 44,
+  "mem_mb": 87.0
+ },
+ {
+  "n": 200,
+  "cond": "ind",
+  "firstTile": 31,
+  "firstViewport": 354,
+  "allVisible": 379,
+  "mem_mb": 127.3
+ },
+ {
+  "n": 200,
+  "cond": "atlas",
+  "firstTile": 14,
+  "firstViewport": 14,
+  "allVisible": 23,
+  "mem_mb": 92.5
+ },
+ {
+  "n": 200,
+  "cond": "bundle",
+  "firstTile": 98,
+  "firstViewport": 120,
+  "allVisible": 139,
+  "mem_mb": 119.2
+ },
+ {
+  "n": 500,
+  "cond": "ind",
+  "firstTile": 90,
+  "firstViewport": 429,
+  "allVisible": 767,
+  "mem_mb": 129.1
+ },
+ {
+  "n": 500,
+  "cond": "atlas",
+  "firstTile": 15,
+  "firstViewport": 15,
+  "allVisible": 33,
+  "mem_mb": 105.7
+ },
+ {
+  "n": 500,
+  "cond": "bundle",
+  "firstTile": 228,
+  "firstViewport": 304,
+  "allVisible": 313,
+  "mem_mb": 142.8
+ }
+]
