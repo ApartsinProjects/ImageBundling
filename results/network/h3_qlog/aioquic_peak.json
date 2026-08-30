@@ -1,0 +1,12 @@
+{
+ "server": "aioquic",
+ "peaks": [
+  12,
+  8,
+  25,
+  13,
+  20
+ ],
+ "median": 13,
+ "caddy_median_for_comparison": 6
+}

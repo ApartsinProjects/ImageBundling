@@ -1257,11 +1257,17 @@ the effect and locates it precisely: across cold HTTP/3 loads of the 500-file pa
 server records a peak of only 4&ndash;6 request streams open at once (median 5 for
 photographs, 4 for flat art), agreeing with the browser-side count, while its transport
 parameters advertise a 100-stream limit (<code>initial_max_streams_bidi</code>) that is
-never approached. The constraint is thus not a QUIC stream-limit or flow-control effect;
-the server permits 100 concurrent streams. It sits in the client's QUIC request scheduler
-(Chromium's), a property of the deployment, not of HTTP/3 itself, which multiplexes
-independent streams over one connection. A default HTTP/3 client can therefore under-multiplex a
-many-small-image page relative to HTTP/2, which makes bundling valuable there. Under the 1% packet-loss
+never approached, so the stream limit is not the binding constraint. To test whether the
+low concurrency is a property of this particular server, we replayed the load against a
+second, independent QUIC implementation (aioquic) driven by the same Chromium: it
+sustained a median of 13 concurrent request streams, roughly double the quic-go/Caddy
+figure and close to HTTP/2's, on a faster loopback path with smaller tiles that both bias
+the count downward, so the gap is conservative. The low concurrency is therefore a
+property of the specific server stack and its defaults interacting with Chromium's QUIC
+scheduler, not of HTTP/3 itself, which multiplexes independent streams over one
+connection. A default HTTP/3 stack can therefore under-multiplex a
+many-small-image page relative to HTTP/2, which makes bundling valuable there, while a
+different server stack narrows the gap. Under the 1% packet-loss
 profile every serving condition becomes noise-dominated on this testbed: per-cell
 coefficients of variation reach 0.4 and the atlas-vs-individual and chunk-vs-atlas
 differences fall inside overlapping confidence intervals (for example lossy4g photos on
@@ -1436,8 +1442,9 @@ cost is now measured in a live renderer (Section&nbsp;3.2, Table&nbsp;9), confir
 pixel atlas is memory-favorable at typical tile counts; profiling under a production
 framework with texture upload and long-lived navigation remains future work. The HTTP/3
 concurrency diagnosis is confirmed from the server's own QUIC transport log
-(Section&nbsp;5.5); testing its generality across a second QUIC implementation and native
-Linux remains future work. The matched-quality photo crossover is validated across four
+(Section&nbsp;5.5) and cross-checked against a second QUIC implementation (aioquic), which
+sustained about twice the concurrency; a fully controlled comparison across server stacks
+and native Linux remains future work. The matched-quality photo crossover is validated across four
 independent natural-photo populations (Section&nbsp;5.1) and the heuristic on five further
 independent corpora (Section&nbsp;6.3); a still wider survey of naturally-occurring
 collections would further generalize the reported thresholds. The network numbers are
@@ -1464,8 +1471,8 @@ deduplicate repeats explicitly, and delta-encode updates against the cached bund
 (Compression Dictionary Transport). On the wire, bundling loads 500 small flat-art tiles
 4.5&ndash;8.6x faster to full visibility on HTTP/1.1 (1.5&ndash;2.8x for photographic
 thumbnails) and is chiefly a byte optimization on HTTP/2; the comparable HTTP/3 gain
-reflects a client-side request-concurrency limit specific to the tested stack
-(Section&nbsp;5.5), not a protocol-general result. The unifying
+reflects a request-concurrency limit specific to the tested server stack, which a second
+QUIC implementation roughly halves (Section&nbsp;5.5), not a protocol-general result. The unifying
 account, that savings come from sharing fixed costs and losses from sharing adaptive
 state, is quantitatively predictive for JPEG (R<sup>2</sup>&nbsp;=&nbsp;0.99) and
 organizes the codec-specific behavior of the rest, and it guides the accompanying

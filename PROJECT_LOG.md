@@ -69,10 +69,14 @@ ssimulacra2_rs --no-default-features (vapoursynth link error with defaults).
 
 | 2026-08-30 | P1 experiments (W7/W8/W5/P1.4) | W7+W8: cross-corpus+AVIF crossover on RunPod ($0.03, 5.4min) - 4 independent photo populations, JPEG/WebP/AVIF at 56/112/224. AVIF POSITIVE everywhere (+33/+12/+5), like JPEG; WebP crosses zero ~112px on ALL corpora; savings tight across populations (56px JPEG 25-27% everywhere). W5: browser memory+timing - atlas fastest-to-visible (33ms@N=500) AND lowest memory (106 vs ind 129 vs bundle 143 MB); refines width*height*4 caution. P1.4: leave-one-corpus-out held-out - two-term model does NOT beat size+codec baseline (MAE 4.65 vs 4.58) because photo populations too similar; reframed HONESTLY as regime-stability evidence for W7 (held-out predicted to 4.6pp) not a prediction win | crosscorpus per-corpus ranges tight; e_memory RSS delta over blank baseline; heldout null reported honestly | AVIF added (user reversed JPEG/PNG/WebP scope); scope+Limitations updated; new Tables 7 (memory) + 8-equiv (crosscorpus); RunPod OOM avoided by offload |
 
+| 2026-08-30 | W4-strong: HTTP/3 second QUIC stack (aioquic) | Ran aioquic (pure-Python QUIC, != Caddy's quic-go) NATIVELY ON WINDOWS (bypassing dead WSL), same Chromium: browser-side peak concurrency median 13 (range 8-25) vs quic-go/Caddy's qlog-confirmed 6 | confounds (Windows loopback vs WSL, 96px vs 224px tiles) bias AGAINST higher aioquic -> conservative | CORRECTS earlier over-narrow "client scheduler" claim: low h3 concurrency is STACK-SPECIFIC (quic-go/Caddy defaults x Chromium), a 2nd stack ~doubles it. §5.5+conclusion+Limitations updated. WSL died from C:-full (apt install); worked around via Windows-native aioquic per user "use E drive" |
+
 ## Current standing + next
 Phases 0-2 COMPLETE and published; SPE strength revisions + bibtest + HTTP/3 qlog +
 two-author byline + PDF/DOCX + Fable polish + external-review P0 integrity + P1
-(cross-corpus, AVIF, memory/timing, held-out) all landed.
+(cross-corpus, AVIF, memory/timing, held-out) + W4-strong (aioquic second stack) all
+landed. ALL reviewer P0+P1 items addressed. Machine note: C: was 100% full (WSL crashed);
+reclaimed 133MB cargo cache, C:~154MB free, needs user attention + reboot to restore WSL.
 Byte-bundle artifact bug (reviewer's one blocking issue) fixed and verified; tool emits
 one self-describing .bin/chunk and report matches emitted bytes/requests exactly.
 DECISIONS PENDING for P1 (need user): AVIF in core crossover (conflicts with user's
