@@ -21,7 +21,9 @@ code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;backgr
 pre{padding:.5rem .8rem;overflow-x:auto;text-align:left;line-height:1.4;margin:.7rem 0}
 pre+p{text-indent:0}
 h1{font-size:19pt;font-weight:600;text-align:center;line-height:1.25;margin:0 0 .4rem}
-.authors{text-align:center;font-size:10.5pt;color:#2c3138;margin-bottom:.2rem}
+.authors{text-align:center;font-size:10.5pt;color:#2c3138;margin-bottom:.25rem}
+.authors sup,.affil sup{font-size:.72em}
+.affil{text-align:center;font-size:9pt;color:#5a626c;margin-bottom:.35rem;line-height:1.4}
 .venue{text-align:center;font-size:9.5pt;color:#5a626c;margin-bottom:1.6rem}
 h2{font-size:13pt;font-weight:700;color:#14385c;margin:1.6rem 0 .5rem;text-align:left}
 h3{font-size:11.5pt;font-weight:700;margin:1.1rem 0 .35rem;text-align:left}
@@ -85,18 +87,20 @@ def icon_table():
             for size in (24, 48):
                 if cond == "__individual_ll":
                     v = base.get((corpus, size))
-                    cells.append(f"<td>{v:,}</td>" if v else "<td>&mdash;</td>")
+                    cells.append(f"<td>{v:,}</td>" if v else "<td>n/a</td>")
                     continue
                 r = next((x for x in rows if x["cond"] == cond and
                           x["corpus"] == corpus and x["size"] == size), None)
-                cells.append(f"<td>{r['bytes']:,}</td>" if r else "<td>&mdash;</td>")
+                cells.append(f"<td>{r['bytes']:,}</td>" if r else "<td>n/a</td>")
         trows.append(f"<tr><td>{label}</td>{''.join(cells)}</tr>")
     return ("<div class='tablewrap'><table>"
             "<caption><b>Table 3.</b> Bundle bytes for 200 synthetic flat icons (fixed "
             "12-color palette, alpha), lossless unless noted, on a clean corpus and one "
             "with 20% exact + 20% near-duplicate tiles. Lossless bundles are byte-exact "
             "(palette conversion verified identical after decode); the JPEG row is the "
-            "matched-SSIM-0.97 grid atlas. Smaller is better.</caption>"
+            "matched-SSIM-0.97 grid atlas. The 90&ndash;97% shared-palette saving cited in "
+            "the text is measured against individual paletted PNGs (per tile), whose byte "
+            "totals are in the released data. Smaller is better.</caption>"
             "<thead><tr><th>bundle</th><th>clean 24px</th><th>clean 48px</th>"
             "<th>dup 24px</th><th>dup 48px</th></tr></thead>"
             f"<tbody>{''.join(trows)}</tbody></table></div>")
@@ -176,7 +180,7 @@ def ss2_table():
 
     def cell(v):
         if v is None:
-            return "<td>&mdash;</td>"
+            return "<td>n/a</td>"
         return f'<td class="neg">{v:.1f}</td>' if v < 0 else f"<td>{v:.1f}</td>"
 
     trows = []
@@ -202,7 +206,7 @@ def ss2_table():
 
 def heuristic_figure():
     """Decision-flow diagram of the atlas_optimizer construction heuristic (Section 6.3)."""
-    W, H = 662, 540
+    W, H = 650, 566
     o = [f'<svg viewBox="0 0 {W} {H}" style="max-width:100%" font-family="Georgia,serif" '
          f'role="img" aria-label="Construction heuristic decision flow">']
     o.append('<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" '
@@ -234,42 +238,49 @@ def heuristic_figure():
             o.append(f'<text x="{(x1+x2)/2+lx:.0f}" y="{(y1+y2)/2+ly:.0f}" font-size="9" '
                      f'text-anchor="middle" fill="#8a2f22">{label}</text>')
 
-    L, R = 190, 452       # left spine (diamonds), right column (terminals)
-    box(L, 24, 220, 30, "directory of images")
-    arrow(L, 39, L, 54)
-    box(L, 70, 240, 30, "collapse exact duplicates &rarr; shared CSS coords")
-    arrow(L, 85, L, 100)
-    box(L, 116, 240, 30, "group by cadence / lossless / dimensions")
-    arrow(L, 131, L, 152)
-    # decision cascade
-    diamond(L, 180, 150, 54, "group|&lt; 10 tiles?")
-    box(R, 180, 190, 30, "individual files", fill="#f4f5f7", stroke="#5a626c")
-    arrow(L + 75, 180, R - 95, 180, "yes", 0, -4)
-    arrow(L, 207, L, 234, "no", -10, 0)
-    diamond(L, 262, 150, 54, "lossless|required?")
-    box(R, 262, 200, 34, "keep smaller of byte-bundle|or WebP-lossless strip",
+    L, R, BUS = 190, 452, 572   # spine x, terminal x, convergence bus x (right of boxes)
+
+    def seg(x1, y1, x2, y2, dash=False):
+        d = ' stroke-dasharray="3 3"' if dash else ''
+        o.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#5a626c"{d}/>')
+
+    # --- nodes (drawn first so arrows render on top) ---
+    box(L, 24, 230, 30, "directory of images")
+    box(L, 72, 250, 30, "collapse exact duplicates &rarr; shared CSS coords")
+    box(L, 120, 250, 30, "group by cadence / lossless / dimensions")
+    diamond(L, 184, 150, 54, "group|&lt; 10 tiles?")
+    diamond(L, 268, 150, 54, "lossless|required?")
+    diamond(L, 352, 160, 54, "small lossy tile|(&le; 130 px)?")
+    box(R, 184, 190, 30, "individual files", fill="#f4f5f7", stroke="#5a626c")
+    box(R, 268, 200, 34, "keep smaller of byte-bundle|or WebP-lossless strip",
         fill="#e8f3ef", stroke="#16a085")
-    arrow(L + 75, 262, R - 100, 262, "yes", 0, -4)
-    arrow(L, 289, L, 316, "no", -10, 0)
-    diamond(L, 344, 160, 54, "small lossy tile|(&le; 130 px)?")
-    box(R, 328, 190, 30, "WebP pixel atlas", fill="#e7eff6", stroke="#2980b9")
-    box(R, 372, 190, 30, "byte-bundle", fill="#f4f5f7", stroke="#5a626c")
-    arrow(L + 78, 344, R - 95, 330, "yes", 0, -4)
-    arrow(L, 371, L + 40, 371)
-    arrow(L + 40, 371, L + 40, 372)
-    arrow(L + 40, 372, R - 95, 372, "no", 0, -4)
-    # convergence bus to chunk + emit
-    o.append(f'<line x1="{R}" y1="195" x2="{R}" y2="450" stroke="#5a626c"/>')
-    box(L, 452, 240, 30, "chunk into ~4 (cache &amp; memory bounds)")
-    arrow(R, 450, L + 120 + 2, 452)
-    arrow(L, 467, L, 488)
-    box(L, 504, 300, 30,
-        "emit atlas / bundle + CSS map + loader + savings report")
-    # optional delta note
-    o.append(f'<line x1="{L+150}" y1="504" x2="{R+40}" y2="504" stroke="#5a626c" '
-             f'stroke-dasharray="3 3"/>')
-    box(R + 96, 504, 150, 34, "updates:|serve dictionary deltas",
+    box(R, 352, 190, 30, "WebP pixel atlas", fill="#e7eff6", stroke="#2980b9")
+    box(R, 408, 190, 30, "byte-bundle", fill="#f4f5f7", stroke="#5a626c")
+    box(L, 480, 250, 30, "chunk into ~4 (cache &amp; memory bounds)")
+    box(L, 528, 300, 30, "emit atlas / bundle + CSS map + loader + savings report")
+    box(R + 100, 528, 150, 34, "updates:|serve dictionary deltas",
         fill="#fbf7ee", stroke="#b9770e", fs=9.5)
+
+    # --- spine flow ---
+    arrow(L, 39, L, 57)
+    arrow(L, 87, L, 105)
+    arrow(L, 135, L, 157)
+    arrow(L, 211, L, 241, "no", -11, 0)     # D1 no -> D2
+    arrow(L, 295, L, 325, "no", -11, 0)     # D2 no -> D3
+    # --- yes branches to terminals (straight) ---
+    arrow(L + 75, 184, R - 95, 184, "yes", 0, -5)
+    arrow(L + 75, 268, R - 100, 268, "yes", 0, -5)
+    arrow(L + 80, 352, R - 95, 352, "yes", 0, -5)   # small tile? yes -> pixel atlas
+    # --- D3 no -> byte-bundle (clean elbow, no crossing) ---
+    seg(L, 379, L, 408)
+    arrow(L, 408, R - 95, 408, "no", 22, -5)
+    # --- convergence: terminal right edges -> vertical bus -> chunk ---
+    for ty, hw in ((184, 95), (268, 100), (352, 95), (408, 95)):
+        seg(R + hw, ty, BUS, ty)
+    seg(BUS, 184, BUS, 480)
+    arrow(BUS, 480, L + 125 + 2, 480)               # bus -> chunk right edge
+    arrow(L, 495, L, 513)                            # chunk -> emit
+    seg(L + 152, 528, R + 25, 528, dash=True)       # emit -> delta note
     o.append('</svg>')
     return (f"<figure>{''.join(o)}<figcaption><b>Figure 6.</b> The construction heuristic "
             "as implemented in <code>atlas_optimizer</code>. Exact duplicates collapse to "
@@ -296,7 +307,7 @@ def oracle_table():
 
     def fmt(v):
         if v is None:
-            return "<td>&mdash;</td>"
+            return "<td>n/a</td>"
         klass = ' class="neg"' if v > 0.05 else ""
         return f"<td{klass}>{v:+.1f}%</td>" if v > 0.05 else f"<td>0.0%</td>"
 
@@ -646,7 +657,7 @@ def main():
                 mark = "&ge;" if r.get("lower_bound") else ""
                 klass = ' class="neg"' if s < 0 else ""
                 return f"<td{klass}>{mark}{s:.1f}</td>"
-        return "<td>&mdash;</td>"
+        return "<td>n/a</td>"
 
     codecs = ["jpeg", "webp", "png", "webp_ll"]
     heads = ["JPEG", "WebP", "PNG", "WebP-lossless"]
@@ -660,7 +671,8 @@ def main():
               "<caption><b>Table 1.</b> Bytes saved by atlasing (%) at matched per-tile "
               "SSIM 0.97 (lossy codecs; interpolated on the quality ladder) or exact "
               "lossless comparison (-ll columns), grid packing, no padding. Negative "
-              "values (red) mean the atlas is larger.</caption>"
+              "values (red) mean the atlas is larger; n/a marks a cell whose quality "
+              "ladder lies entirely above the target with no interpolable point.</caption>"
               f"<thead><tr><th>class</th><th>N</th>{''.join(f'<th>{h}</th>' for h in heads)}"
               f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
@@ -703,24 +715,27 @@ def main():
 <a href="paper.docx">DOCX</a></div>
 <h1>Image Bundling Revisited: Atlasing Small Web Images under Modern Codecs and
 Protocols</h1>
-<div class="authors">Alexander Apartsin</div>
+<div class="authors">Alexander Apartsin<sup>1</sup>, Yehudit Aperstein<sup>2</sup></div>
+<div class="affil"><sup>1</sup>School of Computer Science, Faculty of Sciences, Holon
+Institute of Technology (HIT), Holon, Israel<br><sup>2</sup>Intelligent Systems, Afeka
+Academic College of Engineering, Tel-Aviv, Israel</div>
 <div class="venue">Technical Report &middot; 2026</div>
 
 <div class="abstract"><div class="ahead">Abstract</div>
 <p>Web pages load tens to hundreds of small images, and the median mobile page carries
-13. Serving each one separately pays three costs that HTTP/2 multiplexing does not
-remove: per-request overhead, a fixed per-file structural cost (roughly 600 bytes for a
-JPEG), and the loss of cross-image redundancy. We measure how much of this bundling many
-images into one atlas recovers, for the three codecs that carry most web images and
+13. Serving each one separately pays per-request overhead plus two byte costs that HTTP/2
+multiplexing does not remove: a fixed per-file structural cost (roughly 600 bytes for a
+JPEG) and the loss of cross-image redundancy. We measure how much of these costs bundling
+many images into one atlas recovers, for the three codecs that carry most web images and
 decode in every browser: JPEG, PNG, and WebP.</p>
-<p>At matched per-tile quality, atlasing small tiles saves up to 26% of bytes under JPEG
-and up to 15% under WebP, independent of protocol. The saving is set by the ratio of
+<p>At matched per-tile quality, atlasing small tiles saves up to 30% of bytes under JPEG
+and up to 19% under WebP, independent of protocol. The saving is set by the ratio of
 per-file overhead to content size, so it falls as tiles grow: for photographs it drops
-from about 30% at 56&nbsp;pixels to a few percent at 224&nbsp;pixels, where WebP even
-turns slightly negative. Lossless formats lose under a naive grid but win 40&ndash;95%
-under codec-aware packing (vertical strips, shared palettes), so the question is how to
-pack, not whether. We distil the measurements into a coupling account, savings come from
-sharing fixed costs and losses from sharing adaptive state, and into an open-source tool
+from about 30% at 56&nbsp;pixels to a few percent at 224&nbsp;pixels, where WebP turns
+clearly negative. Lossless formats lose under a naive grid but win 40&ndash;97% under
+codec-aware packing (vertical strips, shared palettes), so the question is how to pack,
+not whether. We distil the measurements into a coupling account (savings come from
+sharing fixed costs; losses from sharing adaptive state) and into an open-source tool
 that turns a directory of images into deployable bundles and matches an offline oracle on
 five unseen collections. A supporting browser study shows the byte savings also cut load
 time on HTTP/1.1 and HTTP/3.</p></div>
@@ -760,9 +775,9 @@ browser decodes the atlas once and paints windows into it.</p>
 image atlasing across the three universally-supported web codecs (JPEG, PNG, WebP) over
 tile size and image count, establishing that the byte saving is governed by the ratio
 of per-file structural cost to content bytes, and to our knowledge the first
-peer-reviewed measurement of image-atlasing byte savings resolved by codec and tile size
-at matched perceptual quality (the one prior peer-reviewed sprite study [33] optimized
-PNG packing geometry and held the codec fixed); (ii) a network study of 2,515 validated
+measurement of image-atlasing byte savings resolved by codec and tile size at matched
+perceptual quality (the one prior peer-reviewed sprite study [33] optimized PNG packing
+geometry and held the codec fixed); (ii) a supporting network study of 2,515 validated
 cold browser loads that separates the timing effect of bundling across HTTP/1.1,
 HTTP/2, and HTTP/3 under emulated network conditions; (iii) a set of construction
 techniques with measured effect, PNG vertical-strip packing, explicit and LZ-window
@@ -891,10 +906,9 @@ immutable content-addressed URLs (<code>atlas.3fe2a1.webp</code>,
 cache, and the decode-once property still applies. The cost appears on content change:
 editing one tile invalidates the whole bundle, so the expected re-download per deploy
 grows with bundle size. Splitting the collection into k chunked atlases bounds the
-worst-case invalidation at 1/k of the collection while retaining nearly all of the byte and
-request savings (the ordering study of Section&nbsp;5.3 finds four chunks price within
-about a percentage point of one atlas), which makes chunking the practical default for
-collections that update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
+worst-case invalidation at 1/k of the collection while retaining nearly all of the byte
+and request savings, since chunking adds only a few container headers and a little grid
+slack, which makes chunking the practical default for collections that update piecemeal. Grouping tiles by update cadence (stable icon set in one chunk,
 weekly seasonal art in another) further confines invalidation to the chunk that
 actually changed.</p>
 <p>The second resource to budget is decoded memory: a decoded atlas occupies
@@ -911,7 +925,7 @@ cost neither bytes nor memory.</p>
 (alpha composited over white) and 521 photographic 224x224 thumbnails, with the photo
 set additionally downscaled to 112 and 56 pixels for the size sweep and synthetic
 icon, product-thumbnail, and avatar corpora added for the use-case tests
-(Section&nbsp;5.4). Tiles are packed row-major into a near-square grid; a padding
+(Section&nbsp;5.3). Tiles are packed row-major into a near-square grid; a padding
 variant edge-replicates each tile by 8 or 16 pixels, and a vertical-strip variant packs
 one tile per row band. All conditions consume identical source pixels.</p>
 {H3('Codecs and matched-quality protocol')}
@@ -920,11 +934,11 @@ libjpeg-turbo JPEG, WebP (lossy and lossless), and PNG, with the lossy codecs sw
 over a quality ladder q &isin; {{30,50,65,80,90}}. Quality is the mean over tiles of the
 per-tile luma SSIM [25], each tile scored after cropping it back out of the decoded artifact
 so atlas border bleed is charged to the atlas; the matched target of 0.97 is therefore a
-mean-tile floor, and Section&nbsp;5.4 reports the per-tile spread where it is
+mean-tile floor, and Section&nbsp;5.1 reports the per-tile spread where it is
 load-bearing. Bytes are compared at equal quality by log-linear interpolation of each
 condition's rate-distortion curve at the target; the five-point ladder is coarse, so
 where the atlas and individual curves nearly coincide the interpolation is unstable and
-equal-quality byte comparison is used instead (Section&nbsp;5.4). When an atlas's entire
+equal-quality byte comparison is used instead (Section&nbsp;5.3). When an atlas's entire
 ladder exceeds the target, its cheapest measured point is used, understating the atlas's
 advantage, and the value is reported as a lower bound. Three invariants validate the harness: lossless
 conditions score SSIM exactly 1.0; an atlas of one image is byte-identical to the
@@ -1002,10 +1016,10 @@ photos shares four segments where individual files had four each. This penalty i
 quality effect, not a byte cost, and the &minus;8.5% headline is best read as the pair it
 comes from: at equal encoder quality the 500-photo WebP atlas costs essentially the same
 bytes as individual files (&minus;0.2% at q80) but reaches a slightly lower mean per-tile
-SSIM (0.975 vs 0.978, a 0.004 deficit); the matched-quality protocol prices that small
+SSIM (0.9748 vs 0.9784, a 0.004 deficit); the matched-quality protocol prices that small
 deficit as the &minus;8.5% through interpolation on a steep rate-distortion curve. The
 sign is robust (the deduplicated-subset bootstrap interval is [&minus;12.0, &minus;6.7]),
-but the magnitude is metric-dependent, and Section&nbsp;5.5 shows two encoder flags
+but the magnitude is metric-dependent, and Section&nbsp;5.4 shows two encoder flags
 reverse it to +5%. Edge-replicated padding costs roughly 7 percentage points of saving
 per 8-pixel step for JPEG and roughly 10 for WebP (flat art, N&nbsp;=&nbsp;200),
 pricing the block-alignment mitigations against chroma bleed.</p>
@@ -1126,13 +1140,14 @@ image library's default binding.</p>
 <p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
 HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
 4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.5&ndash;2.8x
-for photos. Across cells, added network impairment never speeds a condition up, and the reported speedups carry tight bootstrap intervals (Table&nbsp;2). Second, HTTP/2 is the strongest protocol for many small files: its
+for photos on the loss-free profiles (the 1% packet-loss photo cells fall to parity and
+are discussed below). Across cells, added network impairment never speeds a condition up, and the reported speedups carry tight bootstrap intervals (Table&nbsp;2). Second, HTTP/2 is the strongest protocol for many small files: its
 multiplexing loads 500 individual images almost as fast as the atlas on
 bandwidth-limited links (1.0&ndash;1.1x at 9&nbsp;Mbit), so under HTTP/2 the case for
 bundling small tiles rests chiefly on the byte saving of Table&nbsp;1 (up to 26% for
-flat art) rather than on latency. Third, on this testbed HTTP/3's individual-file loads run 4&ndash;5x slower
-than HTTP/2's on the same links, including at zero loss, and a concurrency diagnostic
-locates the cause. The diagnostic reconstructs each request's in-flight interval from the Resource Timing
+flat art) rather than on latency. Third, on this testbed HTTP/3's individual-file loads run several times
+slower than HTTP/2's on the same links, up to 5x for flat art on the constrained profiles
+and about 3x on the fast zero-loss link, and a concurrency diagnostic locates the cause. The diagnostic reconstructs each request's in-flight interval from the Resource Timing
 API and finds the peak number of simultaneous image requests: HTTP/2 sustained
 13&ndash;14 at once while HTTP/3 sustained only 6, roughly half the parallelism, and the
 slowdown tracks that gap. The server's own QUIC transport log (quic-go qlog) confirms
@@ -1140,10 +1155,10 @@ the effect and locates it precisely: across cold HTTP/3 loads of the 500-file pa
 server records a peak of only 4&ndash;6 request streams open at once (median 5 for
 photographs, 4 for flat art), agreeing with the browser-side count, while its transport
 parameters advertise a 100-stream limit (<code>initial_max_streams_bidi</code>) that is
-never approached. The constraint is thus not a QUIC stream-limit or flow-control effect,
-the server permits 100 concurrent streams, but the client's QUIC request scheduler
-(Chromium's), a property of the deployment, not of HTTP/3, which multiplexes independent
-streams over one connection. A default HTTP/3 client can therefore under-multiplex a
+never approached. The constraint is thus not a QUIC stream-limit or flow-control effect;
+the server permits 100 concurrent streams. It sits in the client's QUIC request scheduler
+(Chromium's), a property of the deployment, not of HTTP/3 itself, which multiplexes
+independent streams over one connection. A default HTTP/3 client can therefore under-multiplex a
 many-small-image page relative to HTTP/2, which makes bundling valuable there. Under the 1% packet-loss
 profile every serving condition becomes noise-dominated on this testbed: per-cell
 coefficients of variation reach 0.4 and the atlas-vs-individual and chunk-vs-atlas
@@ -1152,7 +1167,7 @@ HTTP/1.1 give a single atlas at 1.50x and four chunks at 1.54x, indistinguishabl
 therefore make no loss-recovery claim for chunking from the timing data; chunking's
 demonstrated benefit is cache granularity and bounded invalidation (Section&nbsp;6.2,
 Figure&nbsp;5), not packet-loss resilience. The byte-bundle beats individual serving nearly everywhere on HTTP/1.1 and HTTP/3
-(up to 5.7x) at exactly the individual conditions' byte cost, which makes it the
+(up to 5.6x) at exactly the individual conditions' byte cost, which makes it the
 bundling method of choice for content whose pixels should not share a codec model
 (photos, lossless assets); the pixel atlas remains faster where its byte savings
 compound with the request savings.</p>
@@ -1311,14 +1326,16 @@ AVIF is the first codec a follow-up should add.</p>
 <p>Bundling small web images pays, and the study makes precise when and by how much for
 the three formats that carry most of the web's images. Atlas small lossy tiles: icons
 and thumbnails gain up to 30% under JPEG and up to 19% under WebP at matched
-quality, and lossless flat art, the icon-set and map-marker case, gains 40&ndash;95%
+quality, and lossless flat art, the icon-set and map-marker case, gains 40&ndash;97%
 with a strip-packed or shared-palette bundle that is smaller than even the best lossy
 option. Serve larger photographs and lossless assets as a byte-bundle, which collapses
 requests at zero byte cost, or, for photographic WebP, tune the encoder (noise shaping
 plus adaptive deblocking) to turn the atlas penalty into a gain. Ship about four chunks
 for bounded cache invalidation and decoded-memory limits, deduplicate repeats explicitly, and
-serve updates as dictionary deltas. On the wire, bundling is 4.5&ndash;8.6x faster to full
-visibility on HTTP/1.1 and HTTP/3 and chiefly a byte optimization on HTTP/2. The unifying
+serve updates as dictionary deltas. On the wire, bundling loads 500 small tiles
+4.5&ndash;8.6x faster to full visibility on HTTP/1.1 and HTTP/3 for flat art
+(1.5&ndash;2.8x for photographic thumbnails) and is chiefly a byte optimization on
+HTTP/2. The unifying
 account, that savings come from sharing fixed costs and losses from sharing adaptive
 state, is quantitatively predictive for JPEG (R<sup>2</sup>&nbsp;=&nbsp;0.99) and
 organizes the codec-specific behavior of the rest, and it guides the accompanying
@@ -1415,8 +1432,8 @@ https://developers.google.com/speed/webp/docs/webp_study</p>
 <p>[40] G. Randers-Pehrson. MNG (Multiple-image Network Graphics) Format, Version 1.0,
 2001. http://www.libpng.org/pub/mng/spec/ (APNG is standardized in the W3C PNG
 Specification, 3rd ed. [18]).</p>
-<p>[41] ISO/IEC 23008-12:2017. Information technology &mdash; High efficiency coding and
-media delivery in heterogeneous environments &mdash; Part 12: Image File Format (HEIF).</p>
+<p>[41] ISO/IEC 23008-12:2017. Information technology: High efficiency coding and media
+delivery in heterogeneous environments, Part 12: Image File Format (HEIF).</p>
 <p>[42] J. Mogul, B. Krishnamurthy, F. Douglis, A. Feldmann, Y. Goland, A. van Hoff,
 D. Hellerstein. Delta Encoding in HTTP. RFC 3229, IETF, 2002. doi:10.17487/RFC3229</p>
 <p>[43] D. Korn, J. MacDonald, J. Mogul, K. Vo. The VCDIFF Generic Differencing and
@@ -1426,7 +1443,7 @@ Compression over HTTP (SDCH). IETF Internet-Draft draft-lee-sdch-spec, 2008.</p>
 <p>[45] R. Fielding, M. Nottingham, J. Reschke (Eds.). HTTP Caching. RFC 9111 (STD 98),
 IETF, 2022. doi:10.17487/RFC9111</p>
 </div>
-<div class="footer">Alexander Apartsin &middot; 2026</div>
+<div class="footer">Alexander Apartsin, Yehudit Aperstein &middot; 2026</div>
 </body></html>"""
 
     # Renumber tables to document order (captions <b>Table N.</b> define the order;

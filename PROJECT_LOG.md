@@ -63,9 +63,11 @@ ssimulacra2_rs --no-default-features (vapoursynth link error with defaults).
 | 2026-08-29 | bibtest pass (45 refs) | 35 valid / 0 misattributed / 9 not_found / 1 skipped after fixes | identifier cross-check | Caught misattributed [4] (arXiv:2207.05885 = Meireles/Liu/Steenkiste, not Dahal); added DOIs to 7 RFCs; 9 residual not_found are genuine no-DOI works (ISO/ITU standards, USENIX NSDI, SciTePress, magazine, IETF draft) |
 | 2026-08-29 | e_h3_qlog HTTP/3 server-side qlog confirmation (quic-go QLOGDIR, 36 loads, localhost) | h3 individual_photos_500: server-side peak concurrency 4-6 (median 5), browser-side median 6; emoji server-peak 4, browser 12; server advertises initial_max_streams_bidi=100 | server-side peak agrees with browser-side; atlas control = 1/1; both classes << 100 | CONFIRMS h3 under-multiplexing directly from transport, not Resource Timing reconstruction. CORRECTS prior wording: not stream-limit/flow-control (server allows 100), it is the CLIENT (Chromium) QUIC scheduler. §5.5 + Limitations updated |
 
+| 2026-08-30 | Second author + affiliations; PDF/DOCX downloads; Figure 5 arrow fix; Fable final-polish pass | Added Yehudit Aperstein (Afeka) + Apartsin (HIT) affiliations; top-right PDF/DOCX links (scripts/build_downloads.py); flowchart convergence bus moved right of boxes + clean byte-bundle elbow (no crossings) | Fable review cross-checked every prose number vs tables | Fixed: 5 stale section cross-refs, abstract 3-vs-2-costs contradiction, abstract headline 26/15%->30/19%, lossless 40-95%->40-97%, bun-x 5.7->5.6x, SSIM deficit 4-decimals, broken client-scheduler sentence, unsupported "~1pp chunk" claim softened, conclusion 4.5-8.6x scoped to flat art, "first peer-reviewed"->"first" (it is a tech report), em-dash placeholders->n/a, ref [41] em-dashes, Table 1/4 caption notes. 126x warm-cache verified CORRECT (agent false alarm) |
+
 ## Current standing + next
-Phases 0-2 COMPLETE and published; SPE strength revisions + bibtest + HTTP/3 qlog
-confirmation all landed. §5.5 h3 mechanism now transport-log-confirmed (server permits
-100 streams, client uses 4-6) and the "flow-control" mischaracterization corrected.
-Optional remaining: second QUIC stack / native-Linux generality, DOCX build.
+Phases 0-2 COMPLETE and published; SPE strength revisions + bibtest + HTTP/3 qlog +
+two-author byline + PDF/DOCX downloads + Fable final polish all landed. Paper reads clean,
+numbers cross-checked against tables, house style clean (no em-dashes/forbidden words).
+Optional remaining: second QUIC stack / native-Linux generality.
 Paper: https://apartsinprojects.github.io/ImageBundling/
