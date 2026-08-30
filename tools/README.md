@@ -20,22 +20,26 @@ What it does, in order:
      `background-position` (saved 15-26% bytes at matched quality in the study, and
      2-9x time-to-all-visible on HTTP/1.1 and HTTP/3);
    - larger lossy tiles and all lossless tiles: **byte-bundle** (files concatenated
-     into one `.bin` + offset index, decoded client-side via blob URLs), which
-     collapses requests at exactly zero byte penalty (pixel-atlasing these classes
-     measured net-negative on bytes);
+     into one self-describing `.bin`, a 4-byte header length plus a JSON offset index
+     plus the payloads, decoded client-side via blob URLs), which collapses a chunk to
+     one request at near-zero byte penalty (only the small offset header; pixel-atlasing
+     these classes measured net-negative on bytes);
    - groups smaller than `--min-group`: individual files (bundling overhead not paid
      back).
-4. **Chunks** each bundle (default 4): keeps nearly all savings, adds packet-loss
-   resilience (measured 0.9x -> 1.8x under 1% loss on HTTP/1.1), bounds cache
+4. **Chunks** each bundle (default 4): keeps nearly all savings, bounds cache
    invalidation and decoded-memory blast radius.
 
-Outputs: `atlas_*.webp`, `bundle_*.bin` + `bundle_*.json`, `atlas.css`
+Outputs: `atlas_*.webp`, `bundle_*.bin` (self-describing, one request per chunk),
+`atlas.css`
 (`.ib-<name>` class per tile, duplicates aliased), `usage.html` (loader snippet),
 `report.json` (per-group condition, bytes vs individual baseline, savings).
 
 `manifest.json` (optional), per filename:
 `{"hero.png": {"cadence": "weekly", "lossless": true}}`
 
-Validation on the study's asset sets: 521 emoji -> 4 atlas chunks, +19.2% bytes
-saved, 521 requests -> 4; 521 photo thumbnails (21.6% duplicates) -> 4 byte-bundle
-chunks, +21.4% saved, 521 requests -> 4.
+Validation on the study's asset sets (verified against emitted bytes with
+`verify_output.py`): 521 emoji (lossless PNG) -> 4 WebP-lossless strip-atlas chunks,
++5.1% vs individual PNGs (342 KB, the byte-optimal choice; with `--lossy-png` the same set
+goes to 4 pixel-atlas chunks at +19.2% vs individual WebP); 521 photo thumbnails (119
+exact duplicates folded) -> 4 self-describing byte-bundle chunks, +21.1% saved. Both
+collapse 521 requests to 4.

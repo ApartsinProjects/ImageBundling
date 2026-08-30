@@ -753,8 +753,10 @@ context, palettes, and predictors across images.</p>
 formats: JPEG, PNG, and WebP together carry over 70% of images served on the web (HTTP
 Archive 2024: JPEG 32.4%, PNG 28.4%, WebP 12.0%), decode in every browser, and are
 where the practical savings live. The three formats price the per-file costs very
-differently: a JPEG file carries roughly 600 bytes of Huffman and quantization table
-definitions plus headers, a PNG a 67-byte structural floor plus per-scanline filter
+differently: a JPEG file carries, with the libjpeg-turbo encoder and settings used here,
+roughly 600 bytes of Huffman and quantization table definitions plus headers (the exact
+figure is encoder- and settings-specific), a PNG a 67-byte structural floor plus
+per-scanline filter
 adaptation, and a WebP as little as 30 bytes of container around a heavily
 image-adapted VP8 payload. This report quantifies what bundling recovers, per codec,
 tile size, and image count, under a matched-quality protocol, and describes a testbed
@@ -1245,11 +1247,14 @@ p<sub>i</sub> pays expected bytes
 per deploy, which grows with bundle size and with churn. Chunking bounds it at 1/k of
 the collection; grouping tiles by update cadence confines a change to the chunk that
 carries it. The sharpest remedy is to serve updates as deltas against the cached
-previous version (Compression Dictionary Transport). In a 392-photo
-WebP bundle, a zstd delta against the prior bundle cost 25&nbsp;KB when 5 tiles changed
-and 237&nbsp;KB when 50 changed, tracking the changed-files optimum and beating whole-atlas
-re-download (2.8&nbsp;MB) by two orders of magnitude. The structural weakness thus
-becomes proportional to churn rather than to bundle size.</p>
+previous version, the mechanism Compression Dictionary Transport (RFC&nbsp;9842) now
+standardizes for the web. We measure the compression-level cost of this remedy as a
+proxy, computing the delta offline rather than through a live browser-server negotiation:
+in a 392-photo WebP bundle, a zstd delta against the prior bundle cost 25&nbsp;KB when 5
+tiles changed and 237&nbsp;KB when 50 changed, tracking the changed-files optimum and
+beating whole-atlas re-download (2.8&nbsp;MB) by two orders of magnitude. The structural
+weakness thus becomes proportional to churn rather than to bundle size; an end-to-end CDT
+deployment measurement is future work.</p>
 <p>A warm-cache simulation over a 200-tile WebP collection makes the full trade-off
 explicit (Figure&nbsp;5). Serving immutable individual files is the granularity ideal, a
 returning client fetches only the changed tiles (12&nbsp;KB at 1% churn). A single
@@ -1272,9 +1277,12 @@ group to a pixel atlas (small lossy tiles), a byte-bundle (large or lossless til
 individual files (tiny groups); and chunks each bundle (Figure&nbsp;6). It emits the atlas
 and bundle files, a CSS coordinate map, a loader snippet, and a per-group savings report.
 Validated against the study's own asset sets, it converts 521
-icon-class tiles into four atlas chunks at 19% fewer bytes, and 521 photo thumbnails, of
-which 21.6% are exact repeats, into four byte-bundle chunks at 21% fewer bytes, with 521
-requests becoming four in both cases.</p>
+flat-art tiles into four WebP-lossless strip-atlas chunks, the byte-optimal choice for
+this lossless class (or into four pixel-atlas chunks at 19% fewer bytes when the tiles are
+declared lossy-encodable), and 521 photographic thumbnails, 119 of them exact repeats,
+into four self-describing byte-bundle chunks at 21% fewer bytes, with 521 requests
+becoming four in both cases. An accounting check confirms the emitted bytes and request
+count equal what the tool reports.</p>
 {heuristic_html}
 <p>Because those asset sets also shaped the rules, a fair test requires collections the
 heuristic never saw. We evaluate it on five independent corpora, Noto emoji, OpenMoji,
@@ -1329,13 +1337,15 @@ and thumbnails gain up to 30% under JPEG and up to 19% under WebP at matched
 quality, and lossless flat art, the icon-set and map-marker case, gains 40&ndash;97%
 with a strip-packed or shared-palette bundle that is smaller than even the best lossy
 option. Serve larger photographs and lossless assets as a byte-bundle, which collapses
-requests at zero byte cost, or, for photographic WebP, tune the encoder (noise shaping
-plus adaptive deblocking) to turn the atlas penalty into a gain. Ship about four chunks
-for bounded cache invalidation and decoded-memory limits, deduplicate repeats explicitly, and
-serve updates as dictionary deltas. On the wire, bundling loads 500 small tiles
-4.5&ndash;8.6x faster to full visibility on HTTP/1.1 and HTTP/3 for flat art
-(1.5&ndash;2.8x for photographic thumbnails) and is chiefly a byte optimization on
-HTTP/2. The unifying
+requests at near-zero byte cost (a small offset header), or, for photographic WebP, tune
+the encoder (noise shaping plus adaptive deblocking) to turn the atlas penalty into a
+gain. Ship about four chunks for bounded cache invalidation and decoded-memory limits,
+deduplicate repeats explicitly, and delta-encode updates against the cached bundle
+(Compression Dictionary Transport). On the wire, bundling loads 500 small flat-art tiles
+4.5&ndash;8.6x faster to full visibility on HTTP/1.1 (1.5&ndash;2.8x for photographic
+thumbnails) and is chiefly a byte optimization on HTTP/2; the comparable HTTP/3 gain
+reflects a client-side request-concurrency limit specific to the tested stack
+(Section&nbsp;5.5), not a protocol-general result. The unifying
 account, that savings come from sharing fixed costs and losses from sharing adaptive
 state, is quantitatively predictive for JPEG (R<sup>2</sup>&nbsp;=&nbsp;0.99) and
 organizes the codec-specific behavior of the rest, and it guides the accompanying
@@ -1389,8 +1399,8 @@ algorithms (skyline, MaxRects), 2010.</p>
 doi:10.17487/RFC7932</p>
 <p>[23] Y. Collet, M. Kucherawy. Zstandard Compression and the application/zstd Media
 Type. RFC 8878, IETF, 2021. doi:10.17487/RFC8878</p>
-<p>[24] P. Meenan, Y. Weiss. Compression Dictionary Transport. IETF draft / Chrome
-Platform Status, 2024. https://datatracker.ietf.org/doc/draft-ietf-httpbis-compression-dictionary/</p>
+<p>[24] P. Meenan, Y. Weiss. Compression Dictionary Transport. RFC 9842, IETF, 2025.
+doi:10.17487/RFC9842</p>
 <p>[25] Z. Wang, A. C. Bovik, H. R. Sheikh, E. P. Simoncelli. Image Quality Assessment:
 From Error Visibility to Structural Similarity. IEEE Trans. Image Processing 13(4):600-612,
 2004. doi:10.1109/TIP.2003.819861</p>

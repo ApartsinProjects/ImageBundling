@@ -65,9 +65,13 @@ ssimulacra2_rs --no-default-features (vapoursynth link error with defaults).
 
 | 2026-08-30 | Second author + affiliations; PDF/DOCX downloads; Figure 5 arrow fix; Fable final-polish pass | Added Yehudit Aperstein (Afeka) + Apartsin (HIT) affiliations; top-right PDF/DOCX links (scripts/build_downloads.py); flowchart convergence bus moved right of boxes + clean byte-bundle elbow (no crossings) | Fable review cross-checked every prose number vs tables | Fixed: 5 stale section cross-refs, abstract 3-vs-2-costs contradiction, abstract headline 26/15%->30/19%, lossless 40-95%->40-97%, bun-x 5.7->5.6x, SSIM deficit 4-decimals, broken client-scheduler sentence, unsupported "~1pp chunk" claim softened, conclusion 4.5-8.6x scoped to flat art, "first peer-reviewed"->"first" (it is a tech report), em-dash placeholders->n/a, ref [41] em-dashes, Table 1/4 caption notes. 126x warm-cache verified CORRECT (agent false alarm) |
 
+| 2026-08-30 | External SPE venue review (ImageBundling_publication_review.md) P0 integrity fixes | W1 byte-bundle now ONE self-describing .bin/chunk (4-byte hdr len + JSON index + payloads); report bytes/requests == emitted (verify_output.py invariant PASS on emoji+photos); W10 stale packet-loss claim removed from README+docstring; W6 CDT->RFC 9842 + delta labeled compression-level proxy; W11 600B made encoder-specific; W4 H3 conclusion scoped to tested stack; README/paper tool-validation numbers reconciled to verified output (emoji default strip-atlas +5.1%, --lossy-png pixel +19.2%; photos byte-bundle +21.1%) | verify_output.py: report==emitted bytes/requests, bin self-consistent, tiles slice to valid WEBP | Blocking artifact accounting bug fixed + verified; docs/paper/tool now agree. W3 (oracle baselines) already done prior round |
+
 ## Current standing + next
 Phases 0-2 COMPLETE and published; SPE strength revisions + bibtest + HTTP/3 qlog +
-two-author byline + PDF/DOCX downloads + Fable final polish all landed. Paper reads clean,
-numbers cross-checked against tables, house style clean (no em-dashes/forbidden words).
-Optional remaining: second QUIC stack / native-Linux generality.
-Paper: https://apartsinprojects.github.io/ImageBundling/
+two-author byline + PDF/DOCX + Fable polish + external-review P0 integrity all landed.
+Byte-bundle artifact bug (reviewer's one blocking issue) fixed and verified; tool emits
+one self-describing .bin/chunk and report matches emitted bytes/requests exactly.
+DECISIONS PENDING for P1 (need user): AVIF in core crossover (conflicts with user's
+JPEG/PNG/WebP scoping), cross-corpus external validity (W7), held-out coupling prediction
+(P1.4), browser memory + viewport-timing (W5). Paper: https://apartsinprojects.github.io/ImageBundling/

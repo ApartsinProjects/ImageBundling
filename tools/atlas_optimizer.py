@@ -8,12 +8,13 @@ Applies the decision rules measured in the ImageBundling study
 - small LOSSY tiles (<= --atlas-max-px, default 130) with uniform dimensions are
   packed into WebP pixel atlases (byte saving grows as tiles shrink; ~15% for 56px
   photos, up to ~17% for 72px flat art at WebP; requests collapse to ~1 per chunk);
-- larger lossy tiles and ALL lossless tiles go into a byte-bundle (concatenation of
-  individually-encoded files + offset index): zero byte penalty, requests collapse
-  to one (pixel-atlasing lossless or large-photo content costs bytes, so it is
-  never chosen for them);
+- larger lossy tiles and ALL lossless tiles go into a byte-bundle: the
+  individually-encoded files are concatenated into ONE self-describing .bin (a 4-byte
+  header length, a JSON offset index, then the payloads), so a chunk is one request
+  at near-zero byte penalty (only the small offset header); pixel-atlasing lossless
+  or large-photo content costs bytes, so it is never chosen for them;
 - groups are split by update cadence first (whole-bundle cache invalidation), then
-  chunked (default 4) for loss resilience and bounded invalidation blast radius;
+  chunked (default 4) for bounded cache-invalidation blast radius and decoded memory;
 - tiny groups (< --min-group) stay as individual files.
 
 Usage:
@@ -223,18 +224,24 @@ def main():
                 if not sub:
                     continue
                 nm = f"bundle_{gname}_{c}"
-                offs, off = {}, 0
+                # self-describing .bin: [4-byte header length][JSON index][payloads],
+                # so the whole chunk is ONE request and report bytes == emitted bytes.
+                offs, off, payloads = {}, 0, []
+                for t in sub:
+                    blob = encode(t["im"], lossless, args.quality)
+                    payloads.append(blob)
+                    offs[t["name"]] = [off, len(blob)]
+                    off += len(blob)
+                header = json.dumps(offs, separators=(",", ":")).encode("utf-8")
                 with (out / f"{nm}.bin").open("wb") as f:
-                    for t in sub:
-                        blob = encode(t["im"], lossless, args.quality)
+                    f.write(len(header).to_bytes(4, "big"))
+                    f.write(header)
+                    for blob in payloads:
                         f.write(blob)
-                        offs[t["name"]] = [off, len(blob)]
-                        off += len(blob)
-                json.dump(offs, (out / f"{nm}.json").open("w"))
-                total += off
+                total += 4 + len(header) + off   # index header counts toward bytes_out
                 files += 1
             usage_snippets.append(
-                f"<!-- {gname}: fetch {nm}.bin + {nm}.json, slice, blob-URL each tile -->")
+                f"<!-- {gname}: fetch {nm}.bin (self-describing), slice, blob-URL each tile -->")
         report.append({
             "group": gname, "condition": cond, "tiles": n,
             "duplicates_folded": sum(alias_count[t["name"]] for t in members),
@@ -256,14 +263,17 @@ def main():
 <!-- byte-bundle tiles: -->
 <script>
 async function loadBundle(base) {
-  const [buf, offs] = await Promise.all([
-    fetch(base + '.bin').then(r => r.arrayBuffer()),
-    fetch(base + '.json').then(r => r.json())]);
-  const urls = {};
+  // one request per chunk; the .bin is self-describing:
+  // [4-byte big-endian header length][JSON offset index][payloads]
+  const buf = await fetch(base + '.bin').then(r => r.arrayBuffer());
+  const dv = new DataView(buf);
+  const hlen = dv.getUint32(0);
+  const offs = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, hlen)));
+  const base0 = 4 + hlen, urls = {};
   for (const [name, [o, l]] of Object.entries(offs))
-    urls[name] = URL.createObjectURL(new Blob([buf.slice(o, o + l)],
+    urls[name] = URL.createObjectURL(new Blob([buf.slice(base0 + o, base0 + o + l)],
                                               {type: 'image/webp'}));
-  return urls;  // urls[filename] -> use as <img src>
+  return urls;  // urls[filename] -> <img src>; call URL.revokeObjectURL(url) when done
 }
 </script>
 """
