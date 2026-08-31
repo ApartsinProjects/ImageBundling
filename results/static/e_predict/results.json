@@ -1,0 +1,51 @@
+{
+ "n_cells": 47,
+ "classes": [
+  "emoji",
+  "flags",
+  "gradients",
+  "noise",
+  "photos",
+  "product_white",
+  "robo",
+  "ui_mock"
+ ],
+ "by_target": {
+  "saving": {
+   "baseline": {
+    "mae": 4.95,
+    "sign_acc": 0.936
+   },
+   "rich": {
+    "mae": 6.05,
+    "sign_acc": 0.809
+   },
+   "verdict": "NEGATIVE"
+  },
+  "saving_hq": {
+   "baseline": {
+    "mae": 5.68,
+    "sign_acc": 0.894
+   },
+   "rich": {
+    "mae": 12.11,
+    "sign_acc": 0.809
+   },
+   "verdict": "NEGATIVE"
+  }
+ },
+ "probe": {
+  "probe10": {
+   "n": 47,
+   "mae_fit": 2.31,
+   "mae_direct": 3.64,
+   "spearman": 0.981
+  },
+  "probe20": {
+   "n": 47,
+   "mae_fit": 1.62,
+   "mae_direct": 1.62,
+   "spearman": 0.978
+  }
+ }
+}
