@@ -717,6 +717,19 @@ byte-bundle wins on dense Noto and on photographs, a pixel atlas wins on the fla
 flags. The calibrated heuristic tracks those flips to zero regret; no fixed rule
 does.</p>
 <div class='tablewrap'><table><caption><b>Table 9.</b> Out-of-sample evaluation of the construction heuristic on five independent corpora that played no role in its calibration (Noto emoji, OpenMoji, country flags, Flickr photos, Robohash avatars; 100 tiles each). An offline oracle enumerates every candidate configuration (individual, grid atlas, strip atlas, byte-bundle across the admissible codecs) at matched quality and reports the byte-optimal one; regret is a policy's bytes over the oracle's. The last three columns are simple fixed-layout rules a developer might hardcode, each still allowed the best admissible codec (individual files cost the same bytes as a byte-bundle). The calibrated heuristic matches the oracle on all five corpora; every fixed rule is beaten on at least one, because the winning layout is content-dependent. Smaller regret is better.</caption><thead><tr><th>corpus</th><th>class</th><th>tiles</th><th>heuristic choice</th><th>heuristic</th><th>always atlas</th><th>always bundle</th><th>always strip</th></tr></thead><tbody><tr><td>noto</td><td>flat-art</td><td>100</td><td>byte-bundle(webpll)</td><td>0.0%</td><td class="neg">+14.3%</td><td>0.0%</td><td class="neg">+5.1%</td></tr><tr><td>openmoji</td><td>flat-art</td><td>100</td><td>strip-atlas(webpll)</td><td>0.0%</td><td class="neg">+3.7%</td><td class="neg">+6.4%</td><td>0.0%</td></tr><tr><td>flags</td><td>flat-limited</td><td>100</td><td>pixel-atlas(webp)</td><td>0.0%</td><td>0.0%</td><td class="neg">+2.3%</td><td class="neg">+281.2%</td></tr><tr><td>flickr</td><td>photo</td><td>100</td><td>byte-bundle(webp)</td><td>0.0%</td><td class="neg">+6.8%</td><td>0.0%</td><td class="neg">+643.0%</td></tr><tr><td>robo</td><td>avatar</td><td>100</td><td>strip-atlas(webpll)</td><td>0.0%</td><td class="neg">+4.5%</td><td class="neg">+38.1%</td><td>0.0%</td></tr><tr><td colspan='4' style='text-align:right'><i>mean regret</i></td><td><b>0.0%</b></td><td><b>+5.8%</b></td><td><b>+9.4%</b></td><td><b>+185.9%</b></td></tr></tbody></table></div>
+<p>As an end-to-end check we ran the tool on a heterogeneous directory that mimics a real
+site's image folder: 185 files drawn from four live asset sets (country flags, emoji,
+generated avatars, and photographs) at their native, mixed dimensions, with duplicates
+included as real pages carry them. The tool folded 29 exact duplicates, partitioned the
+rest by dimension and lossless requirement, and chose a different representation for each
+group without any per-group tuning: a byte-bundle for the 224-pixel photographs
+(+24.4%), WebP-lossless strips for the uniform 64- and 72-pixel avatar and emoji sets
+(+22.4 to +22.6%), and individual files for the small odd-aspect-ratio flag groups that
+are too few or too dissimilar in dimension to atlas. The result cut 185 requests to 25 at
+23.5% fewer bytes overall. Exercising these mixed code paths, which the uniform benchmark
+corpora never reach, surfaced two accounting defects that the released tool's invariant
+check (predicted bytes and requests must equal the emitted resources) now catches and that
+are fixed; the tool passes that check on every asset set in the study.</p>
 <h3>6.4&nbsp;&nbsp;Choosing a rendering mechanism</h3>
 <p>Selecting a representation is only half of deployment; the four ways to show a bundled
 tile (Section&nbsp;3.1) are not interchangeable in a production page, because they differ

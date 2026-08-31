@@ -1,0 +1,145 @@
+{
+ "total_tiles": 156,
+ "dups": 29,
+ "requests": 25,
+ "bytes_out": 439972,
+ "bytes_individual": 575466,
+ "saving_pct": 23.5,
+ "conditions": {
+  "byte-bundle": 1,
+  "strip-atlas": 4,
+  "individual": 8
+ },
+ "groups": [
+  {
+   "group": "default_lossy_224x224",
+   "condition": "byte-bundle",
+   "tiles": 36,
+   "duplicates_folded": 12,
+   "requests": 1,
+   "bytes_out": 286050,
+   "bytes_if_individual": 378500,
+   "saving_pct": 24.4
+  },
+  {
+   "group": "default_ll_64x64",
+   "condition": "strip-atlas",
+   "tiles": 40,
+   "duplicates_folded": 7,
+   "requests": 4,
+   "bytes_out": 114354,
+   "bytes_if_individual": 147774,
+   "saving_pct": 22.6
+  },
+  {
+   "group": "default_ll_72x72",
+   "condition": "strip-atlas",
+   "tiles": 40,
+   "duplicates_folded": 6,
+   "requests": 4,
+   "bytes_out": 25880,
+   "bytes_if_individual": 33372,
+   "saving_pct": 22.4
+  },
+  {
+   "group": "default_ll_80x40",
+   "condition": "strip-atlas",
+   "tiles": 10,
+   "duplicates_folded": 2,
+   "requests": 1,
+   "bytes_out": 3120,
+   "bytes_if_individual": 3750,
+   "saving_pct": 16.8
+  },
+  {
+   "group": "default_ll_80x48",
+   "condition": "individual",
+   "tiles": 6,
+   "duplicates_folded": 2,
+   "requests": 6,
+   "bytes_out": 2374,
+   "bytes_if_individual": 3852,
+   "saving_pct": 38.4
+  },
+  {
+   "group": "default_ll_80x50",
+   "condition": "individual",
+   "tiles": 1,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 274,
+   "bytes_if_individual": 274,
+   "saving_pct": 0.0
+  },
+  {
+   "group": "default_ll_80x53",
+   "condition": "strip-atlas",
+   "tiles": 16,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 5030,
+   "bytes_if_individual": 5054,
+   "saving_pct": 0.5
+  },
+  {
+   "group": "default_ll_80x55",
+   "condition": "individual",
+   "tiles": 1,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 566,
+   "bytes_if_individual": 566,
+   "saving_pct": 0.0
+  },
+  {
+   "group": "default_ll_80x56",
+   "condition": "individual",
+   "tiles": 2,
+   "duplicates_folded": 0,
+   "requests": 2,
+   "bytes_out": 1278,
+   "bytes_if_individual": 1278,
+   "saving_pct": 0.0
+  },
+  {
+   "group": "default_ll_80x57",
+   "condition": "individual",
+   "tiles": 1,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 500,
+   "bytes_if_individual": 500,
+   "saving_pct": 0.0
+  },
+  {
+   "group": "default_ll_80x60",
+   "condition": "individual",
+   "tiles": 1,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 392,
+   "bytes_if_individual": 392,
+   "saving_pct": 0.0
+  },
+  {
+   "group": "default_ll_80x69",
+   "condition": "individual",
+   "tiles": 1,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 74,
+   "bytes_if_individual": 74,
+   "saving_pct": 0.0
+  },
+  {
+   "group": "default_ll_80x80",
+   "condition": "individual",
+   "tiles": 1,
+   "duplicates_folded": 0,
+   "requests": 1,
+   "bytes_out": 80,
+   "bytes_if_individual": 80,
+   "saving_pct": 0.0
+  }
+ ]
+}

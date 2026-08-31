@@ -1499,6 +1499,19 @@ byte-bundle wins on dense Noto and on photographs, a pixel atlas wins on the fla
 flags. The calibrated heuristic tracks those flips to zero regret; no fixed rule
 does.</p>
 {oracle_html}
+<p>As an end-to-end check we ran the tool on a heterogeneous directory that mimics a real
+site's image folder: 185 files drawn from four live asset sets (country flags, emoji,
+generated avatars, and photographs) at their native, mixed dimensions, with duplicates
+included as real pages carry them. The tool folded 29 exact duplicates, partitioned the
+rest by dimension and lossless requirement, and chose a different representation for each
+group without any per-group tuning: a byte-bundle for the 224-pixel photographs
+(+24.4%), WebP-lossless strips for the uniform 64- and 72-pixel avatar and emoji sets
+(+22.4 to +22.6%), and individual files for the small odd-aspect-ratio flag groups that
+are too few or too dissimilar in dimension to atlas. The result cut 185 requests to 25 at
+23.5% fewer bytes overall. Exercising these mixed code paths, which the uniform benchmark
+corpora never reach, surfaced two accounting defects that the released tool's invariant
+check (predicted bytes and requests must equal the emitted resources) now catches and that
+are fixed; the tool passes that check on every asset set in the study.</p>
 {H3('Choosing a rendering mechanism')}
 <p>Selecting a representation is only half of deployment; the four ways to show a bundled
 tile (Section&nbsp;3.1) are not interchangeable in a production page, because they differ

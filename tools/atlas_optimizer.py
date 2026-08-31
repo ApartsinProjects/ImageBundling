@@ -263,10 +263,16 @@ def main():
                                              args.quality_floor, args.floor_tol, args.probe)
         if n < args.min_group:
             cond = "individual"
-            total = individual_bytes
-            files = n
+            total, files = 0, n   # unique reps; folded duplicates reuse the same URL
             for t in members:
-                (out / t["name"]).write_bytes(encode(t["im"], lossless, args.quality))
+                # emit as .webp: encode() always produces WebP, so the extension must
+                # match the content (the original name may be .png/.jpg/.gif)
+                blob = encode(t["im"], lossless, args.quality)
+                (out / f"{slug(t['name'])}.webp").write_bytes(blob)
+                total += len(blob)
+            usage_snippets.append(
+                f"<!-- {gname}: individual files, one per tile: "
+                "<img src='NAME.webp'> (duplicates map via report.json aliases) -->")
         elif not lossless and atlas_ok:
             cond = "pixel-atlas"
             k = 1 if n < 40 else args.chunks

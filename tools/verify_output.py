@@ -18,8 +18,11 @@ from pathlib import Path
 def main(out):
     out = Path(out)
     report = json.load((out / "report.json").open())
+    META = {"report.json", "atlas.css", "usage.html"}
+    # every emitted resource EXCEPT the metadata files is a served image (atlas/strip
+    # .webp, byte-bundle .bin, or an individual .webp)
     emitted = {p.name: p.stat().st_size for p in out.iterdir()
-               if p.suffix in (".bin", ".webp")}
+               if p.is_file() and p.name not in META}
     stray_json = [p.name for p in out.iterdir()
                   if p.suffix == ".json" and p.name != "report.json"]
     total_reported = sum(g["bytes_out"] for g in report["groups"])
