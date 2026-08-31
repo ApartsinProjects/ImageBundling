@@ -1404,11 +1404,11 @@ model: a probe encode of only 10&ndash;20 tiles estimates the full-set saving to
 about two percentage points, and tracks the content ordering that the baseline misses
 (within-cell rank correlation 0.86 to 1.00). The probe holds as the group grows, which is
 where it earns its keep: a fixed 20-tile probe predicts the saving to a mean absolute error
-of about two points with perfect class ordering at every group size from 50 to 500 tiles,
-so on a 500-tile bundle the decision costs one encode of four percent of the tiles. Its
-only slip is the WebP near-break-even regime, where the shared-quantizer penalty deepens
-with group size faster than a small probe registers, the one case a practitioner should
-confirm on the full set.
+of about two points at every group size from 50 to 500 tiles, and orders the tested
+class-codec cells correctly, so on a 500-tile bundle the decision measures just four
+percent of the tiles. Its only slip is the WebP near-break-even regime, where the
+shared-quantizer penalty deepens with group size faster than a small probe registers, the
+one case a practitioner should confirm on the full set.
 This is the empirical case for the design of Section&nbsp;6.3: the right move is not to
 model the penalty but to measure the two candidate representations, and a small probe
 suffices, which is why the heuristic reaches the oracle out-of-sample without any content
