@@ -139,33 +139,21 @@ def predict_table():
     bl = d["by_target"]["saving"]["baseline"]
     rc = d["by_target"]["saving"]["rich"]
     p10, p20 = d["probe"]["probe10"], d["probe"]["probe20"]
-    diff_f = ROOT / "results" / "static" / "e_predict" / "diff.json"
-    diff = json.load(diff_f.open()) if diff_f.exists() else None
     rows = [("size + codec + one encode (baseline)", f"{bl['mae']:.2f}", f"{bl['spearman']:.2f}"),
             ("+ six source-image features", f"{rc['mae']:.2f}", f"{rc['spearman']:.2f}"),
             ("10-tile probe encode", f"{p10['mae_fit']:.2f}", f"{p10['spearman']:.2f}"),
             ("20-tile probe encode", f"{p20['mae_fit']:.2f}", f"{p20['spearman']:.2f}")]
     n = d.get("n_cells", 48)
-    trows = "".join(f"<tr><td>{n}</td><td>{m}</td><td>{s}</td></tr>" for n, m, s in rows)
-    dnote = ""
-    if diff:
-        dnote = (f" On the isolated codec differential (JPEG minus WebP saving, which "
-                 f"cancels the fixed-cost term), the same features still fail to beat a "
-                 f"constant ({diff['rich_features_mae']:.1f} vs {diff['constant_mae']:.1f} "
-                 f"percentage points), so the shortfall is not a missing fixed-cost signal "
-                 f"but the coupling penalty not being captured by these cheap features.")
-    return ("<div class='tablewrap'><table>"
-            "<caption><b>Table 11.</b> Predicting a group's atlas saving before building "
-            "it, evaluated leave-one-content-class-out over eight classes spanning extreme "
-            "image statistics (natural photos, emoji, flags, avatars, and synthetic "
-            "gradients, noise, UI mockups, and objects on white; JPEG and WebP). Error is "
-            "mean absolute error in percentage points against the measured saving; rank is "
-            "Spearman correlation with it. Six cheap source-image features do not improve "
-            "on a size-and-codec baseline, but a probe encode of 10&ndash;20 tiles predicts "
-            "the full-set saving to within about two points, and orders the classes far "
-            "better than the baseline's rank (0.86)." + dnote + f" Evaluated on {n} of the "
-            "48 class-size-codec cells; one cell whose two rate-distortion curves did not "
-            "overlap in quality is omitted.</caption>"
+    trows = "".join(f"<tr><td>{nm}</td><td>{m}</td><td>{s}</td></tr>" for nm, m, s in rows)
+    return ("<div class='tablewrap'><table style='min-width:62%'>"
+            "<caption><b>Table 11.</b> Predicting a group's atlas saving before building it, "
+            "leave-one-content-class-out over eight classes spanning extreme image "
+            f"statistics (JPEG and WebP; {n} of 48 cells, one omitted for no overlapping "
+            "quality range). Error is mean absolute error (percentage points) against the "
+            "measured saving; rank is Spearman correlation with it. Six cheap source-image "
+            "features do not beat a size-and-codec baseline, but a 10&ndash;20 tile probe "
+            "encode predicts the saving to about two points and orders the classes far "
+            "better.</caption>"
             "<thead><tr><th>predictor</th><th>MAE (pp)</th><th>rank</th></tr></thead>"
             f"<tbody>{trows}</tbody></table></div>")
 
@@ -1397,9 +1385,10 @@ colours, inter-tile heterogeneity, and luminance variance). The content-dependen
 still varies by 16 to 41 percentage points across the eight classes (for example
 &minus;16% to +16% at 224&nbsp;pixels under WebP), so a size-and-codec rule leaves a wide
 residual. Yet predicting a held-out class's saving from the six features does not improve
-on that baseline, and it fails even on the isolated codec differential that cancels the
-fixed-cost term (Table&nbsp;11): the adaptive-state penalty is codec-mechanistic and is
-not captured by these cheap source features. What does recover it is a measurement, not a
+on that baseline (Table&nbsp;11), and it fails even on the isolated codec differential that
+cancels the fixed-cost term (10.1 against a constant's 7.1 percentage points): the
+adaptive-state penalty is codec-mechanistic and is not captured by these cheap source
+features. What does recover it is a measurement, not a
 model: a probe encode of only 10&ndash;20 tiles estimates the full-set saving to within
 about two percentage points, and tracks the content ordering that the baseline misses
 (within-cell rank correlation 0.86 to 1.00). The probe holds as the group grows, which is

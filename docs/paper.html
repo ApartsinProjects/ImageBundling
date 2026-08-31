@@ -611,9 +611,10 @@ colours, inter-tile heterogeneity, and luminance variance). The content-dependen
 still varies by 16 to 41 percentage points across the eight classes (for example
 &minus;16% to +16% at 224&nbsp;pixels under WebP), so a size-and-codec rule leaves a wide
 residual. Yet predicting a held-out class's saving from the six features does not improve
-on that baseline, and it fails even on the isolated codec differential that cancels the
-fixed-cost term (Table&nbsp;8): the adaptive-state penalty is codec-mechanistic and is
-not captured by these cheap source features. What does recover it is a measurement, not a
+on that baseline (Table&nbsp;8), and it fails even on the isolated codec differential that
+cancels the fixed-cost term (10.1 against a constant's 7.1 percentage points): the
+adaptive-state penalty is codec-mechanistic and is not captured by these cheap source
+features. What does recover it is a measurement, not a
 model: a probe encode of only 10&ndash;20 tiles estimates the full-set saving to within
 about two percentage points, and tracks the content ordering that the baseline misses
 (within-cell rank correlation 0.86 to 1.00). The probe holds as the group grows, which is
@@ -627,7 +628,7 @@ This is the empirical case for the design of Section&nbsp;6.3: the right move is
 model the penalty but to measure the two candidate representations, and a small probe
 suffices, which is why the heuristic reaches the oracle out-of-sample without any content
 model.</p>
-<div class='tablewrap'><table><caption><b>Table 8.</b> Predicting a group's atlas saving before building it, evaluated leave-one-content-class-out over eight classes spanning extreme image statistics (natural photos, emoji, flags, avatars, and synthetic gradients, noise, UI mockups, and objects on white; JPEG and WebP). Error is mean absolute error in percentage points against the measured saving; rank is Spearman correlation with it. Six cheap source-image features do not improve on a size-and-codec baseline, but a probe encode of 10&ndash;20 tiles predicts the full-set saving to within about two points, and orders the classes far better than the baseline's rank (0.86). On the isolated codec differential (JPEG minus WebP saving, which cancels the fixed-cost term), the same features still fail to beat a constant (10.1 vs 7.1 percentage points), so the shortfall is not a missing fixed-cost signal but the coupling penalty not being captured by these cheap features. Evaluated on 47 of the 48 class-size-codec cells; one cell whose two rate-distortion curves did not overlap in quality is omitted.</caption><thead><tr><th>predictor</th><th>MAE (pp)</th><th>rank</th></tr></thead><tbody><tr><td>size + codec + one encode (baseline)</td><td>4.95</td><td>0.86</td></tr><tr><td>+ six source-image features</td><td>6.05</td><td>0.84</td></tr><tr><td>10-tile probe encode</td><td>2.31</td><td>0.98</td></tr><tr><td>20-tile probe encode</td><td>1.62</td><td>0.98</td></tr></tbody></table></div>
+<div class='tablewrap'><table style='min-width:62%'><caption><b>Table 8.</b> Predicting a group's atlas saving before building it, leave-one-content-class-out over eight classes spanning extreme image statistics (JPEG and WebP; 47 of 48 cells, one omitted for no overlapping quality range). Error is mean absolute error (percentage points) against the measured saving; rank is Spearman correlation with it. Six cheap source-image features do not beat a size-and-codec baseline, but a 10&ndash;20 tile probe encode predicts the saving to about two points and orders the classes far better.</caption><thead><tr><th>predictor</th><th>MAE (pp)</th><th>rank</th></tr></thead><tbody><tr><td>size + codec + one encode (baseline)</td><td>4.95</td><td>0.86</td></tr><tr><td>+ six source-image features</td><td>6.05</td><td>0.84</td></tr><tr><td>10-tile probe encode</td><td>2.31</td><td>0.98</td></tr><tr><td>20-tile probe encode</td><td>1.62</td><td>0.98</td></tr></tbody></table></div>
 <p>The spectrum has a hard end. Individual serving costs
 &Sigma;<sub>i</sub>&nbsp;(H<sub>i</sub>&nbsp;+&nbsp;C<sub>i</sub>(x<sub>i</sub>)), where
 H<sub>i</sub> is a file's fixed overhead and C<sub>i</sub> its compressed payload under
