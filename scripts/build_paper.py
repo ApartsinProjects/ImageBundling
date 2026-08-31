@@ -1477,8 +1477,10 @@ flat-art tiles into four WebP-lossless strip-atlas chunks (the byte-optimal choi
 this lossless class; declaring them lossy-encodable instead routes them to a byte-bundle,
 since the pixel atlas that would save 19% of bytes fails the quality gate), and 521
 photographic thumbnails, 119 of them exact repeats, into four self-describing byte-bundle
-chunks at 21% fewer bytes, with 521 requests becoming four in both cases. An accounting
-check confirms the emitted bytes and request count equal what the tool reports.</p>
+chunks that collapse 521 requests to four at the deduplicated byte cost (21% below
+per-reference serving, almost all of it the folded repeats, as on the real directory
+below). An accounting check confirms the emitted bytes and request count equal what the
+tool reports.</p>
 {heuristic_html}
 <p>Because those asset sets also shaped the rules, a fair test requires collections the
 heuristic never saw. We evaluate it on five independent corpora, Noto emoji, OpenMoji,
