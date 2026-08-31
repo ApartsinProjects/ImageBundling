@@ -131,6 +131,41 @@ def warmcache_table():
             f"</tr></thead><tbody>{''.join(trows)}</tbody></table></div>")
 
 
+def predict_table():
+    f = ROOT / "results" / "static" / "e_predict" / "results.json"
+    if not f.exists():
+        return ""
+    d = json.load(f.open())
+    base = d["by_target"]["saving"]["baseline"]["mae"]
+    rich = d["by_target"]["saving"]["rich"]["mae"]
+    p10, p20 = d["probe"]["probe10"], d["probe"]["probe20"]
+    diff_f = ROOT / "results" / "static" / "e_predict" / "diff.json"
+    diff = json.load(diff_f.open()) if diff_f.exists() else None
+    rows = [("size + codec + one encode (baseline)", f"{base:.2f}", "n/a"),
+            ("+ six source-image features", f"{rich:.2f}", "n/a"),
+            ("10-tile probe encode", f"{p10['mae_fit']:.2f}", f"{p10['spearman']:.2f}"),
+            ("20-tile probe encode", f"{p20['mae_fit']:.2f}", f"{p20['spearman']:.2f}")]
+    trows = "".join(f"<tr><td>{n}</td><td>{m}</td><td>{s}</td></tr>" for n, m, s in rows)
+    dnote = ""
+    if diff:
+        dnote = (f" On the isolated codec differential (JPEG minus WebP saving, which "
+                 f"cancels the fixed-cost term), the same features still fail to beat a "
+                 f"constant ({diff['rich_features_mae']:.1f} vs {diff['constant_mae']:.1f} "
+                 f"percentage points), so the shortfall is not a missing fixed-cost signal "
+                 f"but the coupling penalty being unreadable from source pixels.")
+    return ("<div class='tablewrap'><table>"
+            "<caption><b>Table 11.</b> Predicting a group's atlas saving before building "
+            "it, evaluated leave-one-content-class-out over eight classes spanning extreme "
+            "image statistics (natural photos, emoji, flags, avatars, and synthetic "
+            "gradients, noise, UI mockups, and objects on white; JPEG and WebP). Error is "
+            "mean absolute error in percentage points against the measured saving; rank is "
+            "Spearman correlation with it. Six cheap source-image features do not improve "
+            "on a size-and-codec baseline, but a probe encode of 10&ndash;20 tiles predicts "
+            "the full-set saving to within about two points." + dnote + "</caption>"
+            "<thead><tr><th>predictor</th><th>MAE (pp)</th><th>rank</th></tr></thead>"
+            f"<tbody>{trows}</tbody></table></div>")
+
+
 def cross_corpus_table():
     f = ROOT / "results" / "static" / "e_crosscorpus" / "summary.json"
     if not f.exists():
@@ -775,6 +810,7 @@ def main():
     ss2_html = ss2_table()
     cross_html = cross_corpus_table()
     mem_html = memory_table()
+    predict_html = predict_table()
 
     _sec, _sub = [0], [0]
 
@@ -819,8 +855,12 @@ codec-aware packing (vertical strips, shared palettes), so the question is how t
 not whether. We distil the measurements into a coupling account (savings come from
 sharing fixed costs; losses from sharing adaptive state) and into an open-source tool
 that turns a directory of images into deployable bundles and matches an offline oracle on
-five unseen collections. A supporting browser study shows the byte savings also cut load
-time on HTTP/1.1 and HTTP/3.</p></div>
+five unseen collections. The byte effect resists prediction from source-image statistics,
+which is why the tool measures rather than models: a probe encode of ten to twenty tiles
+forecasts a group's saving to within two percentage points where colour, edge, and
+frequency features cannot. In a live renderer the pixel atlas is also the fastest to full
+visibility and the lowest in memory, and a supporting browser study shows the byte savings
+cut load time on HTTP/1.1 and HTTP/3.</p></div>
 
 {H2('Introduction')}
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -870,8 +910,11 @@ techniques with measured effect, PNG vertical-strip packing, explicit and LZ-win
 duplicate exploitation, chunking for bounded cache invalidation, delta updates via compression
 dictionaries, and encoder-parameter tuning that flips WebP's photographic-atlas penalty
 to a gain; (iv) a coupling-spectrum account that unifies the results, savings arise from
-sharing fixed costs and losses from sharing adaptive state; and (v) an open-source
-construction heuristic that emits deployable bundles from a directory of images.</p>
+sharing fixed costs and losses from sharing adaptive state, together with the finding that
+this adaptive-state penalty is codec-mechanistic and not predictable from source-image
+statistics, while a small probe encode forecasts it accurately; and (v) an open-source
+construction heuristic, built on that probe-not-predict principle, that emits deployable
+bundles from a directory of images.</p>
 
 {H2('Related work')}
 {H3('Resource bundling and image spriting')}
@@ -1340,12 +1383,23 @@ per-codec penalty coefficient lifts a pooled cross-codec fit from
 R<sup>2</sup>&nbsp;=&nbsp;0.73 (fixed-cost term alone) to 0.78, and the learned penalties
 order the codecs by their adaptive coupling exactly as the mechanism predicts (JPEG 1.2,
 PNG 5.5, lossless WebP 12.7, lossy WebP 21.0). The modest lift shows a generic
-heterogeneity proxy captures the direction but not the full magnitude of the penalty; a
-predictive model accurate across codecs will need codec-specific structure (the
-four-segment allocation for VP8, the per-scanline filter for PNG), which we leave to
-future work. The practical takeaway stands without the full model: measure the two
-candidate representations for a group and keep the smaller, which is what the heuristic
-of Section&nbsp;6.3 does and why it reaches the oracle out-of-sample.</p>
+heterogeneity proxy captures the direction but not the full magnitude of the penalty.</p>
+<p>How far can the saving be predicted from the source images alone, before building any
+atlas? We tested this directly. Eight content classes were assembled to span extreme
+image statistics, natural photos, emoji, flags, and avatars alongside synthetic
+gradients, noise, UI mockups, and objects on white, and six cheap features were computed
+per class (edge density, DCT high-frequency energy, colour-histogram entropy, unique
+colours, inter-tile heterogeneity, and luminance variance). Predicting a held-out class's
+saving from these features does not improve on a size-and-codec baseline, and it fails
+even on the isolated codec differential that cancels the fixed-cost term (Table&nbsp;11):
+the adaptive-state penalty is codec-mechanistic and is not readable from source pixel
+statistics. What does predict it is a measurement: a probe encode of only 10&ndash;20
+tiles estimates the full-set saving to within about two percentage points (Spearman 0.98).
+This is the empirical case for the design of Section&nbsp;6.3: the right move is not to
+model the penalty but to measure the two candidate representations, and a small probe
+suffices, which is why the heuristic reaches the oracle out-of-sample without any content
+model.</p>
+{predict_html}
 <p>The spectrum has a hard end. Individual serving costs
 &Sigma;<sub>i</sub>&nbsp;(H<sub>i</sub>&nbsp;+&nbsp;C<sub>i</sub>(x<sub>i</sub>)), where
 H<sub>i</sub> is a file's fixed overhead and C<sub>i</sub> its compressed payload under
@@ -1656,7 +1710,8 @@ IETF, 2022. doi:10.17487/RFC9111</p>
     (ROOT / "docs" / "index.html").write_text(html, encoding="utf-8")
     # content canaries
     for canary in ["Table 1.", "Table 2.", "Table 3.", "Table 4.", "Table 5.", "Table 6.",
-                   "Table 7.", "Table 8.", "Figure 1.", "Figure 2.", "Figure 3.", "Figure 4.",
+                   "Table 7.", "Table 8.", "Table 9.", "Table 10.", "probe encode",
+                   "Figure 1.", "Figure 2.", "Figure 3.", "Figure 4.",
                    "Figure 5.", "<svg", "atlas_emoji_100.png", "Abstract", "References",
                    "SSIMULACRA2", "AVIF", "RFC 9842", "[45]",
                    "background-position", "object-view-box", "Cache-Control"]:
