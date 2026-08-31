@@ -619,8 +619,8 @@ about two percentage points, and tracks the content ordering that the baseline m
 (within-cell rank correlation 0.86 to 1.00). The probe holds as the group grows, which is
 where it earns its keep: a fixed 20-tile probe predicts the saving to a mean absolute error
 of about two points at every group size from 50 to 500 tiles, and orders the tested
-class-codec cells correctly, so on a 500-tile bundle the decision measures just four
-percent of the tiles. Its only slip is the WebP near-break-even regime, where the
+class-codec cells correctly, so on a 500-tile bundle the decision encodes just four
+percent of the tiles through the same quality ladder. Its only slip is the WebP near-break-even regime, where the
 shared-quantizer penalty deepens with group size faster than a small probe registers, the
 one case a practitioner should confirm on the full set.
 This is the empirical case for the design of Section&nbsp;6.3: the right move is not to
@@ -740,7 +740,7 @@ than serving every file reference separately, but only 3.3% smaller than a dedup
 individual baseline that already serves each unique image once, because most of the first
 figure is duplicate folding that content-addressed URLs also achieve. The residual 3.3%
 over dedup is the genuine bundling gain, and it splits exactly as the study predicts: the
-flat-art strips save 4&ndash;11% of bytes while the photographic byte-bundle is
+flat-art strips save up to 11% of bytes while the photographic byte-bundle is
 byte-neutral (&minus;0.4%) and pays its way purely in collapsed requests. Exercising these
 mixed code paths, which the uniform benchmark corpora never reach, also surfaced two
 accounting defects that the tool's invariant check (predicted bytes and requests must
