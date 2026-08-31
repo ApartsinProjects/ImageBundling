@@ -1,0 +1,33 @@
+{
+ "by_N": {
+  "50": {
+   "direct_mae": 1.0,
+   "spearman": 1.0,
+   "mean_bias": 0.33
+  },
+  "100": {
+   "direct_mae": 1.89,
+   "spearman": 1.0,
+   "mean_bias": -0.92
+  },
+  "200": {
+   "direct_mae": 1.59,
+   "spearman": 1.0,
+   "mean_bias": -0.26
+  },
+  "500": {
+   "direct_mae": 1.94,
+   "spearman": 1.0,
+   "mean_bias": 0.34
+  }
+ },
+ "fitted_N500": {
+  "mae": 1.91,
+  "spearman": 1.0,
+  "line": [
+   1.039,
+   -0.51
+  ]
+ },
+ "verdict": "PROBE VALID AT N=500"
+}
