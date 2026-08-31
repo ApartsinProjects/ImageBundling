@@ -46,8 +46,8 @@ a{color:#14385c}
 </style></head><body>
 <div class="downloads"><a href="paper.pdf">PDF</a><span class="sep">&middot;</span>
 <a href="paper.docx">DOCX</a></div>
-<h1>Image Bundling Revisited: Atlasing Small Web Images under Modern Codecs and
-Protocols</h1>
+<h1>Image Bundling Revisited: Codec-Specific Savings and a Measured Atlas Selector for
+Small Web Images</h1>
 <div class="authors">Alexander Apartsin<sup>1</sup>, Yehudit Aperstein<sup>2</sup></div>
 <div class="affil"><sup>1</sup>School of Computer Science, Faculty of Sciences, Holon
 Institute of Technology (HIT), Holon, Israel<br><sup>2</sup>Intelligent Systems, Afeka
@@ -55,30 +55,28 @@ Academic College of Engineering, Tel-Aviv, Israel</div>
 <div class="venue">Technical Report &middot; 2026</div>
 
 <div class="abstract"><div class="ahead">Abstract</div>
-<p>Web pages load tens to hundreds of small images, and the median mobile page carries
-13. Serving each one separately pays per-request overhead plus two byte costs that HTTP/2
-multiplexing does not remove: a fixed per-file structural cost (roughly 600 bytes for a
-JPEG) and the loss of cross-image redundancy. We measure how much of these costs bundling
-many images into one atlas recovers, for the three codecs that carry most web images and
-decode in every browser: JPEG, PNG, and WebP.</p>
-<p>At matched per-tile quality, atlasing small tiles saves up to 30% of bytes under JPEG
-and up to 19% under WebP, independent of protocol. The saving is set by the ratio of
-per-file overhead to content size, so it falls as tiles grow: for photographs it drops
-from about 30% at 56&nbsp;pixels to a few percent at 224&nbsp;pixels, where WebP turns
-clearly negative. The sign is codec-specific: AVIF, like JPEG, stays positive at every
-size, so WebP's shared quantizer, not atlasing itself, drives the reversal, and the
-pattern holds across four independent photo populations. Lossless formats lose under a
-naive grid but win 40&ndash;97% under
-codec-aware packing (vertical strips, shared palettes), so the question is how to pack,
-not whether. We distil the measurements into a coupling account (savings come from
-sharing fixed costs; losses from sharing adaptive state) and into an open-source tool
-that turns a directory of images into deployable bundles and matches an offline oracle on
-five unseen collections. The byte effect resists prediction from cheap source-image
-features, so the tool measures the candidate representations rather than modelling them;
-we also find that a probe encode of just ten to twenty tiles forecasts a group's saving to
-within two percentage points where colour, edge, and frequency features cannot. In a live renderer the pixel atlas is also the fastest to full
-visibility and the lowest in memory, and a supporting browser study shows the byte savings
-cut load time on HTTP/1.1 and HTTP/3.</p></div>
+<p>Web pages load many small images; the median mobile page carries 13, and product grids,
+icon sets, and avatar walls carry far more. Serving each one separately pays per-request
+overhead plus two byte costs that HTTP/2 multiplexing does not remove: a fixed per-file
+structural cost (roughly 600 bytes for a JPEG) and the loss of cross-image redundancy.
+Measured at matched per-tile quality across the three codecs that carry most web images
+(JPEG, PNG, WebP), bundling many images into one atlas recovers up to 30% of bytes under
+JPEG and up to 19% under WebP, and the sign of the effect is codec-specific: WebP turns
+negative on large photographic tiles while JPEG and AVIF never do.</p>
+<p>The saving is set by the ratio of per-file overhead to content size, so it falls as
+tiles grow, from about 30% for 56-pixel photographs to a few percent at 224&nbsp;pixels.
+The reversal under WebP is driven by its whole-atlas quantizer rather than by atlasing
+itself, and it holds across four independent photo populations. Lossless formats lose
+under a naive grid but win 40&ndash;97% under codec-aware packing (vertical strips, shared
+palettes), so the question is how to pack, not whether. We distill the measurements into a
+coupling account (savings come from sharing fixed costs; losses from sharing adaptive
+state) and into an open-source tool that turns a directory of images into deployable
+bundles and matches an offline oracle on five unseen collections. Cheap source-image
+features (color, edge, frequency) do not predict the byte effect, but a probe encode of
+ten to twenty tiles forecasts a group's saving to within two percentage points, so the
+tool measures candidate bundles rather than modeling them. In a live renderer the pixel
+atlas is also the fastest to full visibility and the lowest in memory, and a supporting
+browser study shows the byte savings cut load time on HTTP/1.1 and HTTP/3.</p></div>
 
 <h2>1&nbsp;&nbsp;Introduction</h2>
 <p>Product grids, icon sets, avatars, and decorative elements make small images the most
@@ -89,12 +87,11 @@ addressed only the request-count cost. Two byte-level costs survive multiplexing
 untouched: every image file carries a fixed container overhead (headers, quantization
 tables, ISOBMFF boxes), and every file boundary prevents the codec from sharing entropy
 context, palettes, and predictors across images.</p>
-<p>The study centers on the popular, universally-supported compressed formats: JPEG, PNG,
-and WebP together carry over 70% of images served on the web (HTTP Archive 2024: JPEG
-32.4%, PNG 28.4%, WebP 12.0%), decode in every browser, and are where the practical
-savings live; AVIF, the leading next-generation codec, is added to the photographic
-crossover (Section&nbsp;5.1) so the codec-dependence of the result is visible against a
-modern container. The three formats price the per-file costs very
+<p>JPEG, PNG, and WebP anchor the study: together they carry over 70% of images served on
+the web (HTTP Archive 2024: JPEG 32.4%, PNG 28.4%, WebP 12.0%), decode in every browser,
+and are where the practical savings live. AVIF, the leading next-generation codec, joins
+the photographic crossover (Section&nbsp;5.1) to show the result's codec-dependence against
+a modern container. The three formats price the per-file costs very
 differently: a JPEG file carries, with the libjpeg-turbo encoder and settings used here,
 roughly 600 bytes of Huffman and quantization table definitions plus headers (the exact
 figure is encoder- and settings-specific), a PNG a 67-byte structural floor plus
@@ -116,12 +113,12 @@ its expected saving off the measured curves.</p>
 canvas <code>drawImage</code> region blits, or SVG <code>viewBox</code> cropping. The
 browser decodes the atlas once and paints windows into it.</p>
 <p><b>Contributions.</b> This report contributes (i) a matched-quality sweep of
-image atlasing across the three universally-supported web codecs (JPEG, PNG, WebP) over
+image atlasing across the three universally supported web codecs (JPEG, PNG, WebP) over
 tile size and image count, establishing that the byte saving is governed by the ratio
-of per-file structural cost to content bytes, and to our knowledge the first
-measurement of image-atlasing byte savings resolved by codec and tile size at matched
+of per-file structural cost to content bytes; this is, to our knowledge, the first
+measurement of atlasing byte savings resolved by codec and tile size at matched
 perceptual quality (the one prior peer-reviewed sprite study [33] optimized PNG packing
-geometry and held the codec fixed); (ii) a supporting network study of 1,056 validated
+geometry with the codec fixed); (ii) a supporting network study of 1,056 validated
 cold browser loads that separates the timing effect of bundling across HTTP/1.1,
 HTTP/2, and HTTP/3 under emulated network conditions; (iii) a set of construction
 techniques with measured effect, PNG vertical-strip packing, explicit and LZ-window
@@ -267,7 +264,7 @@ decode lazily and can be evicted per tile; an atlas is decoded and resident as a
 while any tile is visible. Chunking bounds this cost the same way it bounds
 invalidation, and below-the-fold chunks combine with lazy loading so off-screen tiles
 cost neither bytes nor memory.</p>
-A live-renderer measurement (Section&nbsp;5.6) confirms that at typical tile counts the
+<p>A live-renderer measurement (Section&nbsp;5.6) confirms that at typical tile counts the
 atlas is in fact the memory-favorable representation, so this analytical caution binds
 only for very large atlases.</p>
 
@@ -365,7 +362,7 @@ codes per image, and one global model over hundreds of heterogeneous tiles canno
 hundreds of specialized ones. Lossy WebP shows the same inversion on photographic tiles: VP8 adapts entropy tables per
 image and allows at most four quantizer segments per frame, so an atlas of 500 diverse
 photos shares four segments where individual files had four each. This penalty is a
-quality effect, not a byte cost, and the &minus;8.5% headline is best read as the pair it
+quality effect, not a byte cost, and the &minus;8.5% figure decomposes into the pair it
 comes from: at equal encoder quality the 500-photo WebP atlas costs essentially the same
 bytes as individual files (&minus;0.2% at q80) but reaches a slightly lower mean per-tile
 SSIM (0.9748 vs 0.9784, a 0.004 deficit); the matched-quality protocol prices that small
@@ -504,7 +501,11 @@ not for a tuned one. These controls are reachable through libwebp's configuratio
 image library's default binding.</p>
 
 <h3>5.5&nbsp;&nbsp;Supporting measurements: network timing</h3>
-<p>The byte and construction results above are protocol-independent. This section reports how the byte savings translate to load time on a single-testbed browser study; it is supporting evidence for the deployment guidance, not a protocol-measurement contribution, and its absolute timings are environment-dependent.</p>
+<p>The byte and construction results above are protocol-independent. This section reports
+how the byte savings translate to load time on a single-machine browser testbed. The
+deployment guidance draws on the relative comparisons across conditions, which the
+randomized, validated protocol holds stable; absolute timings are properties of the
+testbed.</p>
 <div class='tablewrap'><table><caption><b>Table 6.</b> Median time to all 500 tiles visible (ms) per serving condition, protocol, and network profile (n&nbsp;=&nbsp;11 cold browser loads per cell; 12 run in randomized order, first dropped; WebP payloads). The atl-x column gives the single-atlas speedup over individual files with a 95% bootstrap confidence interval; bun-x is the byte-bundle speedup. Per-cell quartiles are in the released data.</caption><thead><tr><th>class</th><th>network</th><th>proto</th><th>individual</th><th>atlas</th><th>atlas x4</th><th>byte-bundle</th><th>atl-x</th><th>bun-x</th></tr></thead><tbody><tr><td>flat art</td><td>localhost</td><td>h1</td><td>565</td><td>126</td><td>128</td><td>301</td><td><b>4.5x</b> [3.9,5.4]</td><td>1.9x</td></tr><tr><td>flat art</td><td>localhost</td><td>h2</td><td>448</td><td>126</td><td>129</td><td>319</td><td><b>3.5x</b> [2.3,3.9]</td><td>1.4x</td></tr><tr><td>flat art</td><td>localhost</td><td>h3</td><td>597</td><td>120</td><td>135</td><td>294</td><td><b>5.0x</b> [4.5,5.7]</td><td>2.0x</td></tr><tr><td>flat art</td><td>100 Mbit / 20 ms</td><td>h1</td><td>2,074</td><td>241</td><td>254</td><td>466</td><td><b>8.6x</b> [8.5,8.9]</td><td>4.4x</td></tr><tr><td>flat art</td><td>100 Mbit / 20 ms</td><td>h2</td><td>469</td><td>213</td><td>216</td><td>467</td><td><b>2.2x</b> [2.0,2.3]</td><td>1.0x</td></tr><tr><td>flat art</td><td>100 Mbit / 20 ms</td><td>h3</td><td>1,579</td><td>205</td><td>198</td><td>431</td><td><b>7.7x</b> [7.0,8.1]</td><td>3.7x</td></tr><tr><td>flat art</td><td>9 Mbit / 60 ms</td><td>h1</td><td>5,624</td><td>790</td><td>790</td><td>997</td><td><b>7.1x</b> [7.1,7.2]</td><td>5.6x</td></tr><tr><td>flat art</td><td>9 Mbit / 60 ms</td><td>h2</td><td>790</td><td>730</td><td>713</td><td>1,039</td><td><b>1.1x</b> [1.1,1.1]</td><td>0.8x</td></tr><tr><td>flat art</td><td>9 Mbit / 60 ms</td><td>h3</td><td>4,020</td><td>708</td><td>710</td><td>1,022</td><td><b>5.7x</b> [5.5,5.8]</td><td>3.9x</td></tr><tr><td>flat art</td><td>9 Mbit / 60 ms / 1% loss</td><td>h1</td><td>5,827</td><td>829</td><td>822</td><td>1,105</td><td><b>7.0x</b> [6.2,7.5]</td><td>5.3x</td></tr><tr><td>flat art</td><td>9 Mbit / 60 ms / 1% loss</td><td>h2</td><td>878</td><td>832</td><td>720</td><td>1,098</td><td><b>1.1x</b> [0.7,1.8]</td><td>0.8x</td></tr><tr><td>flat art</td><td>9 Mbit / 60 ms / 1% loss</td><td>h3</td><td>4,149</td><td>867</td><td>871</td><td>1,189</td><td><b>4.8x</b> [4.7,5.0]</td><td>3.5x</td></tr><tr><td>photos</td><td>localhost</td><td>h1</td><td>758</td><td>424</td><td>400</td><td>633</td><td><b>1.8x</b> [1.5,1.9]</td><td>1.2x</td></tr><tr><td>photos</td><td>localhost</td><td>h2</td><td>665</td><td>419</td><td>422</td><td>632</td><td><b>1.6x</b> [1.5,1.6]</td><td>1.1x</td></tr><tr><td>photos</td><td>localhost</td><td>h3</td><td>835</td><td>415</td><td>425</td><td>662</td><td><b>2.0x</b> [1.7,2.3]</td><td>1.3x</td></tr><tr><td>photos</td><td>100 Mbit / 20 ms</td><td>h1</td><td>2,019</td><td>780</td><td>669</td><td>1,036</td><td><b>2.6x</b> [2.6,2.6]</td><td>1.9x</td></tr><tr><td>photos</td><td>100 Mbit / 20 ms</td><td>h2</td><td>692</td><td>758</td><td>709</td><td>1,038</td><td><b>0.9x</b> [0.9,0.9]</td><td>0.7x</td></tr><tr><td>photos</td><td>100 Mbit / 20 ms</td><td>h3</td><td>2,075</td><td>746</td><td>763</td><td>1,002</td><td><b>2.8x</b> [2.7,2.8]</td><td>2.1x</td></tr><tr><td>photos</td><td>9 Mbit / 60 ms</td><td>h1</td><td>6,199</td><td>3,824</td><td>3,897</td><td>4,246</td><td><b>1.6x</b> [1.6,1.6]</td><td>1.5x</td></tr><tr><td>photos</td><td>9 Mbit / 60 ms</td><td>h2</td><td>3,743</td><td>3,771</td><td>3,866</td><td>4,294</td><td><b>1.0x</b> [1.0,1.0]</td><td>0.9x</td></tr><tr><td>photos</td><td>9 Mbit / 60 ms</td><td>h3</td><td>6,218</td><td>3,902</td><td>4,021</td><td>4,427</td><td><b>1.6x</b> [1.6,1.6]</td><td>1.4x</td></tr><tr><td>photos</td><td>9 Mbit / 60 ms / 1% loss</td><td>h1</td><td>6,933</td><td>4,612</td><td>4,490</td><td>7,890</td><td><b>1.5x</b> [1.0,1.7]</td><td>0.9x</td></tr><tr><td>photos</td><td>9 Mbit / 60 ms / 1% loss</td><td>h2</td><td>5,576</td><td>5,993</td><td>7,226</td><td>6,476</td><td><b>0.9x</b> [0.6,1.3]</td><td>0.9x</td></tr><tr><td>photos</td><td>9 Mbit / 60 ms / 1% loss</td><td>h3</td><td>8,793</td><td>8,404</td><td>6,875</td><td>7,934</td><td><b>1.0x</b> [0.9,1.3]</td><td>1.1x</td></tr></tbody></table></div><figure><svg viewBox="0 0 520 250" style="max-width:100%" font-family="Georgia,serif" role="img" aria-label="Atlas speedup, emoji"><line x1="56" y1="167" x2="424" y2="167" stroke="#eee"/><text x="50" y="171" font-size="10" text-anchor="end" fill="#5a626c">1x</text><line x1="56" y1="120" x2="424" y2="120" stroke="#eee"/><text x="50" y="124" font-size="10" text-anchor="end" fill="#5a626c">2x</text><line x1="56" y1="74" x2="424" y2="74" stroke="#eee"/><text x="50" y="78" font-size="10" text-anchor="end" fill="#5a626c">4x</text><line x1="56" y1="28" x2="424" y2="28" stroke="#eee"/><text x="50" y="32" font-size="10" text-anchor="end" fill="#5a626c">8x</text><line x1="56" y1="166.6" x2="424" y2="166.6" stroke="#111418" stroke-dasharray="4 3"/><line x1="89.0" y1="76.4" x2="89.0" y2="54.8" stroke="#c0392b" stroke-width="1.4"/><line x1="86.0" y1="76.4" x2="92.0" y2="76.4" stroke="#c0392b" stroke-width="1.4"/><line x1="86.0" y1="54.8" x2="92.0" y2="54.8" stroke="#c0392b" stroke-width="1.4"/><circle cx="89.0" cy="66.7" r="3" fill="#c0392b"/><line x1="102.0" y1="110.9" x2="102.0" y2="75.7" stroke="#2980b9" stroke-width="1.4"/><line x1="99.0" y1="110.9" x2="105.0" y2="110.9" stroke="#2980b9" stroke-width="1.4"/><line x1="99.0" y1="75.7" x2="105.0" y2="75.7" stroke="#2980b9" stroke-width="1.4"/><circle cx="102.0" cy="82.5" r="3" fill="#2980b9"/><line x1="115.0" y1="67.0" x2="115.0" y2="51.4" stroke="#8e44ad" stroke-width="1.4"/><line x1="112.0" y1="67.0" x2="118.0" y2="67.0" stroke="#8e44ad" stroke-width="1.4"/><line x1="112.0" y1="51.4" x2="118.0" y2="51.4" stroke="#8e44ad" stroke-width="1.4"/><circle cx="115.0" cy="59.8" r="3" fill="#8e44ad"/><text x="102" y="220" font-size="10" text-anchor="middle" fill="#5a626c">local</text><line x1="181.0" y1="24.5" x2="181.0" y2="21.2" stroke="#c0392b" stroke-width="1.4"/><line x1="178.0" y1="24.5" x2="184.0" y2="24.5" stroke="#c0392b" stroke-width="1.4"/><line x1="178.0" y1="21.2" x2="184.0" y2="21.2" stroke="#c0392b" stroke-width="1.4"/><circle cx="181.0" cy="23.5" r="3" fill="#c0392b"/><line x1="194.0" y1="120.5" x2="194.0" y2="111.8" stroke="#2980b9" stroke-width="1.4"/><line x1="191.0" y1="120.5" x2="197.0" y2="120.5" stroke="#2980b9" stroke-width="1.4"/><line x1="191.0" y1="111.8" x2="197.0" y2="111.8" stroke="#2980b9" stroke-width="1.4"/><circle cx="194.0" cy="114.0" r="3" fill="#2980b9"/><line x1="207.0" y1="37.1" x2="207.0" y2="27.3" stroke="#8e44ad" stroke-width="1.4"/><line x1="204.0" y1="37.1" x2="210.0" y2="37.1" stroke="#8e44ad" stroke-width="1.4"/><line x1="204.0" y1="27.3" x2="210.0" y2="27.3" stroke="#8e44ad" stroke-width="1.4"/><circle cx="207.0" cy="30.6" r="3" fill="#8e44ad"/><text x="194" y="220" font-size="10" text-anchor="middle" fill="#5a626c">fast</text><line x1="273.0" y1="36.3" x2="273.0" y2="35.6" stroke="#c0392b" stroke-width="1.4"/><line x1="270.0" y1="36.3" x2="276.0" y2="36.3" stroke="#c0392b" stroke-width="1.4"/><line x1="270.0" y1="35.6" x2="276.0" y2="35.6" stroke="#c0392b" stroke-width="1.4"/><circle cx="273.0" cy="36.0" r="3" fill="#c0392b"/><line x1="286.0" y1="162.1" x2="286.0" y2="160.9" stroke="#2980b9" stroke-width="1.4"/><line x1="283.0" y1="162.1" x2="289.0" y2="162.1" stroke="#2980b9" stroke-width="1.4"/><line x1="283.0" y1="160.9" x2="289.0" y2="160.9" stroke="#2980b9" stroke-width="1.4"/><circle cx="286.0" cy="161.4" r="3" fill="#2980b9"/><line x1="299.0" y1="52.7" x2="299.0" y2="50.2" stroke="#8e44ad" stroke-width="1.4"/><line x1="296.0" y1="52.7" x2="302.0" y2="52.7" stroke="#8e44ad" stroke-width="1.4"/><line x1="296.0" y1="50.2" x2="302.0" y2="50.2" stroke="#8e44ad" stroke-width="1.4"/><circle cx="299.0" cy="51.0" r="3" fill="#8e44ad"/><text x="286" y="220" font-size="10" text-anchor="middle" fill="#5a626c">4G</text><line x1="365.0" y1="45.7" x2="365.0" y2="32.8" stroke="#c0392b" stroke-width="1.4"/><line x1="362.0" y1="45.7" x2="368.0" y2="45.7" stroke="#c0392b" stroke-width="1.4"/><line x1="362.0" y1="32.8" x2="368.0" y2="32.8" stroke="#c0392b" stroke-width="1.4"/><circle cx="365.0" cy="36.9" r="3" fill="#c0392b"/><line x1="378.0" y1="189.4" x2="378.0" y2="127.1" stroke="#2980b9" stroke-width="1.4"/><line x1="375.0" y1="189.4" x2="381.0" y2="189.4" stroke="#2980b9" stroke-width="1.4"/><line x1="375.0" y1="127.1" x2="381.0" y2="127.1" stroke="#2980b9" stroke-width="1.4"/><circle cx="378.0" cy="163.0" r="3" fill="#2980b9"/><line x1="391.0" y1="64.4" x2="391.0" y2="58.9" stroke="#8e44ad" stroke-width="1.4"/><line x1="388.0" y1="64.4" x2="394.0" y2="64.4" stroke="#8e44ad" stroke-width="1.4"/><line x1="388.0" y1="58.9" x2="394.0" y2="58.9" stroke="#8e44ad" stroke-width="1.4"/><circle cx="391.0" cy="62.4" r="3" fill="#8e44ad"/><text x="378" y="220" font-size="10" text-anchor="middle" fill="#5a626c">4G+loss</text><text x="240" y="242" font-size="11" text-anchor="middle" fill="#111418">network profile</text><text x="14" y="111" font-size="11" text-anchor="middle" fill="#111418" transform="rotate(-90 14 111)">atlas speedup (log, individual / atlas)</text><text x="62" y="30" font-size="12" font-weight="bold" fill="#111418">(a) flat art, 72px, N=500</text><rect x="430" y="12" width="82" height="67" fill="#fff" stroke="#d1d4d8"/><circle cx="442" cy="22" r="3.5" fill="#c0392b"/><text x="452" y="26" font-size="9" fill="#111418">HTTP/1.1</text><circle cx="442" cy="39" r="3.5" fill="#2980b9"/><text x="452" y="43" font-size="9" fill="#111418">HTTP/2</text><circle cx="442" cy="56" r="3.5" fill="#8e44ad"/><text x="452" y="60" font-size="9" fill="#111418">HTTP/3</text></svg><svg viewBox="0 0 520 250" style="max-width:100%" font-family="Georgia,serif" role="img" aria-label="Atlas speedup, photos"><line x1="56" y1="167" x2="424" y2="167" stroke="#eee"/><text x="50" y="171" font-size="10" text-anchor="end" fill="#5a626c">1x</text><line x1="56" y1="120" x2="424" y2="120" stroke="#eee"/><text x="50" y="124" font-size="10" text-anchor="end" fill="#5a626c">2x</text><line x1="56" y1="74" x2="424" y2="74" stroke="#eee"/><text x="50" y="78" font-size="10" text-anchor="end" fill="#5a626c">4x</text><line x1="56" y1="28" x2="424" y2="28" stroke="#eee"/><text x="50" y="32" font-size="10" text-anchor="end" fill="#5a626c">8x</text><line x1="56" y1="166.6" x2="424" y2="166.6" stroke="#111418" stroke-dasharray="4 3"/><line x1="89.0" y1="139.6" x2="89.0" y2="124.6" stroke="#c0392b" stroke-width="1.4"/><line x1="86.0" y1="139.6" x2="92.0" y2="139.6" stroke="#c0392b" stroke-width="1.4"/><line x1="86.0" y1="124.6" x2="92.0" y2="124.6" stroke="#c0392b" stroke-width="1.4"/><circle cx="89.0" cy="128.0" r="3" fill="#c0392b"/><line x1="102.0" y1="140.1" x2="102.0" y2="133.7" stroke="#2980b9" stroke-width="1.4"/><line x1="99.0" y1="140.1" x2="105.0" y2="140.1" stroke="#2980b9" stroke-width="1.4"/><line x1="99.0" y1="133.7" x2="105.0" y2="133.7" stroke="#2980b9" stroke-width="1.4"/><circle cx="102.0" cy="135.9" r="3" fill="#2980b9"/><line x1="115.0" y1="130.9" x2="115.0" y2="112.4" stroke="#8e44ad" stroke-width="1.4"/><line x1="112.0" y1="130.9" x2="118.0" y2="130.9" stroke="#8e44ad" stroke-width="1.4"/><line x1="112.0" y1="112.4" x2="118.0" y2="112.4" stroke="#8e44ad" stroke-width="1.4"/><circle cx="115.0" cy="120.2" r="3" fill="#8e44ad"/><text x="102" y="220" font-size="10" text-anchor="middle" fill="#5a626c">local</text><line x1="181.0" y1="103.8" x2="181.0" y2="102.8" stroke="#c0392b" stroke-width="1.4"/><line x1="178.0" y1="103.8" x2="184.0" y2="103.8" stroke="#c0392b" stroke-width="1.4"/><line x1="178.0" y1="102.8" x2="184.0" y2="102.8" stroke="#c0392b" stroke-width="1.4"/><circle cx="181.0" cy="103.3" r="3" fill="#c0392b"/><line x1="194.0" y1="173.6" x2="194.0" y2="171.4" stroke="#2980b9" stroke-width="1.4"/><line x1="191.0" y1="173.6" x2="197.0" y2="173.6" stroke="#2980b9" stroke-width="1.4"/><line x1="191.0" y1="171.4" x2="197.0" y2="171.4" stroke="#2980b9" stroke-width="1.4"/><circle cx="194.0" cy="172.7" r="3" fill="#2980b9"/><line x1="207.0" y1="99.5" x2="207.0" y2="97.6" stroke="#8e44ad" stroke-width="1.4"/><line x1="204.0" y1="99.5" x2="210.0" y2="99.5" stroke="#8e44ad" stroke-width="1.4"/><line x1="204.0" y1="97.6" x2="210.0" y2="97.6" stroke="#8e44ad" stroke-width="1.4"/><circle cx="207.0" cy="98.6" r="3" fill="#8e44ad"/><text x="194" y="220" font-size="10" text-anchor="middle" fill="#5a626c">fast</text><line x1="273.0" y1="134.5" x2="273.0" y2="134.5" stroke="#c0392b" stroke-width="1.4"/><line x1="270.0" y1="134.5" x2="276.0" y2="134.5" stroke="#c0392b" stroke-width="1.4"/><line x1="270.0" y1="134.5" x2="276.0" y2="134.5" stroke="#c0392b" stroke-width="1.4"/><circle cx="273.0" cy="134.5" r="3" fill="#c0392b"/><line x1="286.0" y1="167.3" x2="286.0" y2="167.3" stroke="#2980b9" stroke-width="1.4"/><line x1="283.0" y1="167.3" x2="289.0" y2="167.3" stroke="#2980b9" stroke-width="1.4"/><line x1="283.0" y1="167.3" x2="289.0" y2="167.3" stroke="#2980b9" stroke-width="1.4"/><circle cx="286.0" cy="167.1" r="3" fill="#2980b9"/><line x1="299.0" y1="135.8" x2="299.0" y2="135.3" stroke="#8e44ad" stroke-width="1.4"/><line x1="296.0" y1="135.8" x2="302.0" y2="135.8" stroke="#8e44ad" stroke-width="1.4"/><line x1="296.0" y1="135.3" x2="302.0" y2="135.3" stroke="#8e44ad" stroke-width="1.4"/><circle cx="299.0" cy="135.6" r="3" fill="#8e44ad"/><text x="286" y="220" font-size="10" text-anchor="middle" fill="#5a626c">4G</text><line x1="365.0" y1="166.6" x2="365.0" y2="130.1" stroke="#c0392b" stroke-width="1.4"/><line x1="362.0" y1="166.6" x2="368.0" y2="166.6" stroke="#c0392b" stroke-width="1.4"/><line x1="362.0" y1="130.1" x2="368.0" y2="130.1" stroke="#c0392b" stroke-width="1.4"/><circle cx="365.0" cy="139.5" r="3" fill="#c0392b"/><line x1="378.0" y1="200.6" x2="378.0" y2="148.6" stroke="#2980b9" stroke-width="1.4"/><line x1="375.0" y1="200.6" x2="381.0" y2="200.6" stroke="#2980b9" stroke-width="1.4"/><line x1="375.0" y1="148.6" x2="381.0" y2="148.6" stroke="#2980b9" stroke-width="1.4"/><circle cx="378.0" cy="171.4" r="3" fill="#2980b9"/><line x1="391.0" y1="170.0" x2="391.0" y2="148.6" stroke="#8e44ad" stroke-width="1.4"/><line x1="388.0" y1="170.0" x2="394.0" y2="170.0" stroke="#8e44ad" stroke-width="1.4"/><line x1="388.0" y1="148.6" x2="394.0" y2="148.6" stroke="#8e44ad" stroke-width="1.4"/><circle cx="391.0" cy="163.6" r="3" fill="#8e44ad"/><text x="378" y="220" font-size="10" text-anchor="middle" fill="#5a626c">4G+loss</text><text x="240" y="242" font-size="11" text-anchor="middle" fill="#111418">network profile</text><text x="14" y="111" font-size="11" text-anchor="middle" fill="#111418" transform="rotate(-90 14 111)">atlas speedup (log, individual / atlas)</text><text x="62" y="30" font-size="12" font-weight="bold" fill="#111418">(b) photos, 224px, N=500</text><rect x="430" y="12" width="82" height="67" fill="#fff" stroke="#d1d4d8"/><circle cx="442" cy="22" r="3.5" fill="#c0392b"/><text x="452" y="26" font-size="9" fill="#111418">HTTP/1.1</text><circle cx="442" cy="39" r="3.5" fill="#2980b9"/><text x="452" y="43" font-size="9" fill="#111418">HTTP/2</text><circle cx="442" cy="56" r="3.5" fill="#8e44ad"/><text x="452" y="60" font-size="9" fill="#111418">HTTP/3</text></svg><figcaption><b>Figure 3.</b> Time-to-all-tiles-visible speedup from atlasing (median individual / median single atlas) at N&nbsp;=&nbsp;500, per protocol and network profile, as point estimates with 95% bootstrap confidence intervals on a shared log axis; the dashed line marks parity (1x). HTTP/2 sits near parity for many small files, while HTTP/1.1 and HTTP/3 retain multi-x speedups; intervals that straddle the parity line (notably the loss-dominated 4G+loss profile) mark cells where atlas and individual are statistically indistinguishable.</figcaption></figure>
 <p>Three protocol-level facts organize Table&nbsp;6 and Figure&nbsp;3. First, on
 HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
@@ -608,8 +609,8 @@ heterogeneity proxy captures the direction but not the full magnitude of the pen
 atlas? We tested this directly. Eight content classes were assembled to span extreme
 image statistics, natural photos, emoji, flags, and avatars alongside synthetic
 gradients, noise, UI mockups, and objects on white, and six cheap features were computed
-per class (edge density, DCT high-frequency energy, colour-histogram entropy, unique
-colours, inter-tile heterogeneity, and luminance variance). The content-dependence is real and large: holding tile size and codec fixed, the saving
+per class (edge density, DCT high-frequency energy, color-histogram entropy, unique
+colors, inter-tile heterogeneity, and luminance variance). The content-dependence is real and large: holding tile size and codec fixed, the saving
 still varies by 16 to 41 percentage points across the eight classes (for example
 &minus;16% to +16% at 224&nbsp;pixels under WebP), so a size-and-codec rule leaves a wide
 residual. Yet predicting a held-out class's saving from the six features does not improve
@@ -716,10 +717,10 @@ returns the byte-optimal one (Table&nbsp;9). Each group carries one measured tie
 for a lossless group the heuristic keeps the smaller of a byte-bundle and a WebP-lossless
 strip, since neither dominates (a strip wins on OpenMoji and Robohash, a byte-bundle on
 Noto). With that tiebreak the heuristic's automatic choice equals the oracle on all five
-corpora (0% regret), including the two content types, generated avatars and a second
-emoji vendor, that most differ from the calibration sets. This is the property that
-matters for a deployable tool: on collections it was not built from, it does not merely
-save bytes, it chooses at or near the best available configuration. This comparison is on
+corpora (0% regret, i.e. zero excess bytes over the oracle's choice), including the two
+content types, generated avatars and a second emoji vendor, that most differ from the
+calibration sets. This is the property that matters for a deployable tool: on collections
+it was not built from, it chooses the byte-optimal configuration. This comparison is on
 bytes; the per-tile quality floor is an additional safety constraint that overrides a
 byte-optimal atlas only where it would push a tile below the floor.</p>
 <p>The value is in choosing, not in any single layout. Table&nbsp;9 also scores three
@@ -746,11 +747,10 @@ individual baseline that already serves each unique image once, because most of 
 figure is duplicate folding that content-addressed URLs also achieve. The residual 3.3%
 over dedup is the genuine bundling gain, and it splits exactly as the study predicts: the
 flat-art strips save up to 11% of bytes while the photographic byte-bundle is
-byte-neutral (&minus;0.4%) and pays its way purely in collapsed requests. Exercising these
-mixed code paths, which the uniform benchmark corpora never reach, also surfaced two
-accounting defects that the tool's invariant check (predicted bytes and requests must
-equal the emitted resources) now catches and that are fixed; the tool passes that check on
-every asset set in the study.</p>
+byte-neutral (&minus;0.4%) and pays its way purely in collapsed requests. These mixed code
+paths, which the uniform benchmark corpora never reach, are guarded by the tool's invariant
+check: predicted bytes and requests must equal the emitted resources, and the tool passes
+that check on every asset set in the study.</p>
 <h3>6.4&nbsp;&nbsp;Choosing a rendering mechanism</h3>
 <p>Selecting a representation is only half of deployment; the four ways to show a bundled
 tile (Section&nbsp;3.1) are not interchangeable in a production page, because they differ
@@ -827,8 +827,9 @@ deduplicate repeats explicitly, and delta-encode updates against the cached bund
 (Compression Dictionary Transport). On the wire, bundling loads 500 small flat-art tiles
 4.5&ndash;8.6x faster to full visibility on HTTP/1.1 (1.6&ndash;2.8x for photographic
 thumbnails) and is chiefly a byte optimization on HTTP/2; the comparable HTTP/3 gain
-reflects a request-concurrency limit specific to the tested server stack, which a second
-QUIC implementation roughly halves (Section&nbsp;5.5), not a protocol-general result. The unifying
+reflects a request-concurrency limit specific to the tested server stack (a second QUIC
+implementation sustains roughly twice the concurrency, Section&nbsp;5.5) rather than a
+protocol-general result. The unifying
 account, that savings come from sharing fixed costs and losses from sharing adaptive
 state, is quantitatively predictive for JPEG (R<sup>2</sup>&nbsp;=&nbsp;0.99) and
 organizes the codec-specific behavior of the rest, and it guides the accompanying
