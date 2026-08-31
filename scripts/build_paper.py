@@ -895,7 +895,7 @@ tile size and image count, establishing that the byte saving is governed by the 
 of per-file structural cost to content bytes, and to our knowledge the first
 measurement of image-atlasing byte savings resolved by codec and tile size at matched
 perceptual quality (the one prior peer-reviewed sprite study [33] optimized PNG packing
-geometry and held the codec fixed); (ii) a supporting network study of 2,515 validated
+geometry and held the codec fixed); (ii) a supporting network study of 1,056 validated
 cold browser loads that separates the timing effect of bundling across HTTP/1.1,
 HTTP/2, and HTTP/3 under emulated network conditions; (iii) a set of construction
 techniques with measured effect, PNG vertical-strip packing, explicit and LZ-window
@@ -1083,11 +1083,11 @@ wrong way cannot enter the dataset. Four serving conditions run: N individual fi
 atlas, four chunked atlases, and a byte-bundle (the N encoded files concatenated into
 one binary resource plus an offset index; the client slices the buffer and decodes each
 tile from its own bytes, retaining per-file codec adaptation while collapsing N requests
-into one). The sweep crosses these with N&nbsp;&isin;&nbsp;{{50, 200, 500}}, both asset
-classes as WebP q80, three protocols, and four network profiles. Within each
-profile the load order is randomized across conditions, protocols, and repetitions, and
-the first repetition of each cell is discarded as a warm-up, leaving 11 measured loads
-per cell.</p>
+into one). The reported timing study fixes these at N&nbsp;=&nbsp;500 tiles (the most
+demanding count), both asset classes as WebP q80, three protocols, and four network
+profiles, giving 96 cells. Within each profile the load order is randomized across
+conditions, protocols, and repetitions, and the first repetition of each cell is discarded
+as a warm-up, leaving 11 measured loads per cell (1,056 in all).</p>
 {H3('Artifact availability')}
 <p>All code, asset manifests, raw per-run measurements, and the construction heuristic
 are released at <a href="https://github.com/ApartsinProjects/ImageBundling">github.com/ApartsinProjects/ImageBundling</a>,
@@ -1243,12 +1243,14 @@ on palette size, is the robust default there); and for these alpha-bearing asset
 is structurally disqualified, so the operative comparison is PNG versus WebP, both of
 which the strip atlas improves.</p>
 {icon_html}
-<p>Two further use cases confirm where WebP wins on realistic content. Product-catalog
-thumbnails, which sit on white backgrounds, bundle far better than the generic
-full-frame photos of Section&nbsp;5.1: at equal WebP quality (per-tile SSIM matched within
-0.006) a 100-thumbnail atlas saves 17.8% at 48&nbsp;px, 14.0% at 64&nbsp;px, and still
-6.7% at 112&nbsp;px, all positive, because the homogeneous white field nearly removes
-the shared-segment penalty that drives generic photos negative. Avatar walls add the
+<p>Two further use cases show where bundling wins on realistic content. Product-catalog
+thumbnails, which sit on white backgrounds, bundle well under JPEG: a 100-thumbnail atlas
+saves 13&ndash;40% of bytes across 48&ndash;112&nbsp;px, more than the generic full-frame
+photos of Section&nbsp;5.1, because the homogeneous white field enlarges the fixed-cost
+share. Under WebP the equal-quality outcome is noisy and not uniformly positive (from +24%
+at 48&nbsp;px to &minus;9% at 64&nbsp;px), because the atlas and individual arms reach
+nearly identical per-tile quality here, so the byte comparison is dominated by small
+encoder fluctuations rather than a stable saving. Avatar walls add the
 duplicate dimension: a comment thread of 200 slots drawn from a heavy-tailed popularity
 distribution resolves to about 45 unique faces, and an atlas of the uniques (with many
 coordinate-map entries pointing at repeats) saves 26% under WebP and 50% under JPEG at
@@ -1257,8 +1259,8 @@ recover the duplication on their own, an atlas of all 200 slots is 5.0x the size
 unique atlas, so deduplication must be explicit at the coordinate-map level. A
 methodological note accompanies these: when the atlas and individual arms reach nearly
 identical per-tile quality, as they do on homogeneous thumbnails, matched-SSIM byte
-interpolation becomes unstable and equal-quality byte comparison is the reliable
-measurement.</p>
+interpolation becomes unstable and equal-quality byte comparison is the appropriate
+measure, though for such near-ties it too varies with small encoder fluctuations.</p>
 {H3('Encoder parameters')}
 <p>The photographic WebP penalty is not structural. VP8's default encode shares one set
 of entropy tables and at most four quantizer segments across the whole atlas, and no
@@ -1280,7 +1282,7 @@ image library's default binding.</p>
 {net_html}
 <p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
 HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
-4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.5&ndash;2.8x
+4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.6&ndash;2.8x
 for photos on the loss-free profiles (the 1% packet-loss photo cells fall to parity and
 are discussed below). Across cells, added network impairment never speeds a condition up, and the reported speedups carry tight bootstrap intervals (Table&nbsp;2). Second, HTTP/2 is the strongest protocol for many small files: its
 multiplexing loads 500 individual images almost as fast as the atlas on
@@ -1294,8 +1296,8 @@ API and finds the peak number of simultaneous image requests: HTTP/2 sustained
 slowdown tracks that gap. The server's own QUIC transport log (quic-go qlog) confirms
 the effect and locates it precisely: across cold HTTP/3 loads of the 500-file page, the
 server records a peak of only 4&ndash;6 request streams open at once (median 5 for
-photographs, 4 for flat art), agreeing with the browser-side count, while its transport
-parameters advertise a 100-stream limit (<code>initial_max_streams_bidi</code>) that is
+photographs, 4 for flat art), agreeing with the browser-side count on the photographic
+page, while its transport parameters advertise a 100-stream limit (<code>initial_max_streams_bidi</code>) that is
 never approached, so the stream limit is not the binding constraint. To test whether the
 low concurrency is a property of this particular server, we replayed the load against a
 second, independent QUIC implementation (aioquic) driven by the same Chromium: it
@@ -1330,8 +1332,8 @@ decode paints every tile) and uses the least memory (106&nbsp;MB over baseline),
 individual files take 767&nbsp;ms and 129&nbsp;MB and the byte-bundle 313&nbsp;ms and
 143&nbsp;MB, the latter because it fetches its whole object before the first tile and then
 retains N blob-backed decodes. Two milestones make the progressive difference concrete: the
-atlas reaches first-viewport-visible in 15&nbsp;ms at every N, whereas individual files
-reach it in 148&ndash;429&nbsp;ms as tiles stream in. For typical thumbnail collections the
+atlas reaches first-viewport-visible in under 25&nbsp;ms at every N (15&nbsp;ms at 500
+tiles), whereas individual files reach it in 148&ndash;429&nbsp;ms as tiles stream in. For typical thumbnail collections the
 atlas is therefore memory-favorable rather than a liability, and the
 width&times;height&times;4 caution binds only for very large atlases, which chunking keeps
 below.</p>
@@ -1352,7 +1354,7 @@ extent tiles share <em>fixed</em> costs (container overhead, tables, duplicate c
 and <em>loses</em> to the extent they are forced to share <em>adaptive</em> state (a
 single quantizer allocation, one scanline-filter prediction context, one palette) that individually-encoded
 files would have specialized. The fixed-cost half of this account is directly testable:
-regressing each codec's measured saving (47 matched-quality cells) on the
+regressing each codec's measured saving (63 matched-quality cells) on the
 overhead-to-content predictor 100&middot;H&middot;N/bytes<sub>individual</sub> gives
 R<sup>2</sup>&nbsp;=&nbsp;0.99 for JPEG, where the container tables dominate, so
 amortization alone explains the JPEG savings almost completely (slope 0.59, i.e. the
@@ -1595,7 +1597,7 @@ the encoder (noise shaping plus adaptive deblocking) to turn the atlas penalty i
 gain. Ship about four chunks for bounded cache invalidation and decoded-memory limits,
 deduplicate repeats explicitly, and delta-encode updates against the cached bundle
 (Compression Dictionary Transport). On the wire, bundling loads 500 small flat-art tiles
-4.5&ndash;8.6x faster to full visibility on HTTP/1.1 (1.5&ndash;2.8x for photographic
+4.5&ndash;8.6x faster to full visibility on HTTP/1.1 (1.6&ndash;2.8x for photographic
 thumbnails) and is chiefly a byte optimization on HTTP/2; the comparable HTTP/3 gain
 reflects a request-concurrency limit specific to the tested server stack, which a second
 QUIC implementation roughly halves (Section&nbsp;5.5), not a protocol-general result. The unifying
