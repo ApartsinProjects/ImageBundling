@@ -1,14 +1,14 @@
 {
- "total_tiles": 156,
- "dups": 29,
  "requests": 25,
+ "unique": 156,
+ "dups": 29,
  "bytes_out": 439972,
- "bytes_individual": 575466,
- "saving_pct": 23.5,
- "conditions": {
+ "saving_vs_perref": 23.5,
+ "saving_vs_dedup": 3.3,
+ "n_conditions": {
   "byte-bundle": 1,
-  "strip-atlas": 4,
-  "individual": 8
+  "individual": 8,
+  "strip-atlas": 4
  },
  "groups": [
   {
@@ -19,7 +19,9 @@
    "requests": 1,
    "bytes_out": 286050,
    "bytes_if_individual": 378500,
-   "saving_pct": 24.4
+   "bytes_if_individual_dedup": 284868,
+   "saving_pct": 24.4,
+   "saving_pct_vs_dedup": -0.4
   },
   {
    "group": "default_ll_64x64",
@@ -29,7 +31,9 @@
    "requests": 4,
    "bytes_out": 114354,
    "bytes_if_individual": 147774,
-   "saving_pct": 22.6
+   "bytes_if_individual_dedup": 126886,
+   "saving_pct": 22.6,
+   "saving_pct_vs_dedup": 9.9
   },
   {
    "group": "default_ll_72x72",
@@ -39,7 +43,9 @@
    "requests": 4,
    "bytes_out": 25880,
    "bytes_if_individual": 33372,
-   "saving_pct": 22.4
+   "bytes_if_individual_dedup": 29222,
+   "saving_pct": 22.4,
+   "saving_pct_vs_dedup": 11.4
   },
   {
    "group": "default_ll_80x40",
@@ -49,7 +55,9 @@
    "requests": 1,
    "bytes_out": 3120,
    "bytes_if_individual": 3750,
-   "saving_pct": 16.8
+   "bytes_if_individual_dedup": 3238,
+   "saving_pct": 16.8,
+   "saving_pct_vs_dedup": 3.6
   },
   {
    "group": "default_ll_80x48",
@@ -59,7 +67,9 @@
    "requests": 6,
    "bytes_out": 2374,
    "bytes_if_individual": 3852,
-   "saving_pct": 38.4
+   "bytes_if_individual_dedup": 2374,
+   "saving_pct": 38.4,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x50",
@@ -69,7 +79,9 @@
    "requests": 1,
    "bytes_out": 274,
    "bytes_if_individual": 274,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 274,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x53",
@@ -79,7 +91,9 @@
    "requests": 1,
    "bytes_out": 5030,
    "bytes_if_individual": 5054,
-   "saving_pct": 0.5
+   "bytes_if_individual_dedup": 5054,
+   "saving_pct": 0.5,
+   "saving_pct_vs_dedup": 0.5
   },
   {
    "group": "default_ll_80x55",
@@ -89,7 +103,9 @@
    "requests": 1,
    "bytes_out": 566,
    "bytes_if_individual": 566,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 566,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x56",
@@ -99,7 +115,9 @@
    "requests": 2,
    "bytes_out": 1278,
    "bytes_if_individual": 1278,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 1278,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x57",
@@ -109,7 +127,9 @@
    "requests": 1,
    "bytes_out": 500,
    "bytes_if_individual": 500,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 500,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x60",
@@ -119,7 +139,9 @@
    "requests": 1,
    "bytes_out": 392,
    "bytes_if_individual": 392,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 392,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x69",
@@ -129,7 +151,9 @@
    "requests": 1,
    "bytes_out": 74,
    "bytes_if_individual": 74,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 74,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   },
   {
    "group": "default_ll_80x80",
@@ -139,7 +163,9 @@
    "requests": 1,
    "bytes_out": 80,
    "bytes_if_individual": 80,
-   "saving_pct": 0.0
+   "bytes_if_individual_dedup": 80,
+   "saving_pct": 0.0,
+   "saving_pct_vs_dedup": 0.0
   }
  ]
 }

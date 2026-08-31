@@ -249,10 +249,13 @@ def main():
         alias_count[rep] += 1
     for (cadence, lossless, (w, h)), members in sorted(groups.items()):
         gname = f"{cadence}_{'ll' if lossless else 'lossy'}_{w}x{h}"
-        # baseline: every ORIGINAL file (duplicates included) served individually
-        individual_bytes = sum(
-            len(encode(t["im"], lossless, args.quality)) * (1 + alias_count[t["name"]])
-            for t in members)
+        # two individual baselines: per-reference (every original file, duplicates
+        # included, served separately) and deduplicated (each unique image once, as a
+        # content-addressed URL would serve it). The gap between them is pure dedup.
+        enc_bytes = {t["name"]: len(encode(t["im"], lossless, args.quality)) for t in members}
+        individual_bytes = sum(enc_bytes[t["name"]] * (1 + alias_count[t["name"]])
+                               for t in members)   # per-reference
+        dedup_individual_bytes = sum(enc_bytes.values())   # unique files once
         small = max(w, h) <= args.atlas_max_px
         n = len(members)
         # lossy groups: measure pixel-atlas vs byte-bundle and gate on a per-tile quality
@@ -352,8 +355,11 @@ def main():
             "duplicates_folded": sum(alias_count[t["name"]] for t in members),
             "requests": files, "bytes_out": total,
             "bytes_if_individual": individual_bytes,
+            "bytes_if_individual_dedup": dedup_individual_bytes,
             "saving_pct": round(100 * (1 - total / individual_bytes), 1)
-            if individual_bytes else 0.0}
+            if individual_bytes else 0.0,
+            "saving_pct_vs_dedup": round(100 * (1 - total / dedup_individual_bytes), 1)
+            if dedup_individual_bytes else 0.0}
         if lossy_m is not None:
             # measured pixel-atlas-vs-byte-bundle decision + per-tile quality gate (W2/W9)
             rec["lossy_decision"] = {
@@ -396,10 +402,12 @@ async function loadBundle(base) {
               (out / "report.json").open("w"), indent=1)
     tot_out = sum(g["bytes_out"] for g in report)
     tot_ind = sum(g["bytes_if_individual"] for g in report)
+    tot_dedup = sum(g["bytes_if_individual_dedup"] for g in report)
     tot_req = sum(g["requests"] for g in report)
     print(f"{len(tiles)} images ({len(aliases)} duplicates folded) -> "
           f"{tot_req} requests, {tot_out:,} B "
-          f"({100 * (1 - tot_out / tot_ind):+.1f}% vs individual files)")
+          f"({100 * (1 - tot_out / tot_ind):+.1f}% vs per-reference individual, "
+          f"{100 * (1 - tot_out / tot_dedup):+.1f}% vs deduplicated individual)")
     for g in report:
         print(f"  {g['group']:28} {g['condition']:12} tiles={g['tiles']:4} "
               f"req={g['requests']:2} saving={g['saving_pct']:+.1f}%")

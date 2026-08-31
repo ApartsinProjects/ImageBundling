@@ -136,15 +136,16 @@ def predict_table():
     if not f.exists():
         return ""
     d = json.load(f.open())
-    base = d["by_target"]["saving"]["baseline"]["mae"]
-    rich = d["by_target"]["saving"]["rich"]["mae"]
+    bl = d["by_target"]["saving"]["baseline"]
+    rc = d["by_target"]["saving"]["rich"]
     p10, p20 = d["probe"]["probe10"], d["probe"]["probe20"]
     diff_f = ROOT / "results" / "static" / "e_predict" / "diff.json"
     diff = json.load(diff_f.open()) if diff_f.exists() else None
-    rows = [("size + codec + one encode (baseline)", f"{base:.2f}", "n/a"),
-            ("+ six source-image features", f"{rich:.2f}", "n/a"),
+    rows = [("size + codec + one encode (baseline)", f"{bl['mae']:.2f}", f"{bl['spearman']:.2f}"),
+            ("+ six source-image features", f"{rc['mae']:.2f}", f"{rc['spearman']:.2f}"),
             ("10-tile probe encode", f"{p10['mae_fit']:.2f}", f"{p10['spearman']:.2f}"),
             ("20-tile probe encode", f"{p20['mae_fit']:.2f}", f"{p20['spearman']:.2f}")]
+    n = d.get("n_cells", 48)
     trows = "".join(f"<tr><td>{n}</td><td>{m}</td><td>{s}</td></tr>" for n, m, s in rows)
     dnote = ""
     if diff:
@@ -152,7 +153,7 @@ def predict_table():
                  f"cancels the fixed-cost term), the same features still fail to beat a "
                  f"constant ({diff['rich_features_mae']:.1f} vs {diff['constant_mae']:.1f} "
                  f"percentage points), so the shortfall is not a missing fixed-cost signal "
-                 f"but the coupling penalty being unreadable from source pixels.")
+                 f"but the coupling penalty not being captured by these cheap features.")
     return ("<div class='tablewrap'><table>"
             "<caption><b>Table 11.</b> Predicting a group's atlas saving before building "
             "it, evaluated leave-one-content-class-out over eight classes spanning extreme "
@@ -161,7 +162,10 @@ def predict_table():
             "mean absolute error in percentage points against the measured saving; rank is "
             "Spearman correlation with it. Six cheap source-image features do not improve "
             "on a size-and-codec baseline, but a probe encode of 10&ndash;20 tiles predicts "
-            "the full-set saving to within about two points." + dnote + "</caption>"
+            "the full-set saving to within about two points, and orders the classes far "
+            "better than the baseline's rank (0.86)." + dnote + f" Evaluated on {n} of the "
+            "48 class-size-codec cells; one cell whose two rate-distortion curves did not "
+            "overlap in quality is omitted.</caption>"
             "<thead><tr><th>predictor</th><th>MAE (pp)</th><th>rank</th></tr></thead>"
             f"<tbody>{trows}</tbody></table></div>")
 
@@ -855,10 +859,10 @@ codec-aware packing (vertical strips, shared palettes), so the question is how t
 not whether. We distil the measurements into a coupling account (savings come from
 sharing fixed costs; losses from sharing adaptive state) and into an open-source tool
 that turns a directory of images into deployable bundles and matches an offline oracle on
-five unseen collections. The byte effect resists prediction from source-image statistics,
-which is why the tool measures rather than models: a probe encode of ten to twenty tiles
-forecasts a group's saving to within two percentage points where colour, edge, and
-frequency features cannot. In a live renderer the pixel atlas is also the fastest to full
+five unseen collections. The byte effect resists prediction from cheap source-image
+features, so the tool measures the candidate representations rather than modelling them;
+we also find that a probe encode of just ten to twenty tiles forecasts a group's saving to
+within two percentage points where colour, edge, and frequency features cannot. In a live renderer the pixel atlas is also the fastest to full
 visibility and the lowest in memory, and a supporting browser study shows the byte savings
 cut load time on HTTP/1.1 and HTTP/3.</p></div>
 
@@ -911,8 +915,8 @@ duplicate exploitation, chunking for bounded cache invalidation, delta updates v
 dictionaries, and encoder-parameter tuning that flips WebP's photographic-atlas penalty
 to a gain; (iv) a coupling-spectrum account that unifies the results, savings arise from
 sharing fixed costs and losses from sharing adaptive state, together with the finding that
-this adaptive-state penalty is codec-mechanistic and not predictable from source-image
-statistics, while a small probe encode forecasts it accurately; and (v) an open-source
+this adaptive-state penalty is codec-mechanistic and is not predicted by six cheap
+source-image features, while a small probe encode forecasts it accurately; and (v) an open-source
 construction heuristic, built on that probe-not-predict principle, that emits deployable
 bundles from a directory of images.</p>
 
@@ -1389,12 +1393,16 @@ atlas? We tested this directly. Eight content classes were assembled to span ext
 image statistics, natural photos, emoji, flags, and avatars alongside synthetic
 gradients, noise, UI mockups, and objects on white, and six cheap features were computed
 per class (edge density, DCT high-frequency energy, colour-histogram entropy, unique
-colours, inter-tile heterogeneity, and luminance variance). Predicting a held-out class's
-saving from these features does not improve on a size-and-codec baseline, and it fails
-even on the isolated codec differential that cancels the fixed-cost term (Table&nbsp;11):
-the adaptive-state penalty is codec-mechanistic and is not readable from source pixel
-statistics. What does predict it is a measurement: a probe encode of only 10&ndash;20
-tiles estimates the full-set saving to within about two percentage points (Spearman 0.98).
+colours, inter-tile heterogeneity, and luminance variance). The content-dependence is real and large: holding tile size and codec fixed, the saving
+still varies by 16 to 41 percentage points across the eight classes (for example
+&minus;16% to +16% at 224&nbsp;pixels under WebP), so a size-and-codec rule leaves a wide
+residual. Yet predicting a held-out class's saving from the six features does not improve
+on that baseline, and it fails even on the isolated codec differential that cancels the
+fixed-cost term (Table&nbsp;11): the adaptive-state penalty is codec-mechanistic and is
+not captured by these cheap source features. What does recover it is a measurement, not a
+model: a probe encode of only 10&ndash;20 tiles estimates the full-set saving to within
+about two percentage points, and tracks the content ordering that the baseline misses
+(within-cell rank correlation 0.86 to 1.00).
 This is the empirical case for the design of Section&nbsp;6.3: the right move is not to
 model the penalty but to measure the two candidate representations, and a small probe
 suffices, which is why the heuristic reaches the oracle out-of-sample without any content
@@ -1504,14 +1512,20 @@ site's image folder: 185 files drawn from four live asset sets (country flags, e
 generated avatars, and photographs) at their native, mixed dimensions, with duplicates
 included as real pages carry them. The tool folded 29 exact duplicates, partitioned the
 rest by dimension and lossless requirement, and chose a different representation for each
-group without any per-group tuning: a byte-bundle for the 224-pixel photographs
-(+24.4%), WebP-lossless strips for the uniform 64- and 72-pixel avatar and emoji sets
-(+22.4 to +22.6%), and individual files for the small odd-aspect-ratio flag groups that
-are too few or too dissimilar in dimension to atlas. The result cut 185 requests to 25 at
-23.5% fewer bytes overall. Exercising these mixed code paths, which the uniform benchmark
-corpora never reach, surfaced two accounting defects that the released tool's invariant
-check (predicted bytes and requests must equal the emitted resources) now catches and that
-are fixed; the tool passes that check on every asset set in the study.</p>
+group without any per-group tuning: a byte-bundle for the 224-pixel photographs,
+WebP-lossless strips for the uniform 64- and 72-pixel avatar and emoji sets, and strips or
+individual files for the small odd-aspect-ratio flag groups depending on how many share a
+size. It cut 185 requests to 25. The byte outcome depends on the baseline: 23.5% smaller
+than serving every file reference separately, but only 3.3% smaller than a deduplicated
+individual baseline that already serves each unique image once, because most of the first
+figure is duplicate folding that content-addressed URLs also achieve. The residual 3.3%
+over dedup is the genuine bundling gain, and it splits exactly as the study predicts: the
+flat-art strips save 4&ndash;11% of bytes while the photographic byte-bundle is
+byte-neutral (&minus;0.4%) and pays its way purely in collapsed requests. Exercising these
+mixed code paths, which the uniform benchmark corpora never reach, also surfaced two
+accounting defects that the tool's invariant check (predicted bytes and requests must
+equal the emitted resources) now catches and that are fixed; the tool passes that check on
+every asset set in the study.</p>
 {H3('Choosing a rendering mechanism')}
 <p>Selecting a representation is only half of deployment; the four ways to show a bundled
 tile (Section&nbsp;3.1) are not interchangeable in a production page, because they differ

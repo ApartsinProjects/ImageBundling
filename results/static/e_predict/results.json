@@ -14,22 +14,26 @@
   "saving": {
    "baseline": {
     "mae": 4.95,
-    "sign_acc": 0.936
+    "sign_acc": 0.936,
+    "spearman": 0.858
    },
    "rich": {
     "mae": 6.05,
-    "sign_acc": 0.809
+    "sign_acc": 0.809,
+    "spearman": 0.841
    },
    "verdict": "NEGATIVE"
   },
   "saving_hq": {
    "baseline": {
     "mae": 5.68,
-    "sign_acc": 0.894
+    "sign_acc": 0.894,
+    "spearman": 0.773
    },
    "rich": {
     "mae": 12.11,
-    "sign_acc": 0.809
+    "sign_acc": 0.809,
+    "spearman": 0.736
    },
    "verdict": "NEGATIVE"
   }

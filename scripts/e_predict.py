@@ -258,7 +258,8 @@ def design(cells, codecs, rich, means, stds):
 def evaluate_target(cells, target):
     classes = sorted(set(c["cls"] for c in cells))
     codecs = sorted(set(c["codec"] for c in cells))
-    res = {"baseline": {"ae": [], "sign": []}, "rich": {"ae": [], "sign": []}}
+    res = {"baseline": {"ae": [], "sign": [], "pred": [], "act": []},
+           "rich": {"ae": [], "sign": [], "pred": [], "act": []}}
     for held in classes:
         tr = [c for c in cells if c["cls"] != held]
         te = [c for c in cells if c["cls"] == held]
@@ -272,8 +273,10 @@ def evaluate_target(cells, target):
             pred = design(te, codecs, rich, means, stds) @ coef
             res[name]["ae"] += np.abs(pred - yt).tolist()
             res[name]["sign"] += (np.sign(pred) == np.sign(yt)).tolist()
+            res[name]["pred"] += pred.tolist(); res[name]["act"] += yt.tolist()
     out = {n: {"mae": round(float(np.mean(res[n]["ae"])), 2),
-               "sign_acc": round(float(np.mean(res[n]["sign"])), 3)} for n in res}
+               "sign_acc": round(float(np.mean(res[n]["sign"])), 3),
+               "spearman": round(_spearman(res[n]["act"], res[n]["pred"]), 3)} for n in res}
     b, r = out["baseline"], out["rich"]
     out["verdict"] = "RICH WINS" if (r["mae"] < 0.8 * b["mae"] and
                                      r["sign_acc"] > b["sign_acc"]) else "NEGATIVE"
@@ -334,6 +337,10 @@ def evaluate(cells):
 
 
 if __name__ == "__main__":
-    cells = build_cells()
+    import sys
+    if "--eval-only" in sys.argv:   # re-score from saved cells.json, no re-encoding
+        cells = json.load((OUT / "cells.json").open())
+    else:
+        cells = build_cells()
     evaluate(cells)
     print("PREDICT DONE")
