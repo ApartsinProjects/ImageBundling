@@ -36,7 +36,9 @@ figure{margin:1.1rem 0;text-align:center}
 figure img,figure svg{max-width:100%;border:1px solid #d1d4d8}
 figcaption{font-size:9.5pt;color:#5a626c;text-align:justify;margin-top:.35rem;text-indent:0}
 .tablewrap{overflow-x:auto;margin:1.1rem 0}
-table{border-collapse:collapse;margin:0 auto;font-size:9.5pt}
+/* narrow tables get a readable floor so their top caption is not squeezed into a
+   skinny column; wide tables are already past this and are unaffected */
+table{border-collapse:collapse;margin:0 auto;font-size:9.5pt;min-width:62%}
 th,td{padding:2.5px 9px;text-align:right;border:none}
 td:first-child,th:first-child{text-align:left}
 thead th{border-bottom:1px solid #111418}
@@ -1724,6 +1726,7 @@ IETF, 2022. doi:10.17487/RFC9111</p>
     # reference is remapped: moved sections -> Appendix A.n, shifted sections ->
     # their new number. Tables/figures then renumber by the new document order.
     _APP_TITLES = ["Encoder parameters",
+                   "Supporting measurements: network timing",
                    "Local rendering cost: decode time and memory",
                    "Cache invalidation and delta updates",
                    "Choosing a rendering mechanism"]
@@ -1733,9 +1736,9 @@ IETF, 2022. doi:10.17487/RFC9111</p>
                         html, _re.S)
         _app_blocks.append(_m.group(0))
         html = html.replace(_m.group(0), "", 1)
-    # renumber the subsection headers left behind in Results and Discussion
-    for _o, _n in [("<h3>5.5&nbsp;", "<h3>5.4&nbsp;"),
-                   ("<h3>6.3&nbsp;", "<h3>6.2&nbsp;"),
+    # renumber the subsection headers left behind in Discussion (Results 5.1-5.3
+    # keep their numbers; 5.4-5.6 all move to the appendix)
+    for _o, _n in [("<h3>6.3&nbsp;", "<h3>6.2&nbsp;"),
                    ("<h3>6.5&nbsp;", "<h3>6.3&nbsp;")]:
         html = html.replace(_o, _n, 1)
     # assemble the appendix (each moved block's header becomes A.n) after the refs
@@ -1748,12 +1751,12 @@ IETF, 2022. doi:10.17487/RFC9111</p>
     # remap in-text section references (moved sections first so the shifted
     # remap cannot collide with a just-created number)
     for _o, _n in [("Section&nbsp;5.4", "Appendix&nbsp;A.1"),
-                   ("Section&nbsp;5.6", "Appendix&nbsp;A.2"),
-                   ("Section&nbsp;6.2", "Appendix&nbsp;A.3"),
-                   ("Section&nbsp;6.4", "Appendix&nbsp;A.4")]:
+                   ("Section&nbsp;5.5", "Appendix&nbsp;A.2"),
+                   ("Section&nbsp;5.6", "Appendix&nbsp;A.3"),
+                   ("Section&nbsp;6.2", "Appendix&nbsp;A.4"),
+                   ("Section&nbsp;6.4", "Appendix&nbsp;A.5")]:
         html = html.replace(_o, _n)
-    for _o, _n in [("Section&nbsp;5.5", "Section&nbsp;5.4"),
-                   ("Section&nbsp;6.3", "Section&nbsp;6.2")]:
+    for _o, _n in [("Section&nbsp;6.3", "Section&nbsp;6.2")]:
         html = html.replace(_o, _n)
 
     def _renumber(kind):
