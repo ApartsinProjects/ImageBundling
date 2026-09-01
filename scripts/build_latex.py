@@ -138,7 +138,7 @@ def table2(cap):
     head = (r"condition & \multicolumn{3}{c}{individual} & "
             r"\multicolumn{3}{c}{atlas} \\ \cmidrule(l){2-4}\cmidrule(l){5-7}" "\n"
             r"& mean & p5 & min & mean & p5 & min \\")
-    return float_table(2, cap, "col", r"@{}l rrr rrr@{}", head, body)
+    return float_table(2, cap, "full", r"@{}l rrr rrr@{}", head, body)
 
 def table3(cap):
     rows = [
@@ -291,16 +291,21 @@ def float_table(n, cap, width, colspec, head, body):
         f"\\caption{{{cap}}}\n\\label{{tab:{n}}}\n\\end{{{env}}}\n")
 
 
+# Keyed by FINAL document-order number (four sections moved to the appendix):
+# 1-6 unchanged; 7 predictor, 8 oracle stay in the body; 9 memory, 10 rendering
+# now sit in the appendix. table7()=memory, table8()=predictor, table9()=oracle.
 TABLES = {1: table1, 2: table2, 3: table3, 4: table4, 5: table5,
-          6: table6, 7: table7, 8: table8, 9: table9, 10: table10}
+          6: table6, 7: table8, 8: table9, 9: table7, 10: table10}
 
 # figure placement: file (ext), width mode
+# Final order: 1 atlas, 2 crossover, 3 network, 4 flowchart (heuristic, wide),
+# 5 delta (appendix). extract_and_render_figures names files by caption number.
 FIGURES = {
     1: ("fig1.png", "col", 0.82),
     2: ("fig2.pdf", "col", 1.0),
     3: ("fig3.pdf", "col", 1.0),
-    4: ("fig4.pdf", "col", 1.0),
-    5: ("fig5.pdf", "full", 0.62),
+    4: ("fig4.pdf", "full", 0.62),
+    5: ("fig5.pdf", "col", 1.0),
 }
 
 def float_figure(n, cap):
@@ -433,18 +438,18 @@ def build():
     extract_and_render_figures()
     raw = pandoc_body()
 
-    # isolate prose region: Introduction .. References
+    # isolate the body (Introduction .. References) and the appendix (after refs)
     start = raw.index(r"\subsection{1")
     end = raw.index(r"\subsection{References}")
     prose = raw[start:end]
-    refs_region = raw[end:]
+    appendix = raw[raw.index(r"\subsection{Appendix A}"):]
 
     # abstract paragraphs (between the venue line and the Introduction heading)
-    pre = raw[:start]
     ap = re.search(r"\nAbstract\n\n(.*?)\n\n(.*?)\n\n\\subsection\{1", raw, re.S)
     abs1, abs2 = ap.group(1).strip(), ap.group(2).strip()
 
-    # replace figure / longtable blocks with hand-authored floats
+    # replace figure / longtable blocks with hand-authored floats (keyed by the
+    # caption's final number, which TABLES/FIGURES map to the right content)
     def repl(m):
         block = m.group(0)
         km = re.search(r"\\textbf\{(Figure|Table) (\d+)\.\}", block)
@@ -452,22 +457,35 @@ def build():
         cap = caption_of(block)
         return float_figure(num, cap) if kind == "Figure" else TABLES[num](cap)
 
-    prose = re.sub(r"\\begin\{figure\}.*?\\end\{figure\}", repl, prose, flags=re.S)
-    prose = re.sub(r"\\begin\{longtable\}.*?\\end\{longtable\}", repl, prose, flags=re.S)
+    def floats(text):
+        text = re.sub(r"\\begin\{figure\}.*?\\end\{figure\}", repl, text, flags=re.S)
+        text = re.sub(r"\\begin\{longtable\}.*?\\end\{longtable\}", repl, text, flags=re.S)
+        # drop pandoc's duplicated standalone "\textbf{Table N.} ..." caption paragraph
+        return re.sub(r"\n\\textbf\{Table \d+\.\}.*?(?=\n\n)", "", text, flags=re.S)
 
-    # remove any leftover standalone "\textbf{Table N.} ..." caption paragraph (Table 4 dup)
-    prose = re.sub(r"\n\\textbf\{Table \d+\.\}.*?(?=\n\n)", "", prose, flags=re.S)
+    prose, appendix = floats(prose), floats(appendix)
 
-    # headings: drop manual numbers, promote levels to real sectioning
+    # body headings: drop manual numbers, promote levels to real sectioning
     prose = re.sub(r"\\subsubsection\{[\d.]+~~(.*?)\}(\\label\{[^}]*\})?",
                    r"\\subsection{\1}", prose, flags=re.S)
     prose = re.sub(r"\\subsection\{[\d.]+~~(.*?)\}(\\label\{[^}]*\})?",
                    r"\\section{\1}", prose, flags=re.S)
+
+    # appendix: unnumbered "Appendix A" head + A.n run-in subsections; strip the
+    # trailing author/footer line pandoc appends after the last appendix block
+    appendix = appendix.replace(r"\subsection{Appendix A}", r"\section*{Appendix A}")
+    appendix = re.sub(r"\\subsubsection\{(A\.\d+)~~(.*?)\}(\\label\{[^}]*\})?",
+                      r"\\subsection*{\1\\quad \2}", appendix, flags=re.S)
+    appendix = re.sub(r"\n\nAlexander Apartsin[^\n]*\n?", "\n", appendix)
+
     prose = re.sub(r"\\label\{[^}]*\}", "", prose)
+    appendix = re.sub(r"\\label\{[^}]*\}", "", appendix)
 
     # code blocks: verbatim -> our styled 'code' env
-    prose = prose.replace(r"\begin{verbatim}", r"\begin{code}").replace(
-        r"\end{verbatim}", r"\end{code}")
+    def code_env(s):
+        return s.replace(r"\begin{verbatim}", r"\begin{code}").replace(
+            r"\end{verbatim}", r"\end{code}")
+    prose, appendix = code_env(prose), code_env(appendix)
 
     # typographic cleanups. pandoc emits possessives as "\textquotesingle{}" (a
     # real space follows) or "\textquotesingle " (the space is only the control-word
@@ -476,7 +494,8 @@ def build():
         s = s.replace(r"\textquotesingle{}", "'")
         s = re.sub(r"\\textquotesingle\s", "'", s)
         return s.replace(r"{[}", "[").replace(r"{]}", "]")
-    prose, abs1, abs2 = fix_quotes(prose), fix_quotes(abs1), fix_quotes(abs2)
+    prose, appendix, abs1, abs2 = (fix_quotes(prose), fix_quotes(appendix),
+                                   fix_quotes(abs1), fix_quotes(abs2))
 
     references = build_references()
 
@@ -485,7 +504,8 @@ def build():
            + FRONTMATTER.replace("__TITLE__", TITLE).replace("__ABS1__", abs1)
                         .replace("__ABS2__", abs2)
            + prose
-           + "\n\\section*{References}\n\\small\n" + references
+           + "\n\\section*{References}\n{\\small\n" + references + "\n}\n"
+           + appendix
            + "\n\\end{document}\n")
     TEX.write_text(doc, encoding="utf-8")
     print(f"wrote {TEX}")

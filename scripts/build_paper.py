@@ -1718,6 +1718,44 @@ IETF, 2022. doi:10.17487/RFC9111</p>
     # correct after any subsection reordering.
     import re as _re
 
+    # Move four supporting subsections to an appendix (A.1..A.4) placed after the
+    # references. Section numbers are baked in by document position, so the four
+    # remaining subsection headers are renumbered and every in-text "Section X.Y"
+    # reference is remapped: moved sections -> Appendix A.n, shifted sections ->
+    # their new number. Tables/figures then renumber by the new document order.
+    _APP_TITLES = ["Encoder parameters",
+                   "Local rendering cost: decode time and memory",
+                   "Cache invalidation and delta updates",
+                   "Choosing a rendering mechanism"]
+    _app_blocks = []
+    for _t in _APP_TITLES:
+        _m = _re.search(r"<h3>[^<]*?" + _re.escape(_t) + r"</h3>.*?(?=<h3>|<h2)",
+                        html, _re.S)
+        _app_blocks.append(_m.group(0))
+        html = html.replace(_m.group(0), "", 1)
+    # renumber the subsection headers left behind in Results and Discussion
+    for _o, _n in [("<h3>5.5&nbsp;", "<h3>5.4&nbsp;"),
+                   ("<h3>6.3&nbsp;", "<h3>6.2&nbsp;"),
+                   ("<h3>6.5&nbsp;", "<h3>6.3&nbsp;")]:
+        html = html.replace(_o, _n, 1)
+    # assemble the appendix (each moved block's header becomes A.n) after the refs
+    _appendix = ['<h2 class="refs-head">Appendix A</h2>']
+    for _i, _blk in enumerate(_app_blocks, 1):
+        _appendix.append(_re.sub(r"<h3>[^<]*?&nbsp;&nbsp;",
+                                 f"<h3>A.{_i}&nbsp;&nbsp;", _blk, count=1))
+    html = html.replace('<div class="footer">',
+                        "\n".join(_appendix) + '\n<div class="footer">', 1)
+    # remap in-text section references (moved sections first so the shifted
+    # remap cannot collide with a just-created number)
+    for _o, _n in [("Section&nbsp;5.4", "Appendix&nbsp;A.1"),
+                   ("Section&nbsp;5.6", "Appendix&nbsp;A.2"),
+                   ("Section&nbsp;6.2", "Appendix&nbsp;A.3"),
+                   ("Section&nbsp;6.4", "Appendix&nbsp;A.4")]:
+        html = html.replace(_o, _n)
+    for _o, _n in [("Section&nbsp;5.5", "Section&nbsp;5.4"),
+                   ("Section&nbsp;6.3", "Section&nbsp;6.2")]:
+        html = html.replace(_o, _n)
+
     def _renumber(kind):
         nonlocal html
         order = [int(m.group(1)) for m in _re.finditer(rf"<b>{kind} (\d+)\.</b>", html)]
