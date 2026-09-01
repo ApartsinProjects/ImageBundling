@@ -36,14 +36,14 @@ figure{margin:1.1rem 0;text-align:center}
 figure img,figure svg{max-width:100%;border:1px solid #d1d4d8}
 figcaption{font-size:9.5pt;color:#5a626c;text-align:justify;margin-top:.35rem;text-indent:0}
 .tablewrap{overflow-x:auto;margin:1.1rem 0}
-/* narrow tables get a readable floor so their top caption is not squeezed into a
-   skinny column; wide tables are already past this and are unaffected */
-table{border-collapse:collapse;margin:0 auto;font-size:9.5pt;min-width:62%}
+table{border-collapse:collapse;margin:0 auto;font-size:9.5pt}
+/* table caption is a full-width block above the table, so a narrow table keeps
+   its natural size while its caption reads across the whole text column */
+.tcap{font-size:9.5pt;color:#5a626c;margin:0 0 .35rem;text-align:justify}
 th,td{padding:2.5px 9px;text-align:right;border:none}
 td:first-child,th:first-child{text-align:left}
 thead th{border-bottom:1px solid #111418}
 table{border-top:1.5px solid #111418;border-bottom:1.5px solid #111418}
-caption{font-size:9.5pt;color:#5a626c;margin-bottom:.3rem;caption-side:top;text-align:justify}
 .refs{font-size:9pt}
 .refs p{text-indent:-1.4em;padding-left:1.4em;margin-bottom:.25rem}
 a{color:#14385c}
@@ -148,7 +148,7 @@ def predict_table():
             ("20-tile probe encode", f"{p20['mae_fit']:.2f}", f"{p20['spearman']:.2f}")]
     n = d.get("n_cells", 48)
     trows = "".join(f"<tr><td>{nm}</td><td>{m}</td><td>{s}</td></tr>" for nm, m, s in rows)
-    return ("<div class='tablewrap'><table style='min-width:62%'>"
+    return ("<div class='tablewrap'><table>"
             "<caption><b>Table 11.</b> Predicting a group's atlas saving before building it, "
             "leave-one-content-class-out over eight classes spanning extreme image "
             f"statistics (JPEG and WebP; {n} of 48 cells, one omitted for no overlapping "
@@ -1758,6 +1758,11 @@ IETF, 2022. doi:10.17487/RFC9111</p>
         html = html.replace(_o, _n)
     for _o, _n in [("Section&nbsp;6.3", "Section&nbsp;6.2")]:
         html = html.replace(_o, _n)
+
+    # lift each table caption out to a full-width block above the table, so a
+    # narrow table keeps its natural width while its caption spans the text column
+    html = _re.sub(r"(<div class='tablewrap'>)(<table[^>]*>)\s*<caption>(.*?)</caption>",
+                   r'\1<div class="tcap">\3</div>\2', html, flags=_re.S)
 
     def _renumber(kind):
         nonlocal html

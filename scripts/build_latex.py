@@ -448,20 +448,23 @@ def build():
     ap = re.search(r"\nAbstract\n\n(.*?)\n\n(.*?)\n\n\\subsection\{1", raw, re.S)
     abs1, abs2 = ap.group(1).strip(), ap.group(2).strip()
 
-    # replace figure / longtable blocks with hand-authored floats (keyed by the
-    # caption's final number, which TABLES/FIGURES map to the right content)
-    def repl(m):
+    # replace figures and tables with hand-authored floats (keyed by the caption's
+    # final number, which TABLES/FIGURES map to the right content). Figures keep
+    # their caption inside \begin{figure}; table captions now arrive as a standalone
+    # "\textbf{Table N.} ..." paragraph immediately before a caption-less longtable.
+    def fig_repl(m):
         block = m.group(0)
-        km = re.search(r"\\textbf\{(Figure|Table) (\d+)\.\}", block)
-        kind, num = km.group(1), int(km.group(2))
-        cap = caption_of(block)
-        return float_figure(num, cap) if kind == "Figure" else TABLES[num](cap)
+        num = int(re.search(r"\\textbf\{Figure (\d+)\.\}", block).group(1))
+        return float_figure(num, caption_of(block))
+
+    def tab_repl(m):
+        return TABLES[int(m.group(1))](m.group(2).strip())
 
     def floats(text):
-        text = re.sub(r"\\begin\{figure\}.*?\\end\{figure\}", repl, text, flags=re.S)
-        text = re.sub(r"\\begin\{longtable\}.*?\\end\{longtable\}", repl, text, flags=re.S)
-        # drop pandoc's duplicated standalone "\textbf{Table N.} ..." caption paragraph
-        return re.sub(r"\n\\textbf\{Table \d+\.\}.*?(?=\n\n)", "", text, flags=re.S)
+        text = re.sub(r"\\begin\{figure\}.*?\\end\{figure\}", fig_repl, text, flags=re.S)
+        text = re.sub(r"\\textbf\{Table (\d+)\.\}\s*(.*?)\n\n\s*"
+                      r"\\begin\{longtable\}.*?\\end\{longtable\}", tab_repl, text, flags=re.S)
+        return text
 
     prose, appendix = floats(prose), floats(appendix)
 

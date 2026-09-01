@@ -528,12 +528,11 @@ photos 224px & 200 & 2.6 & \nv{-8.2} & \nv{-3.8} & 0.3 \\
 photos 224px & 500 & 3.0 & \nv{-8.5} & \nv{-3.6} & \nv{-4.9} \\
 \bottomrule
 \end{tabular}
-\caption{Bytes saved by atlasing (\%) at matched
-per-tile SSIM 0.97 (lossy codecs; interpolated on the quality ladder) or
-exact lossless comparison (-ll columns), grid packing, no padding.
-Negative values (red) mean the atlas is larger; n/a marks a cell whose
-quality ladder lies entirely above the target with no interpolable
-point.}
+\caption{Bytes saved by atlasing (\%) at matched per-tile SSIM
+0.97 (lossy codecs; interpolated on the quality ladder) or exact
+lossless comparison (-ll columns), grid packing, no padding. Negative
+values (red) mean the atlas is larger; n/a marks a cell whose quality
+ladder lies entirely above the target with no interpolable point.}
 
 \end{table}
 
@@ -608,13 +607,12 @@ photos 56px, WebP & 0.979 & 0.961 & 0.925 & 0.980 & 0.963 & 0.918 \\
 photos 224px, WebP & 0.978 & 0.965 & 0.942 & 0.975 & 0.960 & 0.926 \\
 \bottomrule
 \end{tabular}
-\caption{Per-tile SSIM distribution (mean, 5th
-percentile, minimum) for individual files versus the grid atlas at equal
-encoder quality (q80, N=500). Matching the mean can still leave the
-atlas with a worse worst tile: the flat-art WebP atlas has a tile stuck
-near 0.85 that no quality setting recovers, a shared-segment boundary
-casualty, whereas JPEG's atlas and individual tails
-coincide.}
+\caption{Per-tile SSIM distribution (mean, 5th percentile,
+minimum) for individual files versus the grid atlas at equal encoder
+quality (q80, N=500). Matching the mean can still leave the atlas with a
+worse worst tile: the flat-art WebP atlas has a tile stuck near 0.85
+that no quality setting recovers, a shared-segment boundary casualty,
+whereas JPEG's atlas and individual tails coincide.}
 
 \end{table*}
 
@@ -650,16 +648,15 @@ photos 112px & 17.1 & 12.5 & \nv{-21.8} & \nv{-24.3} \\
 photos 224px & 4.0 & 3.0 & \nv{-28.2} & \nv{-29.4} \\
 \bottomrule
 \end{tabular}
-\caption{Robustness of the photo crossover under a
-modern perceptual metric: bytes saved by atlasing (\%) at matched
-SSIMULACRA2 (reference libjxl implementation), for 100 photographic
-tiles scored on the full grid image at two quality targets. JPEG stays
-positive at every size; WebP is positive only at 56~px and turns clearly
-negative by 112~px. The direction matches the luma-SSIM result of
-Table~1, and the WebP penalty is larger under SSIMULACRA2, which weights
-the chroma and blocking artifacts of VP8's shared
-quantizer more heavily. Negative values (red) mean the atlas is
-larger.}
+\caption{Robustness of the photo crossover under a modern
+perceptual metric: bytes saved by atlasing (\%) at matched SSIMULACRA2
+(reference libjxl implementation), for 100 photographic tiles scored on
+the full grid image at two quality targets. JPEG stays positive at every
+size; WebP is positive only at 56~px and turns clearly negative by
+112~px. The direction matches the luma-SSIM result of Table~1, and the
+WebP penalty is larger under SSIMULACRA2, which weights the chroma and
+blocking artifacts of VP8's shared quantizer more
+heavily. Negative values (red) mean the atlas is larger.}
 
 \end{table}
 
@@ -695,17 +692,17 @@ photos 112px & \makecell{+8.4\\ \rng{[+8,+9]}} & \makecell{+1.6\\ \rng{[+1,+4]}}
 photos 224px & \makecell{+2.3\\ \rng{[+2,+3]}} & \makecell{\nv{-7.0}\\ \rng{[-8,-5]}} & \makecell{+5.1\\ \rng{[+4,+5]}} \\
 \bottomrule
 \end{tabular}
-\caption{Cross-corpus, cross-codec crossover: bytes
-saved by atlasing (\%) at matched SSIM 0.97, median over four
-independent natural-photo populations (Lorem~Picsum and three
-loremflickr categories: generic, nature, food; 60 tiles each), with the
-per-corpus range in brackets. The sign and size of the effect are
-consistent across populations: JPEG and AVIF stay positive at every tile
-size while WebP crosses zero near 112~px and is negative by 224~px.
-AVIF, with the largest container floor, gains the most at small sizes. A
-model trained on any three corpora predicts the held-out
-fourth's saving to 4.6 percentage points mean absolute
-error (leave-one-corpus-out over 36 cells), so the crossover is a
+\caption{Cross-corpus, cross-codec crossover: bytes saved by
+atlasing (\%) at matched SSIM 0.97, median over four independent
+natural-photo populations (Lorem~Picsum and three loremflickr
+categories: generic, nature, food; 60 tiles each), with the per-corpus
+range in brackets. The sign and size of the effect are consistent across
+populations: JPEG and AVIF stay positive at every tile size while WebP
+crosses zero near 112~px and is negative by 224~px. AVIF, with the
+largest container floor, gains the most at small sizes. A model trained
+on any three corpora predicts the held-out fourth's
+saving to 4.6 percentage points mean absolute error
+(leave-one-corpus-out over 36 cells), so the crossover is a
 codec-and-size regime, not a corpus-specific effect. Negative values
 (red) mean the atlas is larger.}
 
@@ -800,11 +797,11 @@ WebP-lossless grid & 7,780 & 15,290 & 7,618 & 14,910 \\
 JPEG atlas (matched SSIM 0.97) & 53,266 & 122,387 & 51,953 & 117,377 \\
 \bottomrule
 \end{tabular}
-\caption{Bundle bytes for 200 synthetic flat icons
-(fixed 12-color palette, alpha), lossless unless noted, on a clean
-corpus and one with 20\% exact + 20\% near-duplicate tiles. Lossless
-bundles are byte-exact (palette conversion verified identical after
-decode); the JPEG row is the matched-SSIM-0.97 grid atlas. The 90--97\%
+\caption{Bundle bytes for 200 synthetic flat icons (fixed
+12-color palette, alpha), lossless unless noted, on a clean corpus and
+one with 20\% exact + 20\% near-duplicate tiles. Lossless bundles are
+byte-exact (palette conversion verified identical after decode); the
+JPEG row is the matched-SSIM-0.97 grid atlas. The 90--97\%
 shared-palette saving cited in the text is measured against individual
 paletted PNGs (per tile), whose byte totals are in the released data.
 Smaller is better.}
@@ -935,15 +932,14 @@ size + codec + one encode (baseline) & 4.95 & 0.86 \\
 20-tile probe encode & \textbf{1.62} & \textbf{0.98} \\
 \bottomrule
 \end{tabular}
-\caption{Predicting a group's atlas
-saving before building it, leave-one-content-class-out over eight
-classes spanning extreme image statistics (JPEG and WebP; 47 of 48
-cells, one omitted for no overlapping quality range). Error is mean
-absolute error (percentage points) against the measured saving; rank is
-Spearman correlation with it. Six cheap source-image features do not
-beat a size-and-codec baseline, but a 10--20 tile probe encode predicts
-the saving to about two points and orders the classes far
-better.}
+\caption{Predicting a group's atlas saving
+before building it, leave-one-content-class-out over eight classes
+spanning extreme image statistics (JPEG and WebP; 47 of 48 cells, one
+omitted for no overlapping quality range). Error is mean absolute error
+(percentage points) against the measured saving; rank is Spearman
+correlation with it. Six cheap source-image features do not beat a
+size-and-codec baseline, but a 10--20 tile probe encode predicts the
+saving to about two points and orders the classes far better.}
 
 \end{table}
 
@@ -1073,19 +1069,19 @@ robo & avatar & strip-atlas (webp-ll) & 0.0\% & +4.5\% & +38.1\% & 0.0\% \\
 \textit{mean regret} &  &  & \textbf{0.0\%} & \textbf{+5.8\%} & \textbf{+9.4\%} & \textbf{+185.9\%} \\
 \bottomrule
 \end{tabular}
-\caption{Out-of-sample evaluation of the construction
-heuristic on five independent corpora that played no role in its
-calibration (Noto emoji, OpenMoji, country flags, Flickr photos,
-Robohash avatars; 100 tiles each). An offline oracle enumerates every
-candidate configuration (individual, grid atlas, strip atlas,
-byte-bundle across the admissible codecs) at matched quality and reports
-the byte-optimal one; regret is a policy's bytes over
-the oracle's. The last three columns are simple
-fixed-layout rules a developer might hardcode, each still allowed the
-best admissible codec (individual files cost the same bytes as a
-byte-bundle). The calibrated heuristic matches the oracle on all five
-corpora; every fixed rule is beaten on at least one, because the winning
-layout is content-dependent. Smaller regret is better.}
+\caption{Out-of-sample evaluation of the construction heuristic
+on five independent corpora that played no role in its calibration (Noto
+emoji, OpenMoji, country flags, Flickr photos, Robohash avatars; 100
+tiles each). An offline oracle enumerates every candidate configuration
+(individual, grid atlas, strip atlas, byte-bundle across the admissible
+codecs) at matched quality and reports the byte-optimal one; regret is a
+policy's bytes over the oracle's. The
+last three columns are simple fixed-layout rules a developer might
+hardcode, each still allowed the best admissible codec (individual files
+cost the same bytes as a byte-bundle). The calibrated heuristic matches
+the oracle on all five corpora; every fixed rule is beaten on at least
+one, because the winning layout is content-dependent. Smaller regret is
+better.}
 
 \end{table*}
 
@@ -1292,13 +1288,12 @@ photos & localhost & 1.1 & 758 & 424 & 400 & 633 & \textbf{1.8$\times$}~\rng{[1.
  & 9 Mbit / 60 ms / 1\% loss & 3 & 8,793 & 8,404 & 6,875 & 7,934 & \textbf{1.0$\times$}~\rng{[0.9,1.3]} & 1.1$\times$ \\
 \bottomrule
 \end{tabular}
-\caption{Median time to all 500 tiles visible (ms) per
-serving condition, protocol, and network profile (n~=~11 cold browser
-loads per cell; 12 run in randomized order, first dropped; WebP
-payloads). The atl-x column gives the single-atlas speedup over
-individual files with a 95\% bootstrap confidence interval; bun-x is the
-byte-bundle speedup. Per-cell quartiles are in the released
-data.}
+\caption{Median time to all 500 tiles visible (ms) per serving
+condition, protocol, and network profile (n~=~11 cold browser loads per
+cell; 12 run in randomized order, first dropped; WebP payloads). The
+atl-x column gives the single-atlas speedup over individual files with a
+95\% bootstrap confidence interval; bun-x is the byte-bundle speedup.
+Per-cell quartiles are in the released data.}
 
 \end{table*}
 
@@ -1409,10 +1404,10 @@ N & \multicolumn{2}{c}{individual} & \multicolumn{2}{c}{atlas} & \multicolumn{2}
 500 & 767 & 129 & 33 & 106 & 313 & 143 \\
 \bottomrule
 \end{tabular}
-\caption{Measured browser cost of rendering N 96px
-photographic tiles three ways, in one Chromium instance with no network
-shaping: time to all tiles visible (ms) and renderer process-tree memory
-over a blank-page baseline (MB, capturing the decoded-image cache that
+\caption{Measured browser cost of rendering N 96px photographic
+tiles three ways, in one Chromium instance with no network shaping: time
+to all tiles visible (ms) and renderer process-tree memory over a
+blank-page baseline (MB, capturing the decoded-image cache that
 JavaScript heap APIs miss). The pixel atlas is fastest to full
 visibility at every N (one decode paints all tiles) and uses the least
 memory (one decoded surface rather than N); the byte-bundle must fetch
@@ -1515,11 +1510,11 @@ cropped \texttt{<img>} wrapper & yes & yes & native & CSS only & broad & semanti
 byte-bundle + blob URLs & yes (after JS) & yes & app-controlled & JS + CSP & broad APIs & heterogeneous photos \\
 \bottomrule
 \end{tabular}
-\caption{Display mechanisms for a bundled tile and
-how they differ in production. All four paint after a single atlas or
-bundle fetch; they diverge on image semantics, accessibility, loading
-control, and support. Pick the byte layout with the Section~6.2 selector
-and the mechanism here.}
+\caption{Display mechanisms for a bundled tile and how they
+differ in production. All four paint after a single atlas or bundle
+fetch; they diverge on image semantics, accessibility, loading control,
+and support. Pick the byte layout with the Section~6.2 selector and the
+mechanism here.}
 
 \end{table*}
 
