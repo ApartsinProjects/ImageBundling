@@ -34,25 +34,24 @@ caption{font-size:9.5pt;color:#5a626c;margin-bottom:.3rem;caption-side:top;text-
 a{color:#14385c}
 .footer{font-size:9pt;color:#5a626c;text-align:center;margin:2.5rem 0 1rem;border-top:1px solid #d1d4d8;padding-top:.6rem}
 .neg{color:#8a2f22}
-.downloads{position:fixed;top:12px;right:14px;font-size:9pt;background:#f4f5f7;
- border:1px solid #d1d4d8;border-radius:5px;padding:.3rem .55rem;line-height:1.2;
- box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.downloads a{color:#14385c;text-decoration:none;font-weight:600}
-.downloads a:hover{text-decoration:underline}
-.downloads .sep{color:#b0b4ba;margin:0 .25rem}
-@media (max-width:980px){.downloads{position:static;display:block;text-align:right;
+.downloads{position:fixed;top:12px;right:14px;font-size:8pt;display:flex;flex-wrap:wrap;
+ gap:.3rem;justify-content:flex-end;max-width:44%;z-index:10}
+.downloads a{color:#14385c;text-decoration:none;font-weight:600;background:#f4f5f7;
+ border:1px solid #d1d4d8;border-radius:5px;padding:.28rem .5rem;line-height:1;
+ box-shadow:0 1px 3px rgba(0,0,0,.06);white-space:nowrap}
+.downloads a:hover{background:#e9ebef;text-decoration:none}
+.downloads a .k{color:#7a828c;font-weight:500}
+@media (max-width:980px){.downloads{position:static;justify-content:flex-end;
  margin:0 0 1rem;box-shadow:none}}
 @media print{.downloads{display:none !important}}
 </style></head><body>
-<div class="downloads"><a href="paper.pdf">PDF</a><span class="sep">&middot;</span>
-<a href="paper.docx">DOCX</a></div>
+<div class="downloads"><a href="paper.pdf" title="Single-column PDF">PDF <span class="k">1-col</span></a><a href="paper.docx" title="Single-column Word">DOCX <span class="k">1-col</span></a><a href="paper-2col-word.pdf" title="Two-column PDF (from Word)">PDF <span class="k">2-col</span></a><a href="paper-2col.docx" title="Two-column Word document">DOCX <span class="k">2-col</span></a><a href="paper-2col.pdf" title="Two-column PDF typeset with LaTeX (elsarticle)">PDF <span class="k">2-col LaTeX</span></a></div>
 <h1>Image Bundling Revisited: Codec-Specific Savings and a Measured Atlas Selector for
 Small Web Images</h1>
 <div class="authors">Alexander Apartsin<sup>1</sup>, Yehudit Aperstein<sup>2</sup></div>
 <div class="affil"><sup>1</sup>School of Computer Science, Faculty of Sciences, Holon
 Institute of Technology (HIT), Holon, Israel<br><sup>2</sup>Intelligent Systems, Afeka
 Academic College of Engineering, Tel-Aviv, Israel</div>
-<div class="venue">Technical Report &middot; 2026</div>
 
 <div class="abstract"><div class="ahead">Abstract</div>
 <p>Web pages load many small images; the median mobile page carries 13, and product grids,
@@ -937,5 +936,5 @@ Compression over HTTP (SDCH). IETF Internet-Draft draft-lee-sdch-spec, 2008.</p>
 <p>[45] R. Fielding, M. Nottingham, J. Reschke (Eds.). HTTP Caching. RFC 9111 (STD 98),
 IETF, 2022. doi:10.17487/RFC9111</p>
 </div>
-<div class="footer">Alexander Apartsin, Yehudit Aperstein &middot; 2026</div>
+<div class="footer">Alexander Apartsin, Yehudit Aperstein</div>
 </body></html>

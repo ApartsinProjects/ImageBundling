@@ -1,0 +1,12 @@
+# LaTeX build intermediates (the PDF is published to docs/paper-2col.pdf)
+_clean.html
+_body.tex
+paper2col.pdf
+_build.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.spl
