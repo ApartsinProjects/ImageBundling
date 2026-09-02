@@ -194,7 +194,7 @@ def cross_corpus_table():
             "populations (Lorem&nbsp;Picsum and three loremflickr categories: generic, "
             "nature, food; 60 tiles each), with the per-corpus range in brackets. The sign "
             "and size of the effect are consistent across populations: JPEG and AVIF stay "
-            "positive at every tile size while WebP crosses zero near 112&nbsp;px and is "
+            "positive at every tile size while WebP crosses zero near 100&nbsp;px and is "
             "negative by 224&nbsp;px. AVIF, with the largest container floor, gains the most "
             "at small sizes." + ho_note + " Negative values (red) mean the atlas is "
             "larger.</caption>"
@@ -842,14 +842,13 @@ under JPEG and up to 33% under AVIF, reaches 42&ndash;68% for flat-art icon and 
 lossless strips (and up to 97% with a shared palette), and saves up to 50% under JPEG on deduplicated avatar walls. The
 effect is codec-specific: a naive WebP atlas of larger photographs adds bytes, because VP8
 shares one whole-frame quantizer, so the sign flips with tile size. A study of 1,056
-validated cold browser loads under emulated cellular network profiles shows request
+validated cold browser loads under emulated network profiles including loaded and lossy 4G links shows request
 collapse cutting time-to-visible by 4.5 to 8.6x on HTTP/1.1 and up to 7.7x on HTTP/3 for
 500 flat-art tiles, while HTTP/2 sits near parity and the case there is the byte saving,
 and a default HTTP/3 stack sustains only four to six concurrent streams. We unify the
 results in a coupling account (savings come from sharing fixed
 per-file costs, losses from sharing adaptive coding state), show that cheap source-image
-features do not predict the byte effect while a probe encode of ten to twenty tiles
-forecasts it to within two percentage points, and release an open-source tool that routes
+features do not predict the byte effect while a probe encode of ten to twenty tiles forecasts it to within about two percentage points, and release an open-source tool that routes
 each group to its byte-optimal, quality-gated representation, matching an offline oracle on
 five unseen collections. In a live renderer the pixel atlas is also fastest to full
 visibility and lowest in memory.</p></div>
@@ -901,7 +900,7 @@ its expected saving off the measured curves. A single mobile screen routinely mi
 both, flat-art tiles and small photographs, which have opposite coding needs, so no one
 codec or layout is right for the whole page; the per-group measurement this paper
 develops is what resolves the mix.</p>
-<p>The display side needs no special machinery: four standard CSS and DOM mechanisms crop a tile from a decoded atlas (Section&nbsp;3.1), which the browser decodes once and paints windows into.</p>
+<p>The display side needs no special machinery: several standard CSS and DOM mechanisms crop a tile from a decoded atlas (Section&nbsp;3.1), which the browser decodes once and paints windows into.</p>
 <p><b>Contributions.</b> This paper contributes (i) a matched-quality sweep of
 image atlasing across the three universally supported web codecs (JPEG, PNG, WebP) over
 tile size and image count, establishing that the byte saving is governed by the ratio
@@ -971,8 +970,7 @@ formats already provide intermediate ways to share structure across many images 
 a full pixel atlas: JPEG's abbreviated format carries one table-specification datastream
 ahead of table-less scans [17]; animated WebP stores independently-coded frames in one
 container [19]; APNG and MNG [40] and the HEIF image-collection format [41] package
-multiple images in one resource. These occupy the low-coupling end of the spectrum this
-report maps, sharing container and tables but not the coding model. The JPEG [17], PNG
+multiple images in one resource. These occupy the low-coupling end of the spectrum this paper maps, sharing container and tables but not the coding model. The JPEG [17], PNG
 [18], and WebP [19] format definitions specify the table, chunk, and container structures
 our measurements amortize; JPEG&nbsp;XL adds a modern architecture aimed partly at small
 images [38]. Matched-quality byte comparison across these formats is established for
@@ -998,7 +996,7 @@ optimize.</p>
 {H2('The atlas serving model')}
 {H3('Rendering a tile from an atlas in HTML')}
 <p>A bundled page references one image resource and displays each tile by cropping a
-window into it. Four standard mechanisms cover every deployment context. The classic and
+window into it. Several standard mechanisms cover every deployment context. The classic and
 universal one positions the atlas behind a fixed-size element as a background:</p>
 <pre>&lt;div class="tile" style="background-image:url(atlas.webp);
      background-position:-144px -216px"&gt;&lt;/div&gt;
@@ -1055,16 +1053,16 @@ one tile per row band. All conditions consume identical source pixels.</p>
 {H3('Codecs and matched-quality protocol')}
 <p>Following the study's scope, the three dominant web formats encode each condition:
 libjpeg-turbo JPEG, WebP (lossy and lossless), and PNG, with the lossy codecs swept
-over a quality ladder q &isin; {{30,50,65,80,90}}. Quality is the mean over tiles of the
+over a quality ladder q &isin; {{30,50,65,80,90}}; AVIF (via Pillow's libavif binding) is
+added for the photographic crossover of Section&nbsp;5.1 over the same ladder, and that
+crossover is cross-checked under the reference ssimulacra2_rs perceptual metric. Quality is the mean over tiles of the
 per-tile luma SSIM [25], each tile scored after cropping it back out of the decoded artifact
 so atlas border bleed is charged to the atlas; the matched target of 0.97 is therefore a
 mean-tile floor, and Section&nbsp;5.1 reports the per-tile spread where it is
 load-bearing. Bytes are compared at equal quality by log-linear interpolation of each
 condition's rate-distortion curve at the target; the five-point ladder is coarse, so
 where the atlas and individual curves nearly coincide the interpolation is unstable and
-equal-quality byte comparison is used instead (Section&nbsp;5.3). When an atlas's entire
-ladder exceeds the target, its cheapest measured point is used, understating the atlas's
-advantage, and the value is reported as a lower bound. Three invariants validate the harness: lossless
+equal-quality byte comparison is used instead (Section&nbsp;5.3). When an atlas's entire quality ladder lies above the target with no interpolable point, that cell is reported as n/a. Three invariants validate the harness: lossless
 conditions score SSIM exactly 1.0; an atlas of one image is byte-identical to the
 individual file; padding never reduces atlas bytes.</p>
 {H3('Network testbed')}
@@ -1090,7 +1088,7 @@ as a warm-up, leaving 11 measured loads per cell (1,056 in all).</p>
 <p>All code, asset manifests, raw per-run measurements, and the construction heuristic
 are released at <a href="https://github.com/ApartsinProjects/ImageBundling">github.com/ApartsinProjects/ImageBundling</a>,
 and every table and figure in this paper is regenerated from that data by a single
-build command. The measurements use Pillow&nbsp;12.2 (libwebp&nbsp;1.6.0, libjpeg-turbo
+build command. The measurements use Pillow&nbsp;12.2 with the libavif AVIF binding and the reference ssimulacra2_rs metric (libwebp&nbsp;1.6.0, libjpeg-turbo
 via libjpeg&nbsp;8.0, zlib-ng&nbsp;1.3.1), Python&nbsp;3.14, Caddy&nbsp;2.11.4 for the three-protocol server, and Playwright&nbsp;1.58
 driving Chromium&nbsp;145 for the network loads. The photographic corpus is drawn from
 Lorem&nbsp;Picsum and the flat-art corpus from the Twemoji set; both frozen manifests are
@@ -1112,14 +1110,11 @@ law). Third, tile size, not image count, is the dominant variable, and the photo
 of Table&nbsp;1 trace the full crossover: downscaling the same 500 photographs from
 224 to 112 to 56 pixels moves the JPEG saving from 3.0% to 9.8% to 29.8%, and moves
 WebP from &minus;8.5% through &minus;1.4% to +15.3%, placing WebP's bundling
-break-even near 100-pixel tiles. Search-result and recommendation thumbnails
-(48&ndash;120&nbsp;px) therefore sit squarely in the paying regime for both formats,
-while product-grid images (200&nbsp;px and up) pay only under JPEG, and only a few
-percent.</p>
+break-even near 100-pixel tiles. Recommendation, cart, and avatar thumbnails (48&ndash;96&nbsp;px) therefore sit in the paying regime for both formats; at 112&ndash;120&nbsp;px WebP is at break-even and only JPEG pays, and product-grid images (200&nbsp;px and up) pay under JPEG, and only a few percent.</p>
 <p>To confirm the crossover is not an artifact of the single deterministic subset each
 Table&nbsp;1 cell uses, we resampled it: for each (tile size, N, codec) we drew 20 random
 N-tile subsets from the full pool and computed the matched-quality saving of each. The
-medians track Table&nbsp;1 and the 95% bootstrap intervals are tight and separate the
+medians broadly track Table&nbsp;1 and the 95% bootstrap intervals are tight and separate the
 regimes; Figure&nbsp;2 plots the photo crossover with these intervals. For photos the JPEG saving is 29.1% (95% CI [28.4, 29.5]) at 56&nbsp;px,
 9.3% [8.9, 9.8] at 112&nbsp;px, and 2.6% [2.4, 2.8] at 224&nbsp;px, all clearly positive;
 WebP is 14.8% [10.0, 17.4] at 56&nbsp;px, straddles zero at 112&nbsp;px
@@ -1140,8 +1135,7 @@ quality effect, not a byte cost, and the &minus;8.5% figure decomposes into the 
 comes from: at equal encoder quality the 500-photo WebP atlas costs essentially the same
 bytes as individual files (&minus;0.2% at q80) but reaches a slightly lower mean per-tile
 SSIM (0.9748 vs 0.9784, a 0.004 deficit); the matched-quality protocol prices that small
-deficit as the &minus;8.5% through interpolation on a steep rate-distortion curve. The
-sign is robust (the bootstrap interval is [&minus;12.0, &minus;6.7]),
+deficit as the &minus;8.5% through interpolation on a steep rate-distortion curve. The sign is robust (the 200-tile resample interval is [&minus;12.0, &minus;6.7]),
 but the magnitude is metric-dependent, and two libwebp settings, noise shaping and adaptive
 deblocking, reverse it to +5%. Edge-replicated padding costs roughly 7 percentage points of saving
 per 8-pixel step for JPEG and roughly 10 for WebP (flat art, N&nbsp;=&nbsp;200),
@@ -1167,7 +1161,7 @@ positive at every tile size (about +33% at 56&nbsp;px, +12% at 112&nbsp;px, and 
 positive only for the smallest tiles (+12% at 56&nbsp;px) and turns clearly negative by
 112&nbsp;px (&minus;24%) and 224&nbsp;px (&minus;29%). The break-even therefore survives
 the change of metric and moves to a smaller tile, and the WebP penalty is larger under
-SSIMULACRA2 than under luma SSIM (&minus;29% vs &minus;8.5% at 224&nbsp;px): the diagnostic
+SSIMULACRA2 than under luma SSIM (&minus;29% vs &minus;8.5% at 224&nbsp;px, at 100 and 500 tiles respectively): the diagnostic
 that at equal encoder quality the WebP atlas reaches a lower score than individual files
 while JPEG does not (for example WebP 112&nbsp;px q80 scores 72.9 as an atlas against 78.0
 individually, JPEG 77.2 against 77.3) confirms that the deficit is the shared-quantizer
@@ -1184,8 +1178,7 @@ trained on any three corpora predicts the held-out fourth to about 4.6 percentag
 of error, so a tile-size-and-codec rule, not corpus identity, sets the result. AVIF tracks
 JPEG rather than WebP, staying positive at every size (+33% at 56&nbsp;px, +12% at
 112&nbsp;px, +5% at 224&nbsp;px) and gaining the most at small sizes because its container
-floor (303&nbsp;bytes) is the largest fixed cost to amortize. WebP is thus the one codec
-whose atlas penalty turns negative on large photographs, which sharpens rather than
+floor (303&nbsp;bytes) is the largest fixed cost to amortize. WebP is thus the one codec whose atlas saving turns negative on large photographs, which sharpens rather than
 softens the coupling account: the sign of the byte effect is codec-specific, and it is
 VP8's shared four-segment quantizer, not atlasing in general, that reverses it.</p>
 {cross_html}
@@ -1234,7 +1227,7 @@ deployment guidance draws on the relative comparisons across conditions, which t
 randomized, validated protocol holds stable; absolute timings are properties of the
 testbed.</p>
 {net_html}
-<p>Three protocol-level facts organize Table&nbsp;2 and Figure&nbsp;4. First, on
+<p>Table&nbsp;2 and Figure&nbsp;4 reduce to three protocol-level facts. First, on
 HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art: 4.5&ndash;8.6x and
 4.8&ndash;7.7x respectively for 500 tiles across the network profiles, and 1.6&ndash;2.8x
 for photos on the loss-free profiles (the 1% packet-loss photo cells fall to parity and
@@ -1390,7 +1383,7 @@ that loses bytes or damages a subset of tiles. The gate is exactly the tail cons
 Section&nbsp;5.1: the atlas's worst per-tile SSIM must clear an absolute floor (default
 0.90) and its 5th percentile must stay within a small tolerance of the byte-bundle's,
 which carries individual-file quality. On the flat-art set treated as lossy, for instance,
-a pixel atlas would save 19% of bytes but drives one tile to 0.87 SSIM, so the tool
+a pixel atlas would save 19% of bytes but drives one tile below the 0.90 quality floor, so the tool
 rejects it and emits the byte-bundle instead. Lossless groups take the smaller of a
 byte-bundle and a WebP-lossless strip, tiny groups stay individual, and every bundle is
 chunked. It emits the atlas and bundle files, a CSS coordinate map, a loader snippet, and
@@ -1429,8 +1422,7 @@ byte-bundle wins on dense Noto and on photographs, a pixel atlas wins on the fla
 flags. The calibrated heuristic tracks those flips to zero regret; no fixed rule
 does.</p>
 {oracle_html}
-<p>As an end-to-end check we ran the tool on a heterogeneous directory that mimics a mobile app or marketplace image folder, a real
-site's image folder: 185 files drawn from four live asset sets (country flags, emoji,
+<p>As an end-to-end check, the tool is run on a heterogeneous directory that mimics a mobile app or marketplace image folder: 185 files drawn from four live asset sets (country flags, emoji,
 generated avatars, and photographs) at their native, mixed dimensions, with duplicates
 included as real pages carry them. The tool folded 29 exact duplicates, partitioned the
 rest by dimension and lossless requirement, and chose a different representation for each
@@ -1467,7 +1459,7 @@ independent corpora (Section&nbsp;6.3); a still wider survey of naturally-occurr
 collections would further generalize the reported thresholds. The network numbers are
 medians of 11 cold loads per cell with bootstrap confidence intervals (Table&nbsp;2) but
 no formal significance testing, and the timing endpoint is time-to-all-tiles-visible;
-first-tile and first-viewport milestones are reported for the local renderer (Appendix&nbsp;A.1)
+first-viewport milestones are reported for the local renderer (Appendix&nbsp;A.1)
 but LCP, decode CPU, and warm-cache multi-navigation behavior under realistic asset churn
 are not measured and could change the recommended bundle size. Finally, JPEG&nbsp;XL is
 left to future work; AVIF is included in the photographic crossover (Section&nbsp;5.1) and,
@@ -1491,7 +1483,7 @@ implementation sustains roughly twice the concurrency, Section&nbsp;5.5) rather 
 protocol-general result. The unifying
 account, that savings come from sharing fixed costs and losses from sharing adaptive
 state, is quantitatively predictive for JPEG (R<sup>2</sup>&nbsp;=&nbsp;0.99) and
-organizes the codec-specific behavior of the rest, and it guides the accompanying
+explains the codec-specific behavior of the rest, and it guides the accompanying
 construction
 heuristic, which turns a directory of images into deployable bundles. For the mobile mixed
 interface that motivates the study, the recipe follows directly: pack emoji and icon sets
