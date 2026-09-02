@@ -194,16 +194,15 @@ network study of 1,056 validated cold browser loads that separates the
 timing effect of bundling across HTTP/1.1, HTTP/2, and HTTP/3 under
 emulated network conditions; (iii) a set of construction techniques with
 measured effect, PNG vertical-strip packing, explicit and LZ-window
-duplicate exploitation, chunking for bounded cache invalidation, delta
-updates via compression dictionaries, and encoder-parameter tuning that
-flips WebP's photographic-atlas penalty to a gain; (iv)
-a coupling-spectrum account that unifies the results, savings arise from
-sharing fixed costs and losses from sharing adaptive state, together
-with the finding that this adaptive-state penalty is codec-mechanistic
-and is not predicted by six cheap source-image features, while a small
-probe encode forecasts it accurately; and (v) an open-source
-construction heuristic, built on that probe-not-predict principle, that
-emits deployable bundles from a directory of images.
+duplicate exploitation, and chunking for bounded cache invalidation and
+decoded-memory limits; (iv) a coupling-spectrum account that unifies the
+results, savings arise from sharing fixed costs and losses from sharing
+adaptive state, together with the finding that this adaptive-state
+penalty is codec-mechanistic and is not predicted by six cheap
+source-image features, while a small probe encode forecasts it
+accurately; and (v) an open-source construction heuristic, built on that
+probe-not-predict principle, that emits deployable bundles from a
+directory of images.
 
 \section{Related work}
 
@@ -262,7 +261,7 @@ finds such HTTP/1-era habits persist even under HTTP/2 [30], which
 motivates our condition set. This body of work establishes that
 protocol-level outcomes for a given payload are as much a property of
 the deployment as of the standard, the context in which our own HTTP/3
-concurrency observation (Appendix~A.2) should be read; none of it
+concurrency observation (Section~5.4) should be read; none of it
 isolates a many-small-images payload against a bundled baseline.
 
 \subsection{Small-image coding and multi-image
@@ -323,11 +322,11 @@ shared-window and trained-dictionary compressors (Brotli [22], zstd
 [23]) generalize and that Compression Dictionary Transport [24]
 revives for the modern web. Standard HTTP caching semantics (RFC~9111
 [45]) fix the granularity at the resource, which is exactly what
-bundling coarsens; we apply delta and dictionary delivery to the
-whole-bundle cache-invalidation problem (Appendix~A.4). HTTP
-Archive's Web Almanac [8] supplies the population
-statistics (median 13 images per mobile page, format share) that make
-the many-small-images regime the common case rather than an edge case.
+bundling coarsens; delta and dictionary delivery can address the
+whole-bundle cache-invalidation problem. HTTP Archive's
+Web Almanac [8] supplies the population statistics (median 13 images
+per mobile page, format share) that make the many-small-images regime
+the common case rather than an edge case.
 
 \section{The atlas serving model}
 
@@ -368,8 +367,7 @@ fetches and decodes the atlas once, holds one decoded copy, and paints
 windows into it; per-tile cost is a paint, not a decode. The experiments
 use \texttt{background-position}, the mechanism with universal support;
 the four mechanisms differ in image semantics, accessibility, loading
-control, and browser support, compared for deployment in Table~10
-(Appendix~A.5).
+control, and browser support.
 
 \subsection{Delivery, caching, and
 memory}
@@ -398,7 +396,7 @@ cost the same way it bounds invalidation, and below-the-fold chunks
 combine with lazy loading so off-screen tiles cost neither bytes nor
 memory.
 
-A live-renderer measurement (Appendix~A.3) confirms that at typical tile
+A live-renderer measurement (Appendix~A.1) confirms that at typical tile
 counts the atlas is in fact the memory-favorable representation, so this
 analytical caution binds only for very large atlases.
 
@@ -601,11 +599,11 @@ q80) but reaches a slightly lower mean per-tile SSIM (0.9748 vs 0.9784,
 a 0.004 deficit); the matched-quality protocol prices that small deficit
 as the −8.5\% through interpolation on a steep rate-distortion curve.
 The sign is robust (the bootstrap interval is [−12.0, −6.7]), but
-the magnitude is metric-dependent, and Appendix~A.1 shows two encoder
-flags reverse it to +5\%. Edge-replicated padding costs roughly 7
-percentage points of saving per 8-pixel step for JPEG and roughly 10 for
-WebP (flat art, N~=~200), pricing the block-alignment mitigations
-against chroma bleed.
+the magnitude is metric-dependent, and two libwebp settings, noise
+shaping and adaptive deblocking, reverse it to +5\%. Edge-replicated
+padding costs roughly 7 percentage points of saving per 8-pixel step for
+JPEG and roughly 10 for WebP (flat art, N~=~200), pricing the
+block-alignment mitigations against chroma bleed.
 
 The absolute comparison compounds codec choice with bundling: at N~=~500
 and SSIM 0.97 on flat art, individual JPEG files cost 630 KB, the JPEG
@@ -743,49 +741,20 @@ codec-and-size regime, not a corpus-specific effect. Negative values
 \subsection{Ordering, duplicates, and
 layout}
 
-We re-encode identical tile sets under eight within-atlas orders (source
-order, three random shuffles, luminance-sorted, mean-color-sorted,
-k-means cluster-grouped, greedy nearest-neighbor) and two 4-way
-partitions (random split vs cluster-pure split), for every in-scope
-codec at N~=~500. Three calibrated rules emerge. For lossy codecs,
-ordering is worth at most one percent: the placement of tiles does not
-recover the shared-model penalty, so the heuristic can ignore order for
-JPEG and lossy WebP and spend its freedom elsewhere. For lossless flat
-art, order and partition are real levers: source order (which groups
-semantically related icons) is already near-optimal, random shuffling
-costs 2--4\%, and cluster-pure chunks beat randomly-split chunks by
-3~percentage points (lossless WebP, PNG alike), so same-family tiles
-belong in the same bundle. For PNG specifically, layout is decisive:
-packing tiles as a one-tile-wide vertical strip lets the per-scanline
-filters re-adapt at every tile boundary, turning the PNG flat-art atlas
-from 5.7\% larger than individual files (grid layout) to 8.7\% smaller,
-and lifting the photo atlas from −5.2\% (grid, deduplicated 224px
-photos) to parity. Strip packing is therefore the PNG packing rule
-(chunked to respect browser image-dimension limits), while block-aligned
-cells are not worth adopting for any codec: aligning 72-pixel tiles to
-80-pixel cells costs 7\% in bytes for a quality gain below measurement
-noise.
-
-The largest partition-level effect belongs to collections containing
-repeated tiles. Real product grids repeat thumbnails freely (variant
-images, placeholder art, re-listed items); in a separate
-duplicate-injected test set where 21.6\% of tiles were exact repeats, a
-similarity-sorted atlas cut PNG bytes by 17--18\% and lossless WebP
-bytes by 15--16\% relative to unsorted packing, turning both
-formats' atlas comparison against individual files from
-negative to clearly positive (+16.9\% and +11.5\%). The mechanism is
-windowed matching: sorting places copies within the
-codec's LZ window, which dedupes them. Exactly-identical
-tiles are already handled on the web by content-addressed URLs (the
-browser fetches one copy and many elements reuse it), so the
-atlas's unique contribution here is compressing
-near-duplicates: variant and recolored tiles that share most but not all
-pixels, which per-URL caching cannot merge. The gain applies precisely
-to the LZ-class codecs and scales with the duplicate rate, so the
-heuristic prices it as a measured dup-rate term: deduplicate
-exactly-repeated tiles at the coordinate-map level (many CSS entries,
-one atlas region), and sort near-duplicates adjacent so the encoder
-captures the rest.
+Within-atlas order and partition matter only for the LZ-class lossless
+codecs; for lossy JPEG and WebP, placement is worth at most one percent,
+so the heuristic ignores it. Two rules do pay. First, pack PNG as a
+one-tile-wide vertical strip rather than a grid: letting the
+per-scanline filters re-adapt at every tile boundary turns the PNG
+flat-art atlas from 5.7\% larger than individual files to 8.7\% smaller.
+Second, exploit duplicates, which real product grids and avatar walls
+carry freely: sorting near-duplicate tiles adjacent places copies inside
+the codec's LZ window, cutting PNG and lossless-WebP
+bytes by 15--18\% on a duplicate-heavy set and turning their atlas
+comparison clearly positive. Exact repeats are deduplicated at the
+coordinate-map level (many CSS entries, one atlas region); the
+atlas's unique contribution is compressing the
+near-duplicates that per-URL caching cannot merge.
 
 \subsection{Winning content classes: icons, thumbnails,
 avatars}
@@ -865,6 +834,130 @@ matched-SSIM byte interpolation becomes unstable and equal-quality byte
 comparison is the appropriate measure, though for such near-ties it too
 varies with small encoder fluctuations.
 
+\subsection{Supporting measurements: network
+timing}
+
+The byte and construction results above are protocol-independent. This
+section reports how the byte savings translate to load time on a
+single-machine browser testbed. The deployment guidance draws on the
+relative comparisons across conditions, which the randomized, validated
+protocol holds stable; absolute timings are properties of the testbed.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}ll c rrrr r r@{}}
+\toprule
+class & network & \textsc{http} & indiv. & atlas & atlas$\times$4 & byte-bundle & atlas speedup & bun. \\
+\midrule
+flat art & localhost & 1.1 & 565 & 126 & 128 & 301 & \textbf{4.5$\times$}~\rng{[3.9,5.4]} & 1.9$\times$ \\
+ & localhost & 2 & 448 & 126 & 129 & 319 & \textbf{3.5$\times$}~\rng{[2.3,3.9]} & 1.4$\times$ \\
+ & localhost & 3 & 597 & 120 & 135 & 294 & \textbf{5.0$\times$}~\rng{[4.5,5.7]} & 2.0$\times$ \\
+ & 100 Mbit / 20 ms & 1.1 & 2,074 & 241 & 254 & 466 & \textbf{8.6$\times$}~\rng{[8.5,8.9]} & 4.4$\times$ \\
+ & 100 Mbit / 20 ms & 2 & 469 & 213 & 216 & 467 & \textbf{2.2$\times$}~\rng{[2.0,2.3]} & 1.0$\times$ \\
+ & 100 Mbit / 20 ms & 3 & 1,579 & 205 & 198 & 431 & \textbf{7.7$\times$}~\rng{[7.0,8.1]} & 3.7$\times$ \\
+ & 9 Mbit / 60 ms & 1.1 & 5,624 & 790 & 790 & 997 & \textbf{7.1$\times$}~\rng{[7.1,7.2]} & 5.6$\times$ \\
+ & 9 Mbit / 60 ms & 2 & 790 & 730 & 713 & 1,039 & \textbf{1.1$\times$}~\rng{[1.1,1.1]} & 0.8$\times$ \\
+ & 9 Mbit / 60 ms & 3 & 4,020 & 708 & 710 & 1,022 & \textbf{5.7$\times$}~\rng{[5.5,5.8]} & 3.9$\times$ \\
+ & 9 Mbit / 60 ms / 1\% loss & 1.1 & 5,827 & 829 & 822 & 1,105 & \textbf{7.0$\times$}~\rng{[6.2,7.5]} & 5.3$\times$ \\
+ & 9 Mbit / 60 ms / 1\% loss & 2 & 878 & 832 & 720 & 1,098 & \textbf{1.1$\times$}~\rng{[0.7,1.8]} & 0.8$\times$ \\
+ & 9 Mbit / 60 ms / 1\% loss & 3 & 4,149 & 867 & 871 & 1,189 & \textbf{4.8$\times$}~\rng{[4.7,5.0]} & 3.5$\times$ \\
+\midrule
+photos & localhost & 1.1 & 758 & 424 & 400 & 633 & \textbf{1.8$\times$}~\rng{[1.5,1.9]} & 1.2$\times$ \\
+ & localhost & 2 & 665 & 419 & 422 & 632 & \textbf{1.6$\times$}~\rng{[1.5,1.6]} & 1.1$\times$ \\
+ & localhost & 3 & 835 & 415 & 425 & 662 & \textbf{2.0$\times$}~\rng{[1.7,2.3]} & 1.3$\times$ \\
+ & 100 Mbit / 20 ms & 1.1 & 2,019 & 780 & 669 & 1,036 & \textbf{2.6$\times$}~\rng{[2.6,2.6]} & 1.9$\times$ \\
+ & 100 Mbit / 20 ms & 2 & 692 & 758 & 709 & 1,038 & \textbf{0.9$\times$}~\rng{[0.9,0.9]} & 0.7$\times$ \\
+ & 100 Mbit / 20 ms & 3 & 2,075 & 746 & 763 & 1,002 & \textbf{2.8$\times$}~\rng{[2.7,2.8]} & 2.1$\times$ \\
+ & 9 Mbit / 60 ms & 1.1 & 6,199 & 3,824 & 3,897 & 4,246 & \textbf{1.6$\times$}~\rng{[1.6,1.6]} & 1.5$\times$ \\
+ & 9 Mbit / 60 ms & 2 & 3,743 & 3,771 & 3,866 & 4,294 & \textbf{1.0$\times$}~\rng{[1.0,1.0]} & 0.9$\times$ \\
+ & 9 Mbit / 60 ms & 3 & 6,218 & 3,902 & 4,021 & 4,427 & \textbf{1.6$\times$}~\rng{[1.6,1.6]} & 1.4$\times$ \\
+ & 9 Mbit / 60 ms / 1\% loss & 1.1 & 6,933 & 4,612 & 4,490 & 7,890 & \textbf{1.5$\times$}~\rng{[1.0,1.7]} & 0.9$\times$ \\
+ & 9 Mbit / 60 ms / 1\% loss & 2 & 5,576 & 5,993 & 7,226 & 6,476 & \textbf{0.9$\times$}~\rng{[0.6,1.3]} & 0.9$\times$ \\
+ & 9 Mbit / 60 ms / 1\% loss & 3 & 8,793 & 8,404 & 6,875 & 7,934 & \textbf{1.0$\times$}~\rng{[0.9,1.3]} & 1.1$\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Median time to all 500 tiles visible (ms) per serving
+condition, protocol, and network profile (n~=~11 cold browser loads per
+cell; 12 run in randomized order, first dropped; WebP payloads). The
+atl-x column gives the single-atlas speedup over individual files with a
+95\% bootstrap confidence interval; bun-x is the byte-bundle speedup.
+Per-cell quartiles are in the released data.}
+
+\end{table*}
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1.0\columnwidth]{fig/fig3.pdf}
+\caption{Time-to-all-tiles-visible speedup from
+atlasing (median individual / median single atlas) at N~=~500, per
+protocol and network profile, as point estimates with 95\% bootstrap
+confidence intervals on a shared log axis; the dashed line marks parity
+(1x). HTTP/2 sits near parity for many small files, while HTTP/1.1 and
+HTTP/3 retain multi-x speedups; intervals that straddle the parity line
+(notably the loss-dominated 4G+loss profile) mark cells where atlas and
+individual are statistically indistinguishable.}
+
+\end{figure}
+
+
+Three protocol-level facts organize Table~6 and Figure~3. First, on
+HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art:
+4.5--8.6x and 4.8--7.7x respectively for 500 tiles across the network
+profiles, and 1.6--2.8x for photos on the loss-free profiles (the 1\%
+packet-loss photo cells fall to parity and are discussed below). Across
+cells, added network impairment never speeds a condition up, and the
+reported speedups carry tight bootstrap intervals (Table~6). Second,
+HTTP/2 is the strongest protocol for many small files: its multiplexing
+loads 500 individual images almost as fast as the atlas on
+bandwidth-limited links (1.0--1.1x at 9~Mbit), so under HTTP/2 the case
+for bundling small tiles rests chiefly on the byte saving of Table~1 (up
+to 26\% for flat art) rather than on latency. Third, on this testbed
+HTTP/3's individual-file loads run several times slower
+than HTTP/2's on the same links, up to 5x for flat art
+on the constrained profiles and about 3x on the fast zero-loss link, and
+a concurrency diagnostic locates the cause. The diagnostic reconstructs
+each request's in-flight interval from the Resource
+Timing API and finds the peak number of simultaneous image requests:
+HTTP/2 sustained 13--14 at once while HTTP/3 sustained only 6, roughly
+half the parallelism, and the slowdown tracks that gap. The
+server's own QUIC transport log (quic-go qlog) confirms
+the effect and locates it precisely: across cold HTTP/3 loads of the
+500-file page, the server records a peak of only 4--6 request streams
+open at once (median 5 for photographs, 4 for flat art), agreeing with
+the browser-side count on the photographic page, while its transport
+parameters advertise a 100-stream limit
+(\texttt{initial\_max\_streams\_bidi}) that is never approached, so the
+stream limit is not the binding constraint. To test whether the low
+concurrency is a property of this particular server, we replayed the
+load against a second, independent QUIC implementation (aioquic) driven
+by the same Chromium: it sustained a median of 13 concurrent request
+streams, roughly double the quic-go/Caddy figure and close to
+HTTP/2's, on a faster loopback path with smaller tiles
+that both bias the count downward, so the gap is conservative. The low
+concurrency is therefore a property of the specific server stack and its
+defaults interacting with Chromium's QUIC scheduler, not
+of HTTP/3 itself, which multiplexes independent streams over one
+connection. A default HTTP/3 stack can therefore under-multiplex a
+many-small-image page relative to HTTP/2, which makes bundling valuable
+there, while a different server stack narrows the gap. Under the 1\%
+packet-loss profile every serving condition becomes noise-dominated on
+this testbed: per-cell coefficients of variation reach 0.4 and the
+atlas-vs-individual and chunk-vs-atlas differences fall inside
+overlapping confidence intervals (for example photos on the 9 Mbit / 60
+ms / 1\% loss profile give a single atlas at 1.50x and four chunks at
+1.54x on HTTP/1.1, indistinguishable). We therefore make no
+loss-recovery claim for chunking from the timing data;
+chunking's demonstrated benefit is cache granularity and
+bounded invalidation, not packet-loss resilience. The byte-bundle beats
+individual serving nearly everywhere on HTTP/1.1 and HTTP/3 (up to 5.6x)
+at exactly the individual conditions' byte cost, which
+makes it the bundling method of choice for content whose pixels should
+not share a codec model (photos, lossless assets); the pixel atlas
+remains faster where its byte savings compound with the request savings.
+
 \section{Discussion}
 
 \subsection{The coupling spectrum}
@@ -931,7 +1024,7 @@ the saving still varies by 16 to 41 percentage points across the eight
 classes (for example −16\% to +16\% at 224~pixels under WebP), so a
 size-and-codec rule leaves a wide residual. Yet predicting a held-out
 class's saving from the six features does not improve on
-that baseline (Table~6), and it fails even on the isolated codec
+that baseline (Table~7), and it fails even on the isolated codec
 differential that cancels the fixed-cost term (10.1 against a
 constant's 7.1 percentage points): the adaptive-state
 penalty is codec-mechanistic and is not captured by these cheap source
@@ -1010,7 +1103,7 @@ curves calibrate a greedy heuristic, implemented as a command-line tool
 (\texttt{atlas\_optimizer}, released with the study). The tool folds
 exact duplicates into shared coordinates; partitions tiles by update
 cadence, lossless requirement, and dimensions; and routes each group
-(Figure~3). For a lossy group the routing is not decided by tile size
+(Figure~4). For a lossy group the routing is not decided by tile size
 alone: the tool encodes both a pixel atlas and a byte-bundle and keeps
 the atlas only if it is strictly smaller \emph{and} passes a per-tile
 quality gate, so it never adopts an atlas that loses bytes or damages a
@@ -1039,7 +1132,7 @@ and request count equal what the tool reports.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.62\textwidth]{fig/fig3.pdf}
+\includegraphics[width=0.62\textwidth]{fig/fig4.pdf}
 \caption{The construction heuristic as implemented in
 \texttt{atlas\_optimizer}. Exact duplicates collapse to shared
 coordinates; tiles are grouped by update cadence, lossless requirement,
@@ -1051,7 +1144,7 @@ groups keep the smaller of a byte-bundle and a WebP-lossless strip.
 Groups are chunked for bounded cache invalidation and memory, and the
 tool emits the atlas and bundle files, a CSS coordinate map, a loader,
 and a savings report; piecewise updates can be served as dictionary
-deltas. This is the procedure evaluated against the oracle in Table~7.}
+deltas. This is the procedure evaluated against the oracle in Table~8.}
 
 \end{figure*}
 
@@ -1061,7 +1154,7 @@ collections the heuristic never saw. We evaluate it on five independent
 corpora, Noto emoji, OpenMoji, country flags, Flickr photographs, and
 Robohash avatars, none of which were used in calibration, against an
 offline oracle that enumerates the candidate configurations and returns
-the byte-optimal one (Table~7). Each group carries one measured
+the byte-optimal one (Table~8). Each group carries one measured
 tiebreak: for a lossless group the heuristic keeps the smaller of a
 byte-bundle and a WebP-lossless strip, since neither dominates (a strip
 wins on OpenMoji and Robohash, a byte-bundle on Noto). With that
@@ -1075,7 +1168,7 @@ configuration. This comparison is on bytes; the per-tile quality floor
 is an additional safety constraint that overrides a byte-optimal atlas
 only where it would push a tile below the floor.
 
-The value is in choosing, not in any single layout. Table~7 also scores
+The value is in choosing, not in any single layout. Table~8 also scores
 three fixed rules a developer might hardcode, each still allowed the
 best admissible codec: always build one pixel atlas, always byte-bundle,
 or always strip-pack. Every one is beaten on at least one corpus (mean
@@ -1160,23 +1253,23 @@ field-metric suite. Decoded-memory cost is measured in a live renderer
 at typical tile counts; profiling under a production framework with
 texture upload and long-lived navigation remains future work. The HTTP/3
 concurrency diagnosis is confirmed from the server's own
-QUIC transport log (Appendix~A.2) and cross-checked against a second
-QUIC implementation (aioquic), which sustained about twice the
-concurrency; a fully controlled comparison across server stacks and
-native Linux remains future work. The matched-quality photo crossover is
-validated across four independent natural-photo populations
-(Section~5.1) and the heuristic on five further independent corpora
-(Section~6.2); a still wider survey of naturally-occurring collections
-would further generalize the reported thresholds. The network numbers
-are medians of 11 cold loads per cell with bootstrap confidence
-intervals (Table~8) but no formal significance testing, and the timing
-endpoint is time-to-all-tiles-visible; first-tile and first-viewport
-milestones are reported for the local renderer (Table~9) but LCP, decode
-CPU, and warm-cache multi-navigation behavior under realistic asset
-churn are not measured and could change the recommended bundle size.
-Finally, JPEG~XL is left to future work; AVIF is included in the
-photographic crossover (Section~5.1) and, like JPEG, benefits from
-atlasing at every tested size.
+QUIC transport log (Section~5.4) and cross-checked against a second QUIC
+implementation (aioquic), which sustained about twice the concurrency; a
+fully controlled comparison across server stacks and native Linux
+remains future work. The matched-quality photo crossover is validated
+across four independent natural-photo populations (Section~5.1) and the
+heuristic on five further independent corpora (Section~6.2); a still
+wider survey of naturally-occurring collections would further generalize
+the reported thresholds. The network numbers are medians of 11 cold
+loads per cell with bootstrap confidence intervals (Table~6) but no
+formal significance testing, and the timing endpoint is
+time-to-all-tiles-visible; first-tile and first-viewport milestones are
+reported for the local renderer (Table~9) but LCP, decode CPU, and
+warm-cache multi-navigation behavior under realistic asset churn are not
+measured and could change the recommended bundle size. Finally, JPEG~XL
+is left to future work; AVIF is included in the photographic crossover
+(Section~5.1) and, like JPEG, benefits from atlasing at every tested
+size.
 
 \section{Conclusion}
 
@@ -1190,20 +1283,17 @@ independent photo populations; and lossless flat art, the icon-set and
 map-marker case, gains 42--97\% with a strip-packed or shared-palette
 bundle that is smaller than even the best lossy option. Serve larger
 photographs and lossless assets as a byte-bundle, which collapses
-requests at near-zero byte cost (a small offset header), or, for
-photographic WebP, tune the encoder (noise shaping plus adaptive
-deblocking) to turn the atlas penalty into a gain. Ship about four
-chunks for bounded cache invalidation and decoded-memory limits,
-deduplicate repeats explicitly, and delta-encode updates against the
-cached bundle (Compression Dictionary Transport). On the wire, bundling
-loads 500 small flat-art tiles 4.5--8.6x faster to full visibility on
-HTTP/1.1 (1.6--2.6x for photographic thumbnails) and is chiefly a byte
+requests at near-zero byte cost (a small offset header). Ship about four
+chunks for bounded cache invalidation and decoded-memory limits, and
+deduplicate repeats explicitly. On the wire, bundling loads 500 small
+flat-art tiles 4.5--8.6x faster to full visibility on HTTP/1.1
+(1.6--2.6x for photographic thumbnails) and is chiefly a byte
 optimization on HTTP/2; the comparable HTTP/3 gain reflects a
 request-concurrency limit specific to the tested server stack (a second
-QUIC implementation sustains roughly twice the concurrency,
-Appendix~A.2) rather than a protocol-general result. The unifying
-account, that savings come from sharing fixed costs and losses from
-sharing adaptive state, is quantitatively predictive for JPEG
+QUIC implementation sustains roughly twice the concurrency, Section~5.4)
+rather than a protocol-general result. The unifying account, that
+savings come from sharing fixed costs and losses from sharing adaptive
+state, is quantitatively predictive for JPEG
 (R\textsuperscript{2}~=~0.99) and organizes the codec-specific behavior
 of the rest, and it guides the accompanying construction heuristic,
 which turns a directory of images into deployable bundles. For the
@@ -1271,154 +1361,7 @@ packet loss, not bandwidth, set load time.
 }
 \section*{Appendix A}
 
-\subsection*{A.1\quad Encoder parameters}
-
-The photographic WebP penalty is not structural. VP8's
-default encode shares one set of entropy tables and at most four
-quantizer segments across the whole atlas, and no parameter raises the
-four-segment ceiling. But two efficiency controls, spatial noise shaping
-at full strength and adaptive deblocking (autofilter), together move a
-120-tile 224-pixel photo atlas from −9.0\% to \textbf{+5.0\%} against
-individual files at matched SSIM. An equal-quality check isolates the
-mechanism: with the advanced settings the atlas reaches per-tile SSIM
-0.980, above the individual files' 0.979, while
-encoding 2.4\% fewer bytes, because adaptive deblocking removes the
-block artifacts that the atlas's internal tile-grid
-boundaries introduce and noise shaping exploits the larger
-frame's masking context. The knobs improve both arms,
-but they help the atlas more, so the earlier negative for WebP
-photographs holds only for the default encoder, not for a tuned one.
-These controls are reachable through libwebp's
-configuration (the \texttt{cwebp\ -sns\ 100\ -pass\ 10\ -af}
-equivalents) though not through every image library's
-default binding.
-
-\subsection*{A.2\quad Supporting measurements: network
-timing}
-
-The byte and construction results above are protocol-independent. This
-section reports how the byte savings translate to load time on a
-single-machine browser testbed. The deployment guidance draws on the
-relative comparisons across conditions, which the randomized, validated
-protocol holds stable; absolute timings are properties of the testbed.
-
-\begin{table*}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}ll c rrrr r r@{}}
-\toprule
-class & network & \textsc{http} & indiv. & atlas & atlas$\times$4 & byte-bundle & atlas speedup & bun. \\
-\midrule
-flat art & localhost & 1.1 & 565 & 126 & 128 & 301 & \textbf{4.5$\times$}~\rng{[3.9,5.4]} & 1.9$\times$ \\
- & localhost & 2 & 448 & 126 & 129 & 319 & \textbf{3.5$\times$}~\rng{[2.3,3.9]} & 1.4$\times$ \\
- & localhost & 3 & 597 & 120 & 135 & 294 & \textbf{5.0$\times$}~\rng{[4.5,5.7]} & 2.0$\times$ \\
- & 100 Mbit / 20 ms & 1.1 & 2,074 & 241 & 254 & 466 & \textbf{8.6$\times$}~\rng{[8.5,8.9]} & 4.4$\times$ \\
- & 100 Mbit / 20 ms & 2 & 469 & 213 & 216 & 467 & \textbf{2.2$\times$}~\rng{[2.0,2.3]} & 1.0$\times$ \\
- & 100 Mbit / 20 ms & 3 & 1,579 & 205 & 198 & 431 & \textbf{7.7$\times$}~\rng{[7.0,8.1]} & 3.7$\times$ \\
- & 9 Mbit / 60 ms & 1.1 & 5,624 & 790 & 790 & 997 & \textbf{7.1$\times$}~\rng{[7.1,7.2]} & 5.6$\times$ \\
- & 9 Mbit / 60 ms & 2 & 790 & 730 & 713 & 1,039 & \textbf{1.1$\times$}~\rng{[1.1,1.1]} & 0.8$\times$ \\
- & 9 Mbit / 60 ms & 3 & 4,020 & 708 & 710 & 1,022 & \textbf{5.7$\times$}~\rng{[5.5,5.8]} & 3.9$\times$ \\
- & 9 Mbit / 60 ms / 1\% loss & 1.1 & 5,827 & 829 & 822 & 1,105 & \textbf{7.0$\times$}~\rng{[6.2,7.5]} & 5.3$\times$ \\
- & 9 Mbit / 60 ms / 1\% loss & 2 & 878 & 832 & 720 & 1,098 & \textbf{1.1$\times$}~\rng{[0.7,1.8]} & 0.8$\times$ \\
- & 9 Mbit / 60 ms / 1\% loss & 3 & 4,149 & 867 & 871 & 1,189 & \textbf{4.8$\times$}~\rng{[4.7,5.0]} & 3.5$\times$ \\
-\midrule
-photos & localhost & 1.1 & 758 & 424 & 400 & 633 & \textbf{1.8$\times$}~\rng{[1.5,1.9]} & 1.2$\times$ \\
- & localhost & 2 & 665 & 419 & 422 & 632 & \textbf{1.6$\times$}~\rng{[1.5,1.6]} & 1.1$\times$ \\
- & localhost & 3 & 835 & 415 & 425 & 662 & \textbf{2.0$\times$}~\rng{[1.7,2.3]} & 1.3$\times$ \\
- & 100 Mbit / 20 ms & 1.1 & 2,019 & 780 & 669 & 1,036 & \textbf{2.6$\times$}~\rng{[2.6,2.6]} & 1.9$\times$ \\
- & 100 Mbit / 20 ms & 2 & 692 & 758 & 709 & 1,038 & \textbf{0.9$\times$}~\rng{[0.9,0.9]} & 0.7$\times$ \\
- & 100 Mbit / 20 ms & 3 & 2,075 & 746 & 763 & 1,002 & \textbf{2.8$\times$}~\rng{[2.7,2.8]} & 2.1$\times$ \\
- & 9 Mbit / 60 ms & 1.1 & 6,199 & 3,824 & 3,897 & 4,246 & \textbf{1.6$\times$}~\rng{[1.6,1.6]} & 1.5$\times$ \\
- & 9 Mbit / 60 ms & 2 & 3,743 & 3,771 & 3,866 & 4,294 & \textbf{1.0$\times$}~\rng{[1.0,1.0]} & 0.9$\times$ \\
- & 9 Mbit / 60 ms & 3 & 6,218 & 3,902 & 4,021 & 4,427 & \textbf{1.6$\times$}~\rng{[1.6,1.6]} & 1.4$\times$ \\
- & 9 Mbit / 60 ms / 1\% loss & 1.1 & 6,933 & 4,612 & 4,490 & 7,890 & \textbf{1.5$\times$}~\rng{[1.0,1.7]} & 0.9$\times$ \\
- & 9 Mbit / 60 ms / 1\% loss & 2 & 5,576 & 5,993 & 7,226 & 6,476 & \textbf{0.9$\times$}~\rng{[0.6,1.3]} & 0.9$\times$ \\
- & 9 Mbit / 60 ms / 1\% loss & 3 & 8,793 & 8,404 & 6,875 & 7,934 & \textbf{1.0$\times$}~\rng{[0.9,1.3]} & 1.1$\times$ \\
-\bottomrule
-\end{tabular}
-\caption{Median time to all 500 tiles visible (ms) per serving
-condition, protocol, and network profile (n~=~11 cold browser loads per
-cell; 12 run in randomized order, first dropped; WebP payloads). The
-atl-x column gives the single-atlas speedup over individual files with a
-95\% bootstrap confidence interval; bun-x is the byte-bundle speedup.
-Per-cell quartiles are in the released data.}
-
-\end{table*}
-
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=1.0\columnwidth]{fig/fig4.pdf}
-\caption{Time-to-all-tiles-visible speedup from
-atlasing (median individual / median single atlas) at N~=~500, per
-protocol and network profile, as point estimates with 95\% bootstrap
-confidence intervals on a shared log axis; the dashed line marks parity
-(1x). HTTP/2 sits near parity for many small files, while HTTP/1.1 and
-HTTP/3 retain multi-x speedups; intervals that straddle the parity line
-(notably the loss-dominated 4G+loss profile) mark cells where atlas and
-individual are statistically indistinguishable.}
-
-\end{figure}
-
-
-Three protocol-level facts organize Table~8 and Figure~4. First, on
-HTTP/1.1 and HTTP/3, bundling remains a large timing win for flat art:
-4.5--8.6x and 4.8--7.7x respectively for 500 tiles across the network
-profiles, and 1.6--2.8x for photos on the loss-free profiles (the 1\%
-packet-loss photo cells fall to parity and are discussed below). Across
-cells, added network impairment never speeds a condition up, and the
-reported speedups carry tight bootstrap intervals (Table~8). Second,
-HTTP/2 is the strongest protocol for many small files: its multiplexing
-loads 500 individual images almost as fast as the atlas on
-bandwidth-limited links (1.0--1.1x at 9~Mbit), so under HTTP/2 the case
-for bundling small tiles rests chiefly on the byte saving of Table~1 (up
-to 26\% for flat art) rather than on latency. Third, on this testbed
-HTTP/3's individual-file loads run several times slower
-than HTTP/2's on the same links, up to 5x for flat art
-on the constrained profiles and about 3x on the fast zero-loss link, and
-a concurrency diagnostic locates the cause. The diagnostic reconstructs
-each request's in-flight interval from the Resource
-Timing API and finds the peak number of simultaneous image requests:
-HTTP/2 sustained 13--14 at once while HTTP/3 sustained only 6, roughly
-half the parallelism, and the slowdown tracks that gap. The
-server's own QUIC transport log (quic-go qlog) confirms
-the effect and locates it precisely: across cold HTTP/3 loads of the
-500-file page, the server records a peak of only 4--6 request streams
-open at once (median 5 for photographs, 4 for flat art), agreeing with
-the browser-side count on the photographic page, while its transport
-parameters advertise a 100-stream limit
-(\texttt{initial\_max\_streams\_bidi}) that is never approached, so the
-stream limit is not the binding constraint. To test whether the low
-concurrency is a property of this particular server, we replayed the
-load against a second, independent QUIC implementation (aioquic) driven
-by the same Chromium: it sustained a median of 13 concurrent request
-streams, roughly double the quic-go/Caddy figure and close to
-HTTP/2's, on a faster loopback path with smaller tiles
-that both bias the count downward, so the gap is conservative. The low
-concurrency is therefore a property of the specific server stack and its
-defaults interacting with Chromium's QUIC scheduler, not
-of HTTP/3 itself, which multiplexes independent streams over one
-connection. A default HTTP/3 stack can therefore under-multiplex a
-many-small-image page relative to HTTP/2, which makes bundling valuable
-there, while a different server stack narrows the gap. Under the 1\%
-packet-loss profile every serving condition becomes noise-dominated on
-this testbed: per-cell coefficients of variation reach 0.4 and the
-atlas-vs-individual and chunk-vs-atlas differences fall inside
-overlapping confidence intervals (for example photos on the 9 Mbit / 60
-ms / 1\% loss profile give a single atlas at 1.50x and four chunks at
-1.54x on HTTP/1.1, indistinguishable). We therefore make no
-loss-recovery claim for chunking from the timing data;
-chunking's demonstrated benefit is cache granularity and
-bounded invalidation (Appendix~A.4, Figure~5), not packet-loss
-resilience. The byte-bundle beats individual serving nearly everywhere
-on HTTP/1.1 and HTTP/3 (up to 5.6x) at exactly the individual
-conditions' byte cost, which makes it the bundling
-method of choice for content whose pixels should not share a codec model
-(photos, lossless assets); the pixel atlas remains faster where its byte
-savings compound with the request savings.
-
-\subsection*{A.3\quad Local rendering cost: decode time and
+\subsection*{A.1\quad Local rendering cost: decode time and
 memory}
 
 Transport is only half the client cost; decode and memory are the other
@@ -1468,105 +1411,6 @@ memory-favorable, and the decoded-memory caution applies to very large
 atlases, not to bundling per se.}
 
 \end{table}
-
-
-\subsection*{A.4\quad Cache invalidation and delta
-updates}
-
-Bundling's one structural liability is cache
-granularity: editing a single tile invalidates the whole bundle, so a
-naive re-deploy re-downloads everything. Formally, a partition into
-bundles B\textsubscript{1}..B\textsubscript{k} with per-tile update
-probabilities p\textsubscript{i} pays expected bytes
-Σ\textsubscript{j}~[1~−~Π\textsubscript{i∈B\textsubscript{j}}(1~−~p\textsubscript{i})]~·~bytes(B\textsubscript{j})
-per deploy, which grows with bundle size and with churn. Chunking bounds
-it at 1/k of the collection; grouping tiles by update cadence confines a
-change to the chunk that carries it. The sharpest remedy is to serve
-updates as deltas against the cached previous version, the mechanism
-Compression Dictionary Transport (RFC~9842) now standardizes for the
-web. We measure the compression-level cost of this remedy as a proxy,
-computing the delta offline rather than through a live browser-server
-negotiation: in a 392-photo WebP bundle, a zstd delta against the prior
-bundle cost 25~KB when 5 tiles changed and 237~KB when 50 changed,
-tracking the changed-files optimum and beating whole-atlas re-download
-(2.8~MB) by two orders of magnitude. The structural weakness thus
-becomes proportional to churn rather than to bundle size; an end-to-end
-CDT deployment measurement is future work.
-
-A warm-cache simulation over a 200-tile WebP collection makes the full
-trade-off explicit (Figure~5). Serving immutable individual files is the
-granularity ideal, a returning client fetches only the changed tiles
-(12~KB at 1\% churn). A single monolithic atlas is the opposite extreme:
-any change re-downloads the entire 1.47~MB, 126x the individual cost at
-1\% churn. Chunking closes the gap proportionally, 16 chunks cost 170~KB
-at 1\% churn against one atlas's 1.47~MB, but never
-reaches per-tile granularity. Dictionary-delta serving does: at 12~KB
-for 1\% churn it matches the individual-file optimum within one percent,
-and at 20\% churn it undercuts it (192 vs 218~KB) because the shared
-dictionary compresses each new tile against the old ones. The practical
-consequence is that an update-heavy collection can keep the cold-load
-benefits of bundling and still get individual-file cache granularity, by
-serving deltas rather than whole bundles.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=1.0\columnwidth]{fig/fig5.pdf}
-\caption{Warm-cache re-download: bytes a returning
-client fetches after a deploy changes a fraction of a 200-tile WebP
-collection (log scale; full fresh download 1,474,036~B; mean of 20
-random deploys per rate). A single atlas re-fetches almost everything on
-any change; 16 chunks scale with churn; dictionary-delta serving tracks
-the individual-file optimum and undercuts it at high churn.}
-
-\end{figure}
-
-
-\subsection*{A.5\quad Choosing a rendering
-mechanism}
-
-Selecting a representation is only half of deployment; the four ways to
-show a bundled tile (Section~3.1) are not interchangeable in a
-production page, because they differ in native image semantics,
-accessibility, loading control, and browser support (Table~10). A CSS
-pixel atlas shown through \texttt{background-position} is universally
-supported and ideal for decorative icons, but a background image is not
-an \texttt{\textless{}img\textgreater{}}: it carries no intrinsic alt
-text (accessibility must come from surrounding ARIA), does not
-participate in native lazy loading or \texttt{fetchpriority}, and is
-inappropriate for content images that must be announced. A cropped
-\texttt{\textless{}img\textgreater{}} in an \texttt{overflow:hidden}
-wrapper keeps alt text and native loading and works cross-browser;
-\texttt{object-view-box} gives the same with less markup but is
-Chromium-only and should not be treated as a generally deployable
-solution. A byte-bundle reconstructs real per-tile
-\texttt{\textless{}img\textgreater{}} elements from blob URLs, so it
-recovers full image semantics at the cost of a small loader script and
-its content-security-policy implications, which makes it the natural
-choice for heterogeneous or content-bearing photographs. The selector of
-Section~6.2 chooses the byte layout; this table chooses the display
-mechanism, and the two decisions compose.
-
-\begin{table*}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{1.6cm} l l l l >{\raggedright\arraybackslash}p{2.3cm}@{}}
-\toprule
-mechanism & native \texttt{<img>} & alt text & lazy / priority & JS / CSP & support & best use \\
-\midrule
-CSS \texttt{background-\allowbreak position} & no & via ARIA & manual & CSS only & universal & decorative icons \\
-cropped \texttt{<img>} wrapper & yes & yes & native & CSS only & broad & semantic images \\
-\texttt{object-\allowbreak view-\allowbreak box} & yes & yes & native & CSS only & Chromium only & native crop (emerging) \\
-byte-bundle + blob URLs & yes (after JS) & yes & app-controlled & JS + CSP & broad APIs & heterogeneous photos \\
-\bottomrule
-\end{tabular}
-\caption{Display mechanisms for a bundled tile and how they
-differ in production. All four paint after a single atlas or bundle
-fetch; they diverge on image semantics, accessibility, loading control,
-and support. Pick the byte layout with the Section~6.2 selector and the
-mechanism here.}
-
-\end{table*}
 
 
 \end{document}

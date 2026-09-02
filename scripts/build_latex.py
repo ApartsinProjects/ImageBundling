@@ -294,18 +294,22 @@ def float_table(n, cap, width, colspec, head, body):
 # Keyed by FINAL document-order number (five sections in the appendix). Body:
 # 1-5 (5.1/5.3), 6 predictor, 7 oracle. Appendix: 8 network, 9 memory, 10 rendering.
 # table6()=network, table7()=memory, table8()=predictor, table9()=oracle.
+# Final document order after the mobile-focus trim (9 tables; network back in the body,
+# rendering-mechanism table cut): 1-5 as authored, 6 network, 7 predictor, 8 oracle,
+# 9 memory (appendix). table6()=network, table7()=memory, table8()=predictor, table9()=oracle.
 TABLES = {1: table1, 2: table2, 3: table3, 4: table4, 5: table5,
-          6: table8, 7: table9, 8: table6, 9: table7, 10: table10}
+          6: table6, 7: table8, 8: table9, 9: table7}
 
 # figure placement: file (ext), width mode
 # Final order: 1 atlas, 2 crossover, 3 flowchart (heuristic, wide), 4 network
 # (appendix), 5 delta (appendix). extract_and_render_figures names files by caption.
+# Final order (4 figures; delta figure cut): 1 atlas, 2 crossover, 3 network speedup,
+# 4 flowchart (heuristic, wide). extract_and_render_figures names files by caption number.
 FIGURES = {
     1: ("fig1.png", "col", 0.82),
     2: ("fig2.pdf", "col", 1.0),
-    3: ("fig3.pdf", "full", 0.62),
-    4: ("fig4.pdf", "col", 1.0),
-    5: ("fig5.pdf", "col", 1.0),
+    3: ("fig3.pdf", "col", 1.0),
+    4: ("fig4.pdf", "full", 0.62),
 }
 
 def float_figure(n, cap):
