@@ -1,0 +1,29 @@
+{
+ "note": "gain = % fewer bytes vs std_single at matched SSIM 0.97 (JPEG, 128px, ImageNet-diverse)",
+ "opt_single_gain": [
+  4.7,
+  4.47,
+  4.91
+ ],
+ "std_affinity8_gain": [
+  0.08,
+  -0.23,
+  0.57
+ ],
+ "opt_affinity8_gain": [
+  4.81,
+  4.61,
+  5.21
+ ],
+ "opt_affinity_vs_opt_single": [
+  0.12,
+  -0.11,
+  0.32
+ ],
+ "individual_std_gain": [
+  -6.12,
+  -6.42,
+  -5.68
+ ],
+ "any_clamp": false
+}

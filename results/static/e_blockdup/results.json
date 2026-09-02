@@ -1,0 +1,26 @@
+[
+ {
+  "set": "imagenet_diverse",
+  "images": 400,
+  "blocks": 102400,
+  "flat_fraction": 0.174,
+  "exact_dup_rate": 0.0273,
+  "near_dup_rate": 0.0945,
+  "exact_dup_rate_flat_blocks": 0.1562,
+  "exact_dup_rate_textured_blocks": 0.0002,
+  "index_bits_per_block_exact": 16.6,
+  "index_bits_per_block_near": 16.5
+ },
+ {
+  "set": "product_on_white",
+  "images": 400,
+  "blocks": 102400,
+  "flat_fraction": 0.914,
+  "exact_dup_rate": 0.9666,
+  "near_dup_rate": 0.9966,
+  "exact_dup_rate_flat_blocks": 0.9985,
+  "exact_dup_rate_textured_blocks": 0.6262,
+  "index_bits_per_block_exact": 11.7,
+  "index_bits_per_block_near": 8.5
+ }
+]

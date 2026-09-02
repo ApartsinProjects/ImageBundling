@@ -1,0 +1,32 @@
+{
+ "morph_seq": {
+  "frames": 45,
+  "jpeg_bytes": 298907,
+  "avif_bytes": 209175,
+  "h264_intra_bytes": 165632,
+  "h264_inter_bytes": 75808,
+  "inter_vs_intra_pct": 54.2,
+  "inter_vs_avif_pct": 63.8,
+  "avif_vs_jpeg_pct": 30.0
+ },
+ "imagenet_cluster": {
+  "frames": 48,
+  "jpeg_bytes": 478927,
+  "avif_bytes": 333676,
+  "h264_intra_bytes": 239524,
+  "h264_inter_bytes": 300286,
+  "inter_vs_intra_pct": -25.4,
+  "inter_vs_avif_pct": 10.0,
+  "avif_vs_jpeg_pct": 30.3
+ },
+ "imagenet_diverse": {
+  "frames": 48,
+  "jpeg_bytes": 317001,
+  "avif_bytes": 214335,
+  "h264_intra_bytes": 179065,
+  "h264_inter_bytes": 204729,
+  "inter_vs_intra_pct": -14.3,
+  "inter_vs_avif_pct": 4.5,
+  "avif_vs_jpeg_pct": 32.4
+ }
+}

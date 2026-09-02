@@ -1,0 +1,32 @@
+{
+ "invariant_identical_copies_saving_pct": 76.63,
+ "generic_clusters": {
+  "n": 7,
+  "mean": -41.36,
+  "min": -74.4,
+  "max": -12.41,
+  "per_cluster": [
+   -19.7,
+   -12.4,
+   -62.2,
+   -61.0,
+   -38.4,
+   -74.4,
+   -21.4
+  ]
+ },
+ "near_duplicate_groups": {
+  "n": 6,
+  "mean": -1.53,
+  "min": -5.22,
+  "max": 1.15,
+  "per_group": [
+   -5.2,
+   0.6,
+   -2.8,
+   1.1,
+   -1.2,
+   -1.6
+  ]
+ }
+}

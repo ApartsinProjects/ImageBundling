@@ -1,0 +1,72 @@
+[
+ {
+  "set": "imagenet_diverse",
+  "images": 400,
+  "blocks": 102400,
+  "flat_fraction": 0.174,
+  "by_quality": {
+   "90": {
+    "full_dup_rate": 0.0345,
+    "AC_dup_rate": 0.0493,
+    "full_dup_rate_textured": 0.0003,
+    "AC_dup_rate_textured": 0.0004,
+    "AC_dup_rate_flat": 0.2819,
+    "unique_full": 98868,
+    "unique_AC": 97353
+   },
+   "75": {
+    "full_dup_rate": 0.0588,
+    "AC_dup_rate": 0.1015,
+    "full_dup_rate_textured": 0.0009,
+    "AC_dup_rate_textured": 0.0017,
+    "AC_dup_rate_flat": 0.5755,
+    "unique_full": 96374,
+    "unique_AC": 92002
+   },
+   "50": {
+    "full_dup_rate": 0.1086,
+    "AC_dup_rate": 0.1649,
+    "full_dup_rate_textured": 0.0025,
+    "AC_dup_rate_textured": 0.0142,
+    "AC_dup_rate_flat": 0.8631,
+    "unique_full": 91279,
+    "unique_AC": 85512
+   }
+  }
+ },
+ {
+  "set": "product_on_white",
+  "images": 400,
+  "blocks": 102400,
+  "flat_fraction": 0.914,
+  "by_quality": {
+   "90": {
+    "full_dup_rate": 0.9536,
+    "AC_dup_rate": 0.9619,
+    "full_dup_rate_textured": 0.4883,
+    "AC_dup_rate_textured": 0.5562,
+    "AC_dup_rate_flat": 1.0,
+    "unique_full": 4747,
+    "unique_AC": 3898
+   },
+   "75": {
+    "full_dup_rate": 0.9672,
+    "AC_dup_rate": 0.9746,
+    "full_dup_rate_textured": 0.6338,
+    "AC_dup_rate_textured": 0.7033,
+    "AC_dup_rate_flat": 1.0,
+    "unique_full": 3357,
+    "unique_AC": 2606
+   },
+   "50": {
+    "full_dup_rate": 0.9764,
+    "AC_dup_rate": 0.9829,
+    "full_dup_rate_textured": 0.7345,
+    "AC_dup_rate_textured": 0.8005,
+    "AC_dup_rate_flat": 1.0,
+    "unique_full": 2413,
+    "unique_AC": 1753
+   }
+  }
+ }
+]

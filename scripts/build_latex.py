@@ -26,8 +26,8 @@ FIG = LATEX / "fig"
 TEX = LATEX / "paper2col.tex"
 OUT_PDF = ROOT / "docs" / "paper-2col.pdf"
 
-TITLE = ("Image Bundling Revisited: Codec-Specific Savings and a Measured "
-         "Atlas Selector for Small Web Images")
+TITLE = ("Bundling Small Images for Mobile Interfaces: Codec-Specific Savings "
+         "and a Measured Selector for Emoji, Avatar, and Thumbnail Grids")
 
 # ----------------------------------------------------------------------------
 # 1. figures: extract SVGs from the HTML, render to vector PDF; copy the raster
@@ -557,7 +557,7 @@ REFS = [
     "[5] T. Hunter. HTTP/3 is fast. Request Metrics, 2022. https://requestmetrics.com/web-performance/http3-is-fast/",
     "[6] T. Eden. What's the smallest file size for a 1 pixel image? 2024. https://shkspr.mobi/blog/2024/01/whats-the-smallest-file-size-for-a-1-pixel-image/",
     "[7] J. Sneyers. One pixel is worth three thousand words. Cloudinary Blog. https://cloudinary.com/blog/one_pixel_is_worth_three_thousand_words",
-    "[8] HTTP Archive. Web Almanac 2024, Media chapter. https://almanac.httparchive.org/en/2024/media",
+    "[8] HTTP Archive. Web Almanac 2024, Media and Performance chapters. https://almanac.httparchive.org/en/2024/",
     "[9] Unity Technologies. Sprites.AtlasSettings.paddingPower documentation. https://docs.unity3d.com/ScriptReference/Sprites.AtlasSettings-paddingPower.html",
     "[10] D. Shea. CSS Sprites: Image Slicing's Kiss of Death. A List Apart, 2004. https://alistapart.com/article/sprites/",
     "[11] Google. Web Fundamentals: HTTP/2 and resource bundling guidance. https://web.dev/articles/http2",
@@ -595,6 +595,12 @@ REFS = [
     "[43] D. Korn, J. MacDonald, J. Mogul, K. Vo. The VCDIFF Generic Differencing and Compression Data Format. RFC 3284, IETF, 2002. doi:10.17487/RFC3284",
     "[44] J. Butler, W.-H. Lee, B. McQuade, K. Mixter. A Proposal for Shared Dictionary Compression over HTTP (SDCH). IETF Internet-Draft draft-lee-sdch-spec, 2008.",
     "[45] R. Fielding, M. Nottingham, J. Reschke (Eds.). HTTP Caching. RFC 9111 (STD 98), IETF, 2022. doi:10.17487/RFC9111",
+    "[46] StatCounter GlobalStats. Desktop vs Mobile vs Tablet Market Share Worldwide, 2024. https://gs.statcounter.com/platform-market-share/desktop-mobile-tablet",
+    "[47] Ericsson. Ericsson Mobility Report, November 2024. https://www.ericsson.com/en/reports-and-papers/mobility-report/reports/november-2024",
+    "[48] M. Belshe. More Bandwidth Doesn't Matter (Much). Google, 2010. https://www.belshe.com/2010/05/24/more-bandwidth-doesnt-matter-much/",
+    "[49] S. A. M. Mostafa, M. P. Wittie, U. Goel. Does More Bandwidth Really Not Matter (Much)? arXiv:2503.03641, 2025.",
+    "[50] Deloitte Digital. Milliseconds Make Millions: how page speed affects consumer behavior. Commissioned by Google, 2020.",
+    "[51] Cloudflare. Radar 2024 Year in Review: HTTP protocol version share, 2024. https://radar.cloudflare.com/year-in-review/2024",
 ]
 
 
